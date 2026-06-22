@@ -27,7 +27,7 @@ function ProductCard({ item, onQuickView }) {
           <img
             src={item.image}
             alt={item.name}
-            className="h-80 w-full object-cover"
+            className="h-56 md:h-72 lg:h-80 w-full object-cover"
           />
         </Link>
 
@@ -41,7 +41,7 @@ function ProductCard({ item, onQuickView }) {
         )}
       </div>
 
-      <div className="p-5">
+      <div className="p-3 md:p-5">
         <span className="text-xs bg-[#FDEAE6] text-[#9A3F4D] px-3 py-1 rounded-full">
           {item.type}
         </span>

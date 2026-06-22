@@ -33,7 +33,7 @@ function Home() {
       <Navbar />
 
       <section className="bg-[#f7f2ee]">
-        <div className="grid lg:grid-cols-2 min-h-[620px]">
+        <div className="grid lg:grid-cols-2 min-h-[420px] lg:min-h-[620px]">
           <div className="flex items-center px-8 lg:px-24 py-16 relative overflow-hidden">
             <div className="absolute left-0 top-10 text-[#d8c6bc] text-[220px] opacity-40">
               ❧
@@ -44,11 +44,11 @@ function Home() {
                 TIMELESS BEAUTY. EFFORTLESS YOU.
               </p>
 
-              <h1 className="heading-font text-6xl lg:text-7xl text-[#5B3B32] leading-tight">
+              <h1 className="heading-font text-4xl md:text-5xl lg:text-7xl text-[#5B3B32] leading-tight">
                 Grace in Every
               </h1>
 
-              <h2 className="logo-font text-8xl text-[#9A3F4D] -mt-2">
+              <h2 className="logo-font text-5xl md:text-6xl lg:text-8xl text-[#9A3F4D] -mt-2">
                 Thread
               </h2>
 
@@ -77,7 +77,7 @@ function Home() {
             <img
               src={heroDress}
               alt="Parikta Fashion"
-              className="w-full h-full object-cover"
+              className="w-full h-[320px] lg:h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#f7f2ee]/40 to-transparent"></div>
           </div>
@@ -117,7 +117,7 @@ function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {categories.map((item) => (
               <Link to="/products" key={item.name} className="text-center group">
-                <div className="w-40 h-40 md:w-52 md:h-52 mx-auto rounded-full overflow-hidden border-4 border-[#eadbd4] p-2 bg-white group-hover:border-[#BFA996] duration-300">
+                <div className="w-28 h-28 md:w-40 md:h-40 lg:w-52 lg:h-52 mx-auto rounded-full overflow-hidden border-4 border-[#eadbd4] p-2 bg-white group-hover:border-[#BFA996] duration-300">
                   <img
                     src={item.image}
                     alt={item.name}

@@ -27,7 +27,7 @@ function Navbar() {
         <Container>
           <div className="h-24 flex items-center justify-between gap-6">
             <Link to="/" className="text-center leading-none">
-              <div className="logo-font text-6xl text-[#9A3F4D]">
+              <div className="logo-font text-4xl md:text-5xl lg:text-6xl text-[#9A3F4D]">
                 Parikta
               </div>
               <div className="tracking-[0.45em] text-xs text-[#BFA996] font-semibold">

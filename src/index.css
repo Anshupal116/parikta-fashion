@@ -2,13 +2,19 @@
 
 :root {
   --cream: #f7f2ee;
-  --soft: #fdeaee;
-  --peach: #e8d7cc;
-  --gold: #bfa996;
+  --ivory: #fffaf7;
+  --blush: #fdeaee;
   --rose: #e2b7b1;
   --wine: #9a3f4d;
   --brown: #5b3b32;
+  --gold: #bfa996;
   --text: #3f2d28;
+  --muted: #8b746b;
+  --border: #eadbd4;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {

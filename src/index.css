@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #f7f2ee;
+  --soft: #fdeaee;
+  --peach: #e8d7cc;
+  --gold: #bfa996;
+  --rose: #e2b7b1;
+  --wine: #9a3f4d;
+  --brown: #5b3b32;
+  --text: #3f2d28;
+}
+
+body {
+  background: var(--cream);
+  color: var(--text);
+  font-family: "Montserrat", Arial, sans-serif;
+}
+
+.logo-font {
+  font-family: "Great Vibes", cursive;
+}
+
+.heading-font {
+  font-family: "Playfair Display", serif;
+}

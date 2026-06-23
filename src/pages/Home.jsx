@@ -10,6 +10,7 @@ import suitsImg from "../assets/categories/suits.png";
 import sareeImg from "../assets/categories/saree.png";
 import kurtiImg from "../assets/categories/kurti.png";
 import lehengaImg from "../assets/categories/lehenga.png";
+import { useRecentlyViewed } from "../context/RecentlyViewedContext"; 
 
 import { products } from "../data/products";
 
@@ -51,6 +52,8 @@ const reviews = [
 ];
 
 function Home() {
+  const { recentlyViewed } = useRecentlyViewed();
+
   return (
     <>
       <Navbar />
@@ -270,35 +273,99 @@ function Home() {
           </div>
         </Container>
       </section>
+{recentlyViewed.length > 0 && (
+  <section className="bg-[#fffaf7] py-10 md:py-14 border-t border-[#eadbd4]">
+    <Container>
+      <div className="flex items-center justify-between mb-7">
+        <div>
+          <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+            Recently Viewed
+          </p>
 
+          <h2 className="heading-font text-3xl md:text-5xl text-[#5B3B32]">
+            Continue Your Style Journey
+          </h2>
+        </div>
+
+        <Link
+          to="/products"
+          className="text-xs tracking-[0.18em] uppercase text-[#9A3F4D] font-bold"
+        >
+          View All
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
+        {recentlyViewed.map((item) => (
+          <ProductCard key={item.id} item={item} />
+        ))}
+      </div>
+    </Container>
+  </section>
+)}
       {/* REVIEWS */}
-      <section className="bg-[#fffaf7] py-10 md:py-14">
-        <Container>
-          <div className="text-center mb-8">
-            <h2 className="text-sm tracking-[0.28em] uppercase text-[#5B3B32] font-semibold">
-              Happy Clients
-            </h2>
-            <div className="text-[#BFA996] mt-2">⌁</div>
-          </div>
+      {/* CLIENT LOVE */}
+<section className="bg-[#f7f2ee] py-12 md:py-16">
+  <Container>
+    <div className="text-center mb-10">
+      <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+        Client Love
+      </p>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            {reviews.map((review) => (
-              <div
-                key={review.name}
-                className="bg-[#f7f2ee] border border-[#eadbd4] rounded-2xl p-6"
-              >
-                <p className="text-[#BFA996]">★★★★★</p>
-                <p className="text-[#6d554d] text-sm leading-7 mt-4">
-                  “{review.text}”
-                </p>
-                <h3 className="font-bold text-[#5B3B32] mt-5">
-                  — {review.name}
-                </h3>
-              </div>
-            ))}
+      <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-2">
+        Loved By Our Clients
+      </h2>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+      {[
+        {
+          name: "Ananya Sharma",
+          image: sareeImg,
+          review:
+            "The fitting was absolutely perfect. It felt like a designer outfit made exclusively for me.",
+        },
+        {
+          name: "Megha Verma",
+          image: lehengaImg,
+          review:
+            "Premium fabric, elegant detailing and beautiful finishing. Highly recommended.",
+        },
+        {
+          name: "Ritika Jain",
+          image: suitsImg,
+          review:
+            "Parikta made my festive look unforgettable. The craftsmanship is amazing.",
+        },
+      ].map((item) => (
+        <div
+          key={item.name}
+          className="bg-[#fffaf7] rounded-3xl overflow-hidden border border-[#eadbd4]"
+        >
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-full h-72 object-cover"
+          />
+
+          <div className="p-6">
+            <div className="text-[#C9A227] text-lg">
+              ★★★★★
+            </div>
+
+            <p className="text-[#6d554d] text-sm leading-7 mt-4">
+              "{item.review}"
+            </p>
+
+            <h3 className="mt-5 font-bold text-[#5B3B32]">
+              — {item.name}
+            </h3>
           </div>
-        </Container>
-      </section>
+        </div>
+      ))}
+    </div>
+  </Container>
+</section>
 
       {/* NEWSLETTER */}
       <section className="bg-[#9A3F4D] py-10 text-white">
@@ -322,7 +389,58 @@ function Home() {
           </div>
         </Container>
       </section>
+           {/* INSTAGRAM GALLERY */}
+<section className="bg-[#fffaf7] py-12 md:py-16">
+  <Container>
+    <div className="text-center mb-8">
+      <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+        Follow Our Journey
+      </p>
 
+      <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-2">
+        @PariktaFashion
+      </h2>
+
+      <p className="text-[#8b746b] text-sm mt-3">
+        Daily styles, custom designs and behind-the-scenes moments.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-4">
+      {[suitsImg, sareeImg, kurtiImg, lehengaImg, heroDress, sareeImg].map(
+        (img, index) => (
+          <a
+            key={index}
+            href="https://instagram.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="relative aspect-square overflow-hidden rounded-xl group"
+          >
+            <img
+              src={img}
+              alt="Parikta Instagram"
+              className="w-full h-full object-cover group-hover:scale-110 duration-500"
+            />
+
+            <div className="absolute inset-0 bg-[#5B3B32]/0 group-hover:bg-[#5B3B32]/45 duration-300 flex items-center justify-center">
+              <span className="opacity-0 group-hover:opacity-100 text-white text-xs tracking-[0.18em] uppercase">
+                View
+              </span>
+            </div>
+          </a>
+        )
+      )}
+    </div>
+
+    <div className="text-center mt-8">
+      <a href="https://instagram.com/" target="_blank" rel="noreferrer">
+        <button className="border border-[#9A3F4D] text-[#9A3F4D] px-8 py-3 text-xs tracking-[0.18em] uppercase font-semibold">
+          Follow On Instagram
+        </button>
+      </a>
+    </div>
+  </Container>
+</section>
       <Footer />
     </>
   );

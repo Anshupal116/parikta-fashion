@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -7,16 +7,25 @@ import ProductCard from "../components/ProductCard";
 import Container from "../components/Container";
 import { useCart } from "../context/CartContext";
 import { products } from "../data/products";
+import { useRecentlyViewed } from "../context/RecentlyViewedContext";
 
 function ProductDetails() {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { addRecentlyViewed } = useRecentlyViewed();
 
   const product = products.find((item) => item.id === Number(id));
 
   const [selectedSize, setSelectedSize] = useState("");
   const [added, setAdded] = useState(false);
   const [mainImage, setMainImage] = useState(product?.image);
+
+  useEffect(() => {
+    if (product) {
+      addRecentlyViewed(product);
+      setMainImage(product.image);
+    }
+  }, [product]);
 
   if (!product) {
     return (
@@ -53,7 +62,9 @@ function ProductDetails() {
         <section className="py-6 md:py-12">
           <Container>
             <div className="text-xs text-[#8b746b] mb-5">
-              <Link to="/" className="hover:text-[#9A3F4D]">Home</Link>
+              <Link to="/" className="hover:text-[#9A3F4D]">
+                Home
+              </Link>
               <span className="mx-2">/</span>
               <Link to="/products" className="hover:text-[#9A3F4D]">
                 Collection
@@ -63,7 +74,6 @@ function ProductDetails() {
             </div>
 
             <div className="grid lg:grid-cols-[56%_44%] gap-8 lg:gap-12">
-              {/* IMAGE GALLERY */}
               <div>
                 <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl overflow-hidden">
                   <img
@@ -96,7 +106,6 @@ function ProductDetails() {
                 </div>
               </div>
 
-              {/* PRODUCT INFO */}
               <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 md:p-8 h-fit lg:sticky lg:top-32">
                 <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996] font-semibold">
                   {product.type}
@@ -214,10 +223,9 @@ function ProductDetails() {
                 </div>
 
                 <div className="mt-7 border-t border-[#eadbd4] pt-6 space-y-5">
-                  <details className="group">
+                  <details>
                     <summary className="cursor-pointer flex justify-between font-bold text-[#5B3B32]">
-                      Product Details
-                      <span>+</span>
+                      Product Details <span>+</span>
                     </summary>
                     <p className="text-[#6d554d] text-sm leading-7 mt-3">
                       Premium designer outfit crafted with attention to detail,
@@ -225,10 +233,9 @@ function ProductDetails() {
                     </p>
                   </details>
 
-                  <details className="group">
+                  <details>
                     <summary className="cursor-pointer flex justify-between font-bold text-[#5B3B32]">
-                      Fabric & Care
-                      <span>+</span>
+                      Fabric & Care <span>+</span>
                     </summary>
                     <p className="text-[#6d554d] text-sm leading-7 mt-3">
                       Fabric: Premium Georgette. Work: Designer embroidery.
@@ -236,10 +243,9 @@ function ProductDetails() {
                     </p>
                   </details>
 
-                  <details className="group">
+                  <details>
                     <summary className="cursor-pointer flex justify-between font-bold text-[#5B3B32]">
-                      Shipping & Returns
-                      <span>+</span>
+                      Shipping & Returns <span>+</span>
                     </summary>
                     <p className="text-[#6d554d] text-sm leading-7 mt-3">
                       Free shipping on prepaid orders. Easy returns available on
@@ -252,37 +258,6 @@ function ProductDetails() {
           </Container>
         </section>
 
-        {/* COMPLETE LOOK */}
-        <section className="py-8 md:py-12 bg-[#fffaf7] border-y border-[#eadbd4]">
-          <Container>
-            <div className="text-center mb-8">
-              <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
-                Styling
-              </p>
-              <h2 className="heading-font text-4xl text-[#5B3B32]">
-                Complete The Look
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 md:gap-6 text-center">
-              {["Statement Earrings", "Designer Dupatta", "Embroidered Potli"].map(
-                (item) => (
-                  <div
-                    key={item}
-                    className="bg-[#f7f2ee] border border-[#eadbd4] rounded-2xl p-5"
-                  >
-                    <div className="text-3xl mb-3">♡</div>
-                    <p className="text-xs md:text-sm font-semibold text-[#5B3B32]">
-                      {item}
-                    </p>
-                  </div>
-                )
-              )}
-            </div>
-          </Container>
-        </section>
-
-        {/* SIMILAR PRODUCTS */}
         <section className="py-10 md:py-14">
           <Container>
             <div className="flex items-center justify-between mb-7">
@@ -312,7 +287,6 @@ function ProductDetails() {
         </section>
       </main>
 
-      {/* MOBILE STICKY ADD TO BAG */}
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-4 py-3 flex items-center justify-between">
         <div>
           <p className="text-xs text-[#8b746b]">Total</p>

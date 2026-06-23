@@ -10,6 +10,11 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import Lookbook from "./pages/Lookbook";
+import NewsletterPopup from "./components/NewsletterPopup";
+import LoadingScreen from "./components/LoadingScreen";
+
 
 import MobileBottomNav from "./components/MobileBottomNav";
 import WhatsAppButton from "./components/WhatsAppButton";
@@ -17,6 +22,7 @@ import WhatsAppButton from "./components/WhatsAppButton";
 function App() {
   return (
     <BrowserRouter>
+    <LoadingScreen />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
@@ -28,8 +34,11 @@ function App() {
         <Route path="/order-success/:orderId" element={<OrderSuccess />} />
        <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/lookbook" element={<Lookbook />} />
       </Routes>
-
+      
+      <NewsletterPopup />
       <WhatsAppButton />
       <MobileBottomNav />
     </BrowserRouter>

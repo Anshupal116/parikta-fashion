@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
   return (
     <footer className="bg-[#3f2d28] text-white py-10 md:py-14 px-4 md:px-6">
@@ -35,6 +37,7 @@ function Footer() {
             <li>Customize</li>
             <li>Privacy</li>
             <li>Returns</li>
+            <Link to="/faq">FAQ</Link>
           </ul>
         </div>
 

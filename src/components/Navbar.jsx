@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import Container from "./Container";
+import SearchOverlay from "./SearchOverlay";
+import AnnouncementBar from "./AnnouncementBar";
 
 function Navbar() {
   const { cartCount } = useCart();
@@ -10,6 +12,7 @@ function Navbar() {
 
   const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -23,9 +26,7 @@ function Navbar() {
 
   return (
     <>
-      <div className="bg-[#FDEAE6] text-[#5B3B32] text-center text-[11px] md:text-sm py-2 tracking-[0.18em] uppercase">
-        Free Shipping on Prepaid Orders | COD Available
-      </div>
+      <AnnouncementBar />
 
       <nav className="bg-[#fffaf7] border-b border-[#eadbd4] sticky top-0 z-50">
         <Container>
@@ -59,16 +60,17 @@ function Navbar() {
               <li><Link to="/wishlist">Wishlist</Link></li>
               <li><Link to="/about">About</Link></li>
               <li><Link to="/contact">Contact</Link></li>
+              <li><Link to="/lookbook">Lookbook</Link></li>
               
             </ul>
 
             <div className="flex items-center gap-4 text-[#5B3B32]">
               <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="text-xl"
-              >
-                🔍
-              </button>
+  onClick={() => setSearchOpen(true)}
+  className="text-xl"
+>
+  🔍
+</button>
 
               <Link to="/wishlist" className="relative text-xl hidden sm:block">
                 ♡
@@ -113,6 +115,10 @@ function Navbar() {
           )}
         </Container>
       </nav>
+      <SearchOverlay
+  isOpen={searchOpen}
+  onClose={() => setSearchOpen(false)}
+/>
     </>
   );
 }

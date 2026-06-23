@@ -57,7 +57,9 @@ function Navbar() {
               <li><Link to="/products">Fusion</Link></li>
               <li><Link to="/customize">Custom Design</Link></li>
               <li><Link to="/wishlist">Wishlist</Link></li>
+              <li><Link to="/about">About</Link></li>
               <li><Link to="/contact">Contact</Link></li>
+              
             </ul>
 
             <div className="flex items-center gap-4 text-[#5B3B32]">
@@ -104,6 +106,8 @@ function Navbar() {
                 <Link onClick={() => setMenuOpen(false)} to="/customize">Custom Design</Link>
                 <Link onClick={() => setMenuOpen(false)} to="/wishlist">Wishlist</Link>
                 <Link onClick={() => setMenuOpen(false)} to="/cart">Cart</Link>
+                <Link onClick={() => setMenuOpen(false)} to="/about">About</Link>
+                <Link onClick={() => setMenuOpen(false)} to="/contact">Contact</Link>
               </div>
             </div>
           )}

@@ -8,6 +8,8 @@ import Wishlist from "./pages/Wishlist";
 import Customize from "./pages/Customize";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 import MobileBottomNav from "./components/MobileBottomNav";
 import WhatsAppButton from "./components/WhatsAppButton";
@@ -24,6 +26,8 @@ function App() {
         <Route path="/customize" element={<Customize />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+       <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
 
       <WhatsAppButton />

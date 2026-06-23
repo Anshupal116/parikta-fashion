@@ -58,51 +58,69 @@ function Home() {
     <>
       <Navbar />
 
-      {/* HERO */}
-      <section className="bg-[#f7f2ee]">
-        <div className="relative h-[430px] md:h-[620px] overflow-hidden">
-          <img
-            src={heroDress}
-            alt="Parikta Fashion"
-            className="w-full h-full object-cover object-top"
-          />
+      {/* CINEMATIC HERO */}
+<section className="relative bg-[#14100e] overflow-hidden">
+  <div className="relative h-[560px] md:h-[720px]">
+    <img
+      src={heroDress}
+      alt="Parikta Fashion"
+      className="absolute inset-0 w-full h-full object-cover object-top scale-105"
+    />
 
-          <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#2f241f]/65 via-[#2f241f]/20 to-transparent"></div>
+    <div className="absolute inset-0 bg-gradient-to-t from-[#14100e] via-[#14100e]/35 to-transparent"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-[#14100e]/70 via-transparent to-[#14100e]/20"></div>
 
-          <div className="absolute inset-0 flex items-end md:items-center">
-            <Container>
-              <div className="max-w-xl pb-10 md:pb-0 text-white">
-                <p className="text-xs md:text-sm tracking-[0.3em] uppercase text-[#eadbd4]">
-                  Parikta Fashion
+    <Container>
+      <div className="relative z-10 h-[560px] md:h-[720px] flex items-end md:items-center pb-12 md:pb-0">
+        <div className="max-w-xl text-white">
+          <p className="text-[11px] md:text-xs tracking-[0.38em] uppercase text-[#e8d7cc]">
+            Premium Women Designer Wear
+          </p>
+
+          <h1 className="heading-font text-5xl md:text-7xl lg:text-8xl leading-none mt-4">
+            Elegance
+          </h1>
+
+          <h2 className="logo-font text-6xl md:text-8xl text-[#E2B7B1] -mt-1">
+            in Every Thread
+          </h2>
+
+          <p className="text-sm md:text-base leading-7 text-[#fffaf7] mt-5 max-w-md">
+            Discover timeless ethnic, western and custom outfits crafted with
+            premium fabrics, delicate details and a luxury finish.
+          </p>
+
+          <div className="flex flex-wrap gap-3 mt-7">
+            <Link to="/products">
+              <button className="bg-[#9A3F4D] text-white px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
+                Shop Collection
+              </button>
+            </Link>
+
+            <Link to="/customize">
+              <button className="bg-white/90 text-[#9A3F4D] px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
+                Custom Design
+              </button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mt-8 max-w-md">
+            {["Premium Fabric", "Custom Fit", "Designer Finish"].map((item) => (
+              <div
+                key={item}
+                className="border border-white/25 bg-white/10 backdrop-blur-sm px-3 py-3 text-center"
+              >
+                <p className="text-[10px] tracking-[0.18em] uppercase">
+                  {item}
                 </p>
-
-                <h1 className="heading-font text-4xl md:text-7xl mt-3 leading-tight">
-                  Timeless Elegance
-                </h1>
-
-                <p className="text-sm md:text-lg leading-7 mt-4 max-w-md text-[#fffaf7]">
-                  Premium women designer wear, custom outfits and elegant
-                  festive fashion made with love.
-                </p>
-
-                <div className="flex gap-3 mt-7">
-                  <Link to="/products">
-                    <button className="bg-[#9A3F4D] text-white px-6 md:px-9 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
-                      Shop Now
-                    </button>
-                  </Link>
-
-                  <Link to="/customize">
-                    <button className="bg-white/90 text-[#9A3F4D] px-6 md:px-9 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
-                      Customize
-                    </button>
-                  </Link>
-                </div>
               </div>
-            </Container>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
+    </Container>
+  </div>
+</section>
 
       {/* SERVICE STRIP */}
       <section className="bg-[#fffaf7] border-b border-[#eadbd4] py-4">

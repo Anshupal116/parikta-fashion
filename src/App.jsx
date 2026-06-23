@@ -12,18 +12,30 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import Lookbook from "./pages/Lookbook";
-import NewsletterPopup from "./components/NewsletterPopup";
+
+import AdminLayout from "./pages/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminProtectedRoute from "./pages/admin/AdminProtectedRoute";
+import ProductsAdmin from "./pages/admin/ProductsAdmin";
+import AddProduct from "./pages/admin/AddProduct";
+import EditProduct from "./pages/admin/EditProduct";
+import OrdersAdmin from "./pages/admin/OrdersAdmin";
+import CustomOrdersAdmin from "./pages/admin/CustomOrdersAdmin";
+import CustomersAdmin from "./pages/admin/CustomersAdmin";
+import SettingsAdmin from "./pages/admin/SettingsAdmin";
+
 import LoadingScreen from "./components/LoadingScreen";
-import BackToTop from "./components/BackToTop";
-
-
-import MobileBottomNav from "./components/MobileBottomNav";
+import NewsletterPopup from "./components/NewsletterPopup";
 import WhatsAppButton from "./components/WhatsAppButton";
+import MobileBottomNav from "./components/MobileBottomNav";
+import BackToTop from "./components/BackToTop";
 
 function App() {
   return (
     <BrowserRouter>
-    <LoadingScreen />
+      <LoadingScreen />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
@@ -33,12 +45,32 @@ function App() {
         <Route path="/customize" element={<Customize />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-       <Route path="/about" element={<About />} />
+        <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/lookbook" element={<Lookbook />} />
+
+        <Route path="/pf-x7-admin-2026" element={<AdminLogin />} />
+
+        <Route
+          path="/admin-dashboard"
+          element={
+            <AdminProtectedRoute>
+              <AdminLayout />
+            </AdminProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="products" element={<ProductsAdmin />} />
+          <Route path="add-product" element={<AddProduct />} />
+          <Route path="edit-product/:id" element={<EditProduct />} />
+          <Route path="orders" element={<OrdersAdmin />} />
+          <Route path="custom-orders" element={<CustomOrdersAdmin />} />
+          <Route path="customers" element={<CustomersAdmin />} />
+          <Route path="settings" element={<SettingsAdmin />} />
+        </Route>
       </Routes>
-      
+
       <NewsletterPopup />
       <BackToTop />
       <WhatsAppButton />

@@ -1,8 +1,10 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ProductCard from "../components/ProductCard";
+import Container from "../components/Container";
 import { useCart } from "../context/CartContext";
 import { products } from "../data/products";
 
@@ -11,8 +13,24 @@ function ProductDetails() {
   const { addToCart } = useCart();
 
   const product = products.find((item) => item.id === Number(id));
-  const [added, setAdded] = useState(false);
+
   const [selectedSize, setSelectedSize] = useState("");
+  const [added, setAdded] = useState(false);
+  const [mainImage, setMainImage] = useState(product?.image);
+
+  if (!product) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
+          <h1 className="heading-font text-4xl text-[#5B3B32]">
+            Product Not Found
+          </h1>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   const handleAddToBag = () => {
     addToCart(product);
@@ -23,197 +41,291 @@ function ProductDetails() {
     }, 2000);
   };
 
-  if (!product) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen flex items-center justify-center bg-[#f7f2ee]">
-          <h1 className="heading-font text-4xl text-[#5B3B32]">
-            Product Not Found
-          </h1>
-        </div>
-      </>
-    );
-  }
+  const similarProducts = products
+    .filter((item) => item.id !== product.id)
+    .slice(0, 4);
 
   return (
     <>
       <Navbar />
 
-      <main className="bg-[#f7f2ee] min-h-screen py-14 px-6">
-        <div className="max-w-6xl mx-auto bg-[#fffaf7] rounded-[32px] shadow-lg border border-[#eadbd4] p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <div className="w-full h-[580px] bg-[#FDEAE6] rounded-[28px] overflow-hidden border border-[#eadbd4]">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+      <main className="bg-[#f7f2ee] min-h-screen pb-20 md:pb-0">
+        <section className="py-6 md:py-12">
+          <Container>
+            <div className="text-xs text-[#8b746b] mb-5">
+              <Link to="/" className="hover:text-[#9A3F4D]">Home</Link>
+              <span className="mx-2">/</span>
+              <Link to="/products" className="hover:text-[#9A3F4D]">
+                Collection
+              </Link>
+              <span className="mx-2">/</span>
+              <span className="text-[#5B3B32]">{product.name}</span>
             </div>
 
-            <div className="pt-2">
-              <span className="inline-block bg-[#FDEAE6] text-[#9A3F4D] px-4 py-2 rounded-full text-sm font-semibold">
-                {product.type}
-              </span>
-
-              <h1 className="heading-font text-5xl text-[#5B3B32] mt-5 leading-tight">
-                {product.name}
-              </h1>
-
-              <p className="text-[#6d554d] mt-4 text-lg leading-8">
-                {product.description}
-              </p>
-
-              <div className="flex items-center gap-3 mt-6">
-                <span className="bg-[#9A3F4D] text-white px-3 py-1 rounded-md font-semibold">
-                  4.8 ★
-                </span>
-                <span className="text-[#8b746b]">124 Ratings</span>
-              </div>
-
-              <div className="mt-7 border-t border-b border-[#eadbd4] py-6">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-4xl font-bold text-[#9A3F4D]">
-                    ₹{product.price}
-                  </span>
-
-                  <span className="text-xl text-gray-400 line-through">
-                    ₹{product.mrp}
-                  </span>
-
-                  <span className="text-green-600 text-lg font-bold">
-                    {product.discount}
-                  </span>
-                </div>
-
-                <p className="text-green-600 text-sm mt-2">
-                  Inclusive of all taxes
-                </p>
-              </div>
-
-              <div className="mt-7">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-lg text-[#5B3B32]">
-                    Select Size
-                  </h3>
-                  <button className="text-[#9A3F4D] font-semibold">
-                    Size Chart
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-3 mt-4">
-                  {["S", "M", "L", "XL", "XXL"].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`w-14 h-14 rounded-xl border-2 font-bold transition ${
-                        selectedSize === size
-                          ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
-                          : "border-[#eadbd4] text-[#5B3B32] hover:border-[#9A3F4D]"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-8">
-                <button
-                  onClick={handleAddToBag}
-                  className="bg-[#9A3F4D] text-white py-4 rounded-xl font-bold hover:bg-[#7d3140]"
-                >
-                  ADD TO BAG
-                </button>
-
-                <button className="bg-[#5B3B32] text-white py-4 rounded-xl font-bold hover:bg-[#3f2d28]">
-                  BUY NOW
-                </button>
-              </div>
-
-              {added && (
-                <p className="mt-4 text-green-600 font-semibold">
-                  Product added to bag successfully ✅
-                </p>
-              )}
-
-              {product.type === "Customize" && (
-                <button className="mt-4 w-full border-2 border-[#9A3F4D] text-[#9A3F4D] py-4 rounded-xl font-bold hover:bg-[#9A3F4D] hover:text-white">
-                  CUSTOMIZE THIS DESIGN
-                </button>
-              )}
-
-              <div className="mt-8 border-t border-[#eadbd4] pt-6">
-                <h3 className="font-bold text-lg text-[#5B3B32]">
-                  Delivery Options
-                </h3>
-
-                <div className="flex mt-4 max-w-md">
-                  <input
-                    type="text"
-                    placeholder="Enter pincode"
-                    className="border border-[#eadbd4] px-4 py-3 w-full rounded-l-xl outline-none focus:border-[#9A3F4D]"
+            <div className="grid lg:grid-cols-[56%_44%] gap-8 lg:gap-12">
+              {/* IMAGE GALLERY */}
+              <div>
+                <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl overflow-hidden">
+                  <img
+                    src={mainImage}
+                    alt={product.name}
+                    className="w-full h-[430px] md:h-[620px] object-cover object-top hover:scale-105 duration-700"
                   />
-
-                  <button className="border border-l-0 border-[#eadbd4] px-6 rounded-r-xl text-[#9A3F4D] font-bold">
-                    CHECK
-                  </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mt-5 text-sm">
-                  <div className="bg-[#FDEAE6] rounded-xl p-3 text-center">
-                    Free Delivery
-                  </div>
-                  <div className="bg-[#FDEAE6] rounded-xl p-3 text-center">
-                    Easy Return
-                  </div>
-                  <div className="bg-[#FDEAE6] rounded-xl p-3 text-center">
-                    COD Available
-                  </div>
+                <div className="grid grid-cols-4 gap-3 mt-3">
+                  {[product.image, product.image, product.image, product.image].map(
+                    (img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setMainImage(img)}
+                        className={`h-24 md:h-32 rounded-2xl overflow-hidden border ${
+                          mainImage === img
+                            ? "border-[#9A3F4D]"
+                            : "border-[#eadbd4]"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={product.name}
+                          className="w-full h-full object-cover object-top"
+                        />
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
 
-              <div className="mt-8 border-t border-[#eadbd4] pt-6">
-                <h3 className="font-bold text-lg text-[#5B3B32]">
-                  Product Details
-                </h3>
+              {/* PRODUCT INFO */}
+              <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 md:p-8 h-fit lg:sticky lg:top-32">
+                <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996] font-semibold">
+                  {product.type}
+                </p>
 
-                <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
-                  <div>
-                    <p className="text-[#9b8378]">Fabric</p>
-                    <p className="font-semibold text-[#5B3B32]">
-                      Premium Georgette
-                    </p>
+                <h1 className="heading-font text-4xl md:text-6xl text-[#5B3B32] mt-3 leading-tight">
+                  {product.name}
+                </h1>
+
+                <p className="text-[#6d554d] text-sm md:text-base leading-7 mt-4">
+                  {product.description}
+                </p>
+
+                <div className="flex items-center gap-3 mt-5">
+                  <span className="bg-[#9A3F4D] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    4.8 ★
+                  </span>
+                  <span className="text-[#8b746b] text-sm">
+                    124 ratings & reviews
+                  </span>
+                </div>
+
+                <div className="border-y border-[#eadbd4] py-6 mt-6">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-3xl md:text-4xl font-bold text-[#9A3F4D]">
+                      ₹{product.price}
+                    </span>
+
+                    {product.mrp && (
+                      <span className="text-xl text-gray-400 line-through">
+                        ₹{product.mrp}
+                      </span>
+                    )}
+
+                    {product.discount && (
+                      <span className="text-green-600 font-bold">
+                        {product.discount}
+                      </span>
+                    )}
                   </div>
 
-                  <div>
-                    <p className="text-[#9b8378]">Work</p>
-                    <p className="font-semibold text-[#5B3B32]">
-                      Embroidery
-                    </p>
+                  <p className="text-green-600 text-sm mt-2">
+                    Inclusive of all taxes
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm tracking-[0.2em] uppercase font-bold text-[#5B3B32]">
+                      Select Size
+                    </h3>
+
+                    <button className="text-[#9A3F4D] text-sm font-semibold">
+                      Size Guide
+                    </button>
                   </div>
 
-                  <div>
-                    <p className="text-[#9b8378]">Occasion</p>
-                    <p className="font-semibold text-[#5B3B32]">
-                      Wedding / Party
-                    </p>
+                  <div className="grid grid-cols-5 gap-3 mt-4">
+                    {["S", "M", "L", "XL", "XXL"].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`h-12 rounded-xl border font-bold transition ${
+                          selectedSize === size
+                            ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
+                            : "bg-white border-[#eadbd4] text-[#5B3B32]"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  <div>
-                    <p className="text-[#9b8378]">Care</p>
-                    <p className="font-semibold text-[#5B3B32]">
-                      Dry Clean Only
+                <div className="grid grid-cols-2 gap-4 mt-7">
+                  <button
+                    onClick={handleAddToBag}
+                    className="bg-[#9A3F4D] text-white py-4 rounded-xl font-bold text-sm tracking-[0.12em] uppercase hover:bg-[#7d3140]"
+                  >
+                    Add To Bag
+                  </button>
+
+                  <Link to="/checkout">
+                    <button className="w-full bg-[#5B3B32] text-white py-4 rounded-xl font-bold text-sm tracking-[0.12em] uppercase hover:bg-[#3f2d28]">
+                      Buy Now
+                    </button>
+                  </Link>
+                </div>
+
+                {added && (
+                  <p className="mt-4 text-green-600 font-semibold text-sm">
+                    Product added to bag successfully ✅
+                  </p>
+                )}
+
+                {product.type === "Customize" && (
+                  <Link to="/customize">
+                    <button className="mt-4 w-full border border-[#9A3F4D] text-[#9A3F4D] py-4 rounded-xl font-bold text-sm tracking-[0.12em] uppercase hover:bg-[#FDEAE6]">
+                      Customize This Design
+                    </button>
+                  </Link>
+                )}
+
+                <div className="grid grid-cols-3 gap-3 mt-7">
+                  {["Free Delivery", "Easy Return", "COD Available"].map(
+                    (item) => (
+                      <div
+                        key={item}
+                        className="bg-[#FDEAE6] rounded-xl p-3 text-center text-[11px] text-[#5B3B32] font-semibold"
+                      >
+                        {item}
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <div className="mt-7 border-t border-[#eadbd4] pt-6 space-y-5">
+                  <details className="group">
+                    <summary className="cursor-pointer flex justify-between font-bold text-[#5B3B32]">
+                      Product Details
+                      <span>+</span>
+                    </summary>
+                    <p className="text-[#6d554d] text-sm leading-7 mt-3">
+                      Premium designer outfit crafted with attention to detail,
+                      ideal for festive, wedding and party occasions.
                     </p>
-                  </div>
+                  </details>
+
+                  <details className="group">
+                    <summary className="cursor-pointer flex justify-between font-bold text-[#5B3B32]">
+                      Fabric & Care
+                      <span>+</span>
+                    </summary>
+                    <p className="text-[#6d554d] text-sm leading-7 mt-3">
+                      Fabric: Premium Georgette. Work: Designer embroidery.
+                      Care: Dry clean only.
+                    </p>
+                  </details>
+
+                  <details className="group">
+                    <summary className="cursor-pointer flex justify-between font-bold text-[#5B3B32]">
+                      Shipping & Returns
+                      <span>+</span>
+                    </summary>
+                    <p className="text-[#6d554d] text-sm leading-7 mt-3">
+                      Free shipping on prepaid orders. Easy returns available on
+                      eligible products.
+                    </p>
+                  </details>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </Container>
+        </section>
+
+        {/* COMPLETE LOOK */}
+        <section className="py-8 md:py-12 bg-[#fffaf7] border-y border-[#eadbd4]">
+          <Container>
+            <div className="text-center mb-8">
+              <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+                Styling
+              </p>
+              <h2 className="heading-font text-4xl text-[#5B3B32]">
+                Complete The Look
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 md:gap-6 text-center">
+              {["Statement Earrings", "Designer Dupatta", "Embroidered Potli"].map(
+                (item) => (
+                  <div
+                    key={item}
+                    className="bg-[#f7f2ee] border border-[#eadbd4] rounded-2xl p-5"
+                  >
+                    <div className="text-3xl mb-3">♡</div>
+                    <p className="text-xs md:text-sm font-semibold text-[#5B3B32]">
+                      {item}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+          </Container>
+        </section>
+
+        {/* SIMILAR PRODUCTS */}
+        <section className="py-10 md:py-14">
+          <Container>
+            <div className="flex items-center justify-between mb-7">
+              <div>
+                <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+                  You May Also Like
+                </p>
+                <h2 className="heading-font text-4xl text-[#5B3B32]">
+                  Similar Styles
+                </h2>
+              </div>
+
+              <Link
+                to="/products"
+                className="text-xs tracking-[0.18em] uppercase text-[#9A3F4D] font-bold"
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
+              {similarProducts.map((item) => (
+                <ProductCard key={item.id} item={item} />
+              ))}
+            </div>
+          </Container>
+        </section>
       </main>
+
+      {/* MOBILE STICKY ADD TO BAG */}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-4 py-3 flex items-center justify-between">
+        <div>
+          <p className="text-xs text-[#8b746b]">Total</p>
+          <p className="font-bold text-[#9A3F4D]">₹{product.price}</p>
+        </div>
+
+        <button
+          onClick={handleAddToBag}
+          className="bg-[#9A3F4D] text-white px-8 py-3 rounded-full text-xs tracking-[0.18em] uppercase font-bold"
+        >
+          Add To Bag
+        </button>
+      </div>
 
       <Footer />
     </>

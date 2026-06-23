@@ -9,6 +9,9 @@ import Customize from "./pages/Customize";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 
+import MobileBottomNav from "./components/MobileBottomNav";
+import WhatsAppButton from "./components/WhatsAppButton";
+
 function App() {
   return (
     <BrowserRouter>
@@ -20,11 +23,11 @@ function App() {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/customize" element={<Customize />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route
-          path="/order-success/:orderId"
-          element={<OrderSuccess />}
-        />
+        <Route path="/order-success/:orderId" element={<OrderSuccess />} />
       </Routes>
+
+      <WhatsAppButton />
+      <MobileBottomNav />
     </BrowserRouter>
   );
 }

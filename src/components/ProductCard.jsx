@@ -1,68 +1,68 @@
 import { Link } from "react-router-dom";
 import { useWishlist } from "../context/WishlistContext";
 
-function ProductCard({ item, onQuickView }) {
+function ProductCard({ item }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
+
   const liked = isInWishlist(item.id);
 
   return (
-    <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-[28px] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 duration-300 relative group">
-      {item.badge && (
-        <span className="absolute top-4 left-4 z-10 bg-[#9A3F4D] text-white text-xs px-3 py-1 rounded-full font-semibold">
-          {item.badge}
-        </span>
-      )}
-
-      <button
-        onClick={() => toggleWishlist(item)}
-        className={`absolute top-4 right-4 z-10 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl ${
-          liked ? "bg-[#9A3F4D] text-white" : "bg-white text-[#5B3B32]"
-        }`}
-      >
-        ♥
-      </button>
-
-      <div className="relative">
+    <div className="group">
+      <div className="relative overflow-hidden rounded-xl bg-[#f7f2ee]">
         <Link to={`/product/${item.id}`}>
           <img
             src={item.image}
             alt={item.name}
-            className="h-56 md:h-72 lg:h-80 w-full object-cover"
+            className="w-full aspect-[3/4] object-cover transition duration-500 group-hover:scale-105"
           />
         </Link>
 
-        {onQuickView && (
-          <button
-            onClick={onQuickView}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-[#9A3F4D] px-6 py-2 rounded-full font-bold shadow opacity-0 group-hover:opacity-100 duration-300"
+        <button
+          onClick={() => toggleWishlist(item)}
+          className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-sm flex items-center justify-center"
+        >
+          <span
+            className={`text-sm ${
+              liked ? "text-[#9A3F4D]" : "text-[#777]"
+            }`}
           >
-            Quick View
-          </button>
+            ♥
+          </span>
+        </button>
+
+        {item.badge && (
+          <span className="absolute left-3 top-3 bg-[#9A3F4D] text-white text-[10px] px-2 py-1 uppercase tracking-wider">
+            {item.badge}
+          </span>
         )}
       </div>
 
-      <div className="p-3 md:p-5">
-        <span className="text-xs bg-[#FDEAE6] text-[#9A3F4D] px-3 py-1 rounded-full">
+      <div className="pt-4 text-center">
+        <p className="text-[10px] md:text-xs tracking-[0.22em] uppercase text-[#BFA996]">
           {item.type}
-        </span>
+        </p>
 
-        <h3 className="heading-font text-2xl text-[#5B3B32] mt-3">
-          {item.name}
-        </h3>
+        <Link to={`/product/${item.id}`}>
+          <h3 className="mt-2 text-sm md:text-base font-medium text-[#3f2d28] leading-6">
+            {item.name}
+          </h3>
+        </Link>
 
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-[#9A3F4D] font-bold text-lg">
+        <div className="flex items-center justify-center gap-2 mt-3">
+          <span className="text-[#9A3F4D] font-semibold text-sm md:text-base">
             ₹{item.price}
           </span>
-          <span className="text-gray-400 line-through">₹{item.mrp}</span>
-          <span className="text-green-600 text-sm font-semibold">
-            {item.discount}
-          </span>
+
+          {item.mrp && (
+            <span className="text-gray-400 line-through text-xs">
+              ₹{item.mrp}
+            </span>
+          )}
         </div>
 
         <Link to={`/product/${item.id}`}>
-          <button className="mt-4 w-full bg-[#9A3F4D] text-white py-3 rounded-full font-semibold hover:bg-[#7d3140]">
-            View Details
+          <button className="mt-4 text-[11px] tracking-[0.18em] uppercase text-[#9A3F4D] font-semibold">
+            View Details →
           </button>
         </Link>
       </div>

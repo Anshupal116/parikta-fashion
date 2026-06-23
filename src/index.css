@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 64px;
+  }
+}
 
 :root {
   --cream: #f7f2ee;

@@ -27,39 +27,45 @@ function Products() {
     setSortBy("default");
   };
 
+  const categories = ["All", "Ready-made", "Customize"];
+  const colors = ["All", "Pink", "Red", "Yellow", "Green"];
+
   const searchedProducts = products.filter((item) => {
+    const q = search.toLowerCase();
+
     return (
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.type.toLowerCase().includes(search.toLowerCase()) ||
-      item.description.toLowerCase().includes(search.toLowerCase())
+      item.name.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q) ||
+      item.color?.toLowerCase().includes(q)
     );
   });
 
-  const categoryProducts = searchedProducts.filter((item) => {
-    if (selectedCategory === "All") return true;
-    return item.type === selectedCategory;
-  });
+  const filteredProducts = searchedProducts
+    .filter((item) => {
+      if (selectedCategory === "All") return true;
+      return item.type === selectedCategory;
+    })
+    .filter((item) => {
+      if (priceRange === "All") return true;
+      if (priceRange === "under1000") return item.price < 1000;
+      if (priceRange === "1000to3000")
+        return item.price >= 1000 && item.price <= 3000;
+      if (priceRange === "3000to8000")
+        return item.price > 3000 && item.price <= 8000;
+      if (priceRange === "above8000") return item.price > 8000;
+      return true;
+    })
+    .filter((item) => {
+      if (color === "All") return true;
+      return item.color === color;
+    });
 
-  const priceFilteredProducts = categoryProducts.filter((item) => {
-    if (priceRange === "All") return true;
-    if (priceRange === "under1000") return item.price < 1000;
-    if (priceRange === "1000to3000")
-      return item.price >= 1000 && item.price <= 3000;
-    if (priceRange === "3000to8000")
-      return item.price > 3000 && item.price <= 8000;
-    if (priceRange === "above8000") return item.price > 8000;
-    return true;
-  });
-
-  const colorFilteredProducts = priceFilteredProducts.filter((item) => {
-    if (color === "All") return true;
-    return item.color === color;
-  });
-
-  const finalProducts = [...colorFilteredProducts].sort((a, b) => {
+  const finalProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === "low-high") return a.price - b.price;
     if (sortBy === "high-low") return b.price - a.price;
     if (sortBy === "discount") return b.mrp - b.price - (a.mrp - a.price);
+    if (sortBy === "newest") return b.id - a.id;
     return 0;
   });
 
@@ -71,7 +77,7 @@ function Products() {
         </h3>
 
         <div className="grid gap-3">
-          {["All", "Ready-made", "Customize"].map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -110,17 +116,21 @@ function Products() {
           Color
         </h3>
 
-        <select
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="w-full bg-white border border-[#eadbd4] rounded-xl px-4 py-3 outline-none text-[#5B3B32]"
-        >
-          <option value="All">All Colors</option>
-          <option value="Pink">Pink</option>
-          <option value="Red">Red</option>
-          <option value="Yellow">Yellow</option>
-          <option value="Green">Green</option>
-        </select>
+        <div className="flex flex-wrap gap-3">
+          {colors.map((clr) => (
+            <button
+              key={clr}
+              onClick={() => setColor(clr)}
+              className={`px-4 py-2 rounded-full border text-sm ${
+                color === clr
+                  ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
+                  : "bg-white border-[#eadbd4] text-[#5B3B32]"
+              }`}
+            >
+              {clr}
+            </button>
+          ))}
+        </div>
       </div>
 
       <button
@@ -137,69 +147,77 @@ function Products() {
       <Navbar />
 
       <main className="bg-[#f7f2ee] min-h-screen">
-        {/* TOP HERO BANNER */}
         <section className="bg-[#fffaf7] border-b border-[#eadbd4]">
           <Container>
             <div className="py-10 md:py-16 text-center max-w-3xl mx-auto">
               <p className="text-xs tracking-[0.32em] uppercase text-[#BFA996] font-semibold">
-                New Collection 2026
+                Parikta Collection
               </p>
 
               <h1 className="heading-font text-4xl md:text-6xl text-[#5B3B32] mt-3">
-                Luxury Designer Collection
+                {search ? `Search: ${search}` : "Shop Designer Collection"}
               </h1>
 
               <p className="text-[#8b746b] text-sm md:text-base leading-7 mt-4">
-                Explore premium ready-made and custom outfits crafted for modern
-                women with timeless elegance.
+                Explore premium ready-made and custom outfits crafted with
+                timeless elegance.
               </p>
-
-              <div className="mt-7 flex justify-center gap-3">
-                <Link to="/customize">
-                  <button className="bg-[#9A3F4D] text-white px-6 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
-                    Custom Design
-                  </button>
-                </Link>
-
-                <button
-                  onClick={clearFilters}
-                  className="border border-[#9A3F4D] text-[#9A3F4D] px-6 py-3 text-xs tracking-[0.2em] uppercase font-semibold"
-                >
-                  View All
-                </button>
-              </div>
             </div>
           </Container>
         </section>
 
-        <section className="py-8 md:py-12">
+        <section className="py-6 md:py-10">
           <Container>
-            {/* MOBILE FILTER BAR */}
-            <div className="lg:hidden flex items-center justify-between mb-6 bg-[#fffaf7] border border-[#eadbd4] rounded-2xl px-4 py-3">
-              <div>
-                <p className="text-xs tracking-[0.22em] uppercase text-[#BFA996]">
-                  Collection
-                </p>
-                <p className="text-sm font-semibold text-[#5B3B32]">
-                  {finalProducts.length} products
-                </p>
+            <div className="lg:hidden mb-5">
+              <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`shrink-0 px-5 py-2 rounded-full text-xs tracking-[0.12em] uppercase border ${
+                      selectedCategory === cat
+                        ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
+                        : "bg-[#fffaf7] text-[#5B3B32] border-[#eadbd4]"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
 
-              <button
-                onClick={() => setFilterOpen(true)}
-                className="bg-[#9A3F4D] text-white px-5 py-2 rounded-full text-xs tracking-[0.18em] uppercase"
-              >
-                Filters
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setFilterOpen(true)}
+                  className="bg-[#5B3B32] text-white py-3 rounded-xl text-xs tracking-[0.18em] uppercase font-semibold"
+                >
+                  Filters
+                </button>
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-[#fffaf7] border border-[#eadbd4] rounded-xl px-4 py-3 outline-none text-[#5B3B32] text-sm"
+                >
+                  <option value="default">Sort</option>
+                  <option value="newest">Newest</option>
+                  <option value="low-high">Low to High</option>
+                  <option value="high-low">High to Low</option>
+                  <option value="discount">Best Discount</option>
+                </select>
+              </div>
+
+              <p className="text-[#8b746b] text-sm mt-4">
+                {finalProducts.length} product(s) found
+              </p>
             </div>
 
             <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-              {/* DESKTOP SIDEBAR */}
               <aside className="hidden lg:block bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 h-fit sticky top-32">
                 <div className="mb-7">
                   <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
                     Filters
                   </p>
+
                   <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
                     Refine Style
                   </h2>
@@ -208,21 +226,16 @@ function Products() {
                 <FilterContent />
               </aside>
 
-              {/* PRODUCT AREA */}
               <div>
                 <div className="hidden lg:flex items-center justify-between mb-7">
                   <div>
                     <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
-                      Parikta Collection
+                      Showing Collection
                     </p>
 
                     <h2 className="heading-font text-4xl text-[#5B3B32]">
-                      {search ? `Search: ${search}` : "All Products"}
+                      {finalProducts.length} Products
                     </h2>
-
-                    <p className="text-[#8b746b] mt-1">
-                      {finalProducts.length} product(s) found
-                    </p>
                   </div>
 
                   <select
@@ -231,19 +244,7 @@ function Products() {
                     className="bg-[#fffaf7] border border-[#eadbd4] rounded-full px-5 py-3 outline-none text-[#5B3B32]"
                   >
                     <option value="default">Sort By</option>
-                    <option value="low-high">Price: Low to High</option>
-                    <option value="high-low">Price: High to Low</option>
-                    <option value="discount">Best Discount</option>
-                  </select>
-                </div>
-
-                <div className="lg:hidden mb-5">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full bg-[#fffaf7] border border-[#eadbd4] rounded-xl px-4 py-3 outline-none text-[#5B3B32]"
-                  >
-                    <option value="default">Sort By</option>
+                    <option value="newest">Newest First</option>
                     <option value="low-high">Price: Low to High</option>
                     <option value="high-low">Price: High to Low</option>
                     <option value="discount">Best Discount</option>
@@ -276,13 +277,12 @@ function Products() {
         </section>
       </main>
 
-      {/* MOBILE FILTER DRAWER */}
       {filterOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
+        <div className="fixed inset-0 z-[150] lg:hidden">
           <div
             onClick={() => setFilterOpen(false)}
-            className="absolute inset-0 bg-black/50"
-          ></div>
+            className="absolute inset-0 bg-black/55"
+          />
 
           <div className="absolute bottom-0 left-0 right-0 bg-[#fffaf7] rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
@@ -310,9 +310,8 @@ function Products() {
         </div>
       )}
 
-      {/* QUICK VIEW */}
       {quickViewProduct && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center px-4">
           <div className="bg-[#fffaf7] rounded-3xl max-w-4xl w-full p-5 md:p-6 relative">
             <button
               onClick={() => setQuickViewProduct(null)}

@@ -122,6 +122,118 @@ function Home() {
   </div>
 </section>
 
+{/* FEATURED COLLECTION SLIDER */}
+<section className="bg-[#fffaf7] py-12 md:py-16 border-b border-[#eadbd4]">
+  <Container>
+    <div className="flex items-end justify-between mb-8">
+      <div>
+        <p className="text-xs tracking-[0.3em] uppercase text-[#BFA996]">
+          New Season Edit
+        </p>
+
+        <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-2">
+          Featured Collections
+        </h2>
+      </div>
+
+      <Link
+        to="/products"
+        className="hidden md:block text-xs tracking-[0.2em] uppercase text-[#9A3F4D] font-bold"
+      >
+        View All
+      </Link>
+    </div>
+
+    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+      {[
+        {
+          title: "Royal Wedding",
+          text: "Handcrafted elegance for special occasions.",
+          image: lehengaImg,
+          link: "/products",
+        },
+        {
+          title: "Festive Grace",
+          text: "Rich colors, soft fabrics and timeless details.",
+          image: sareeImg,
+          link: "/products",
+        },
+        {
+          title: "Modern Ethnic",
+          text: "Everyday comfort with designer finish.",
+          image: suitsImg,
+          link: "/products",
+        },
+        {
+          title: "Custom Couture",
+          text: "Create your dream outfit with Parikta.",
+          image: heroDress,
+          link: "/customize",
+        },
+      ].map((item) => (
+        <Link
+          to={item.link}
+          key={item.title}
+          className="min-w-[82%] sm:min-w-[48%] lg:min-w-[32%] snap-start relative h-[360px] md:h-[460px] rounded-3xl overflow-hidden group"
+        >
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover group-hover:scale-105 duration-700"
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2f241f]/80 via-[#2f241f]/20 to-transparent"></div>
+
+          <div className="absolute left-6 right-6 bottom-6 text-white">
+            <p className="text-xs tracking-[0.24em] uppercase text-[#eadbd4]">
+              Parikta Edit
+            </p>
+
+            <h3 className="heading-font text-4xl mt-2">
+              {item.title}
+            </h3>
+
+            <p className="text-sm leading-6 mt-3 text-[#fffaf7]">
+              {item.text}
+            </p>
+
+            <p className="mt-5 text-xs tracking-[0.2em] uppercase font-bold">
+              Explore →
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </Container>
+</section>
+
+{/* PARIKTA STATS */}
+<section className="bg-[#f7f2ee] py-12 md:py-16">
+  <Container>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+      {[
+        ["500+", "Happy Clients"],
+        ["100+", "Custom Designs"],
+        ["4.9★", "Average Rating"],
+        ["50+", "New Arrivals"],
+      ].map(([number, label]) => (
+        <div
+          key={label}
+          className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 text-center"
+        >
+          <h3 className="heading-font text-4xl md:text-5xl text-[#9A3F4D]">
+            {number}
+          </h3>
+
+          <p className="mt-3 text-xs tracking-[0.18em] uppercase text-[#5B3B32]">
+            {label}
+          </p>
+        </div>
+      ))}
+    </div>
+  </Container>
+</section>
+
       {/* SERVICE STRIP */}
       <section className="bg-[#fffaf7] border-b border-[#eadbd4] py-4">
         <Container>
@@ -321,7 +433,7 @@ function Home() {
     </Container>
   </section>
 )}
-      {/* REVIEWS */}
+  
       {/* CLIENT LOVE */}
 <section className="bg-[#f7f2ee] py-12 md:py-16">
   <Container>
@@ -456,6 +568,30 @@ function Home() {
           Follow On Instagram
         </button>
       </a>
+    </div>
+  </Container>
+</section>
+<section className="py-14 md:py-20 bg-[#5B3B32] text-white">
+  <Container>
+    <div className="max-w-4xl mx-auto text-center">
+      <p className="text-xs tracking-[0.3em] uppercase text-[#E8D7CC]">
+        Custom Couture
+      </p>
+
+      <h2 className="heading-font text-4xl md:text-6xl mt-4">
+        Ready To Create Your Dream Outfit?
+      </h2>
+
+      <p className="text-[#E8D7CC] mt-5 leading-7">
+        Share your inspiration, measurements and ideas.
+        Our team will craft a unique outfit made just for you.
+      </p>
+
+      <Link to="/customize">
+        <button className="mt-8 bg-[#9A3F4D] px-8 py-4 text-xs tracking-[0.2em] uppercase font-bold">
+          Start Custom Design
+        </button>
+      </Link>
     </div>
   </Container>
 </section>

@@ -111,3 +111,12 @@ body {
   animation: fadeUpLuxury 0.7s ease forwards;
   animation-delay: 1.25s;
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

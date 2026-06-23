@@ -14,6 +14,7 @@ import FAQ from "./pages/FAQ";
 import Lookbook from "./pages/Lookbook";
 import NewsletterPopup from "./components/NewsletterPopup";
 import LoadingScreen from "./components/LoadingScreen";
+import BackToTop from "./components/BackToTop";
 
 
 import MobileBottomNav from "./components/MobileBottomNav";
@@ -39,6 +40,7 @@ function App() {
       </Routes>
       
       <NewsletterPopup />
+      <BackToTop />
       <WhatsAppButton />
       <MobileBottomNav />
     </BrowserRouter>

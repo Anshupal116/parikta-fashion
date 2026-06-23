@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { FiHome, FiGrid, FiScissors, FiHeart, FiShoppingBag } from "react-icons/fi";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 
@@ -10,11 +11,11 @@ function MobileBottomNav() {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { label: "Home", icon: "⌂", path: "/" },
-    { label: "Shop", icon: "◈", path: "/products" },
-    { label: "Custom", icon: "✂", path: "/customize" },
-    { label: "Wishlist", icon: "♡", path: "/wishlist", count: wishlistCount },
-    { label: "Bag", icon: "👜", path: "/cart", count: cartCount },
+    { label: "Home", icon: <FiHome size={20} />, path: "/" },
+    { label: "Shop", icon: <FiGrid size={20} />, path: "/products" },
+    { label: "Custom", icon: <FiScissors size={20} />, path: "/customize" },
+    { label: "Wishlist", icon: <FiHeart size={20} />, path: "/wishlist", count: wishlistCount },
+    { label: "Bag", icon: <FiShoppingBag size={20} />, path: "/cart", count: cartCount },
   ];
 
   return (
@@ -28,8 +29,7 @@ function MobileBottomNav() {
               isActive(item.path) ? "text-[#9A3F4D]" : "text-[#6d554d]"
             }`}
           >
-            <span className="text-xl leading-none">{item.icon}</span>
-
+            {item.icon}
             <span>{item.label}</span>
 
             {item.count > 0 && (

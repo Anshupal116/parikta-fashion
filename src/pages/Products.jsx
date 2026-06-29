@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Container from "../components/Container";
 import ProductCard from "../components/ProductCard";
-import { products } from "../data/products";
+import { getProducts } from "../services/productService";
 import { useCart } from "../context/CartContext";
 
 function Products() {
   const [searchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const { addToCart } = useCart();
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("default");
@@ -20,6 +23,25 @@ function Products() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
+  const categories = ["All", "Ready-made", "Customize"];
+  const colors = ["All", "Pink", "Red", "Yellow", "Green"];
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await getProducts();
+        setProducts(data || []);
+      } catch (error) {
+        console.log(error);
+        alert("Products load failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
   const clearFilters = () => {
     setSelectedCategory("All");
     setPriceRange("All");
@@ -27,47 +49,36 @@ function Products() {
     setSortBy("default");
   };
 
-  const categories = ["All", "Ready-made", "Customize"];
-  const colors = ["All", "Pink", "Red", "Yellow", "Green"];
-
   const searchedProducts = products.filter((item) => {
     const q = search.toLowerCase();
 
     return (
-      item.name.toLowerCase().includes(q) ||
-      item.type.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.color?.toLowerCase().includes(q)
+      item.name?.toLowerCase().includes(q) ||
+      item.type?.toLowerCase().includes(q) ||
+      item.description?.toLowerCase().includes(q) ||
+      item.color?.toLowerCase().includes(q) ||
+      item.category?.toLowerCase().includes(q)
     );
   });
 
-  const filteredProducts = searchedProducts
-    .filter((item) => {
-      if (selectedCategory === "All") return true;
-      return item.type === selectedCategory;
-    })
+  const finalProducts = searchedProducts
+    .filter((item) => selectedCategory === "All" || item.type === selectedCategory)
     .filter((item) => {
       if (priceRange === "All") return true;
       if (priceRange === "under1000") return item.price < 1000;
-      if (priceRange === "1000to3000")
-        return item.price >= 1000 && item.price <= 3000;
-      if (priceRange === "3000to8000")
-        return item.price > 3000 && item.price <= 8000;
+      if (priceRange === "1000to3000") return item.price >= 1000 && item.price <= 3000;
+      if (priceRange === "3000to8000") return item.price > 3000 && item.price <= 8000;
       if (priceRange === "above8000") return item.price > 8000;
       return true;
     })
-    .filter((item) => {
-      if (color === "All") return true;
-      return item.color === color;
+    .filter((item) => color === "All" || item.color === color)
+    .sort((a, b) => {
+      if (sortBy === "low-high") return a.price - b.price;
+      if (sortBy === "high-low") return b.price - a.price;
+      if (sortBy === "discount") return b.mrp - b.price - (a.mrp - a.price);
+      if (sortBy === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
+      return 0;
     });
-
-  const finalProducts = [...filteredProducts].sort((a, b) => {
-    if (sortBy === "low-high") return a.price - b.price;
-    if (sortBy === "high-low") return b.price - a.price;
-    if (sortBy === "discount") return b.mrp - b.price - (a.mrp - a.price);
-    if (sortBy === "newest") return b.id - a.id;
-    return 0;
-  });
 
   const FilterContent = () => (
     <div className="space-y-7">
@@ -159,8 +170,7 @@ function Products() {
               </h1>
 
               <p className="text-[#8b746b] text-sm md:text-base leading-7 mt-4">
-                Explore premium ready-made and custom outfits crafted with
-                timeless elegance.
+                Explore premium ready-made and custom outfits from MongoDB.
               </p>
             </div>
           </Container>
@@ -168,132 +178,130 @@ function Products() {
 
         <section className="py-6 md:py-10">
           <Container>
-            <div className="lg:hidden mb-5">
-              <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`shrink-0 px-5 py-2 rounded-full text-xs tracking-[0.12em] uppercase border ${
-                      selectedCategory === cat
-                        ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
-                        : "bg-[#fffaf7] text-[#5B3B32] border-[#eadbd4]"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+            {loading ? (
+              <div className="text-center py-20">
+                <h2 className="heading-font text-4xl text-[#5B3B32]">
+                  Loading Collection...
+                </h2>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setFilterOpen(true)}
-                  className="bg-[#5B3B32] text-white py-3 rounded-xl text-xs tracking-[0.18em] uppercase font-semibold"
-                >
-                  Filters
-                </button>
-
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-[#fffaf7] border border-[#eadbd4] rounded-xl px-4 py-3 outline-none text-[#5B3B32] text-sm"
-                >
-                  <option value="default">Sort</option>
-                  <option value="newest">Newest</option>
-                  <option value="low-high">Low to High</option>
-                  <option value="high-low">High to Low</option>
-                  <option value="discount">Best Discount</option>
-                </select>
-              </div>
-
-              <p className="text-[#8b746b] text-sm mt-4">
-                {finalProducts.length} product(s) found
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-              <aside className="hidden lg:block bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 h-fit sticky top-32">
-                <div className="mb-7">
-                  <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
-                    Filters
-                  </p>
-
-                  <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
-                    Refine Style
-                  </h2>
-                </div>
-
-                <FilterContent />
-              </aside>
-
-              <div>
-                <div className="hidden lg:flex items-center justify-between mb-7">
-                  <div>
-                    <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
-                      Showing Collection
-                    </p>
-
-                    <h2 className="heading-font text-4xl text-[#5B3B32]">
-                      {finalProducts.length} Products
-                    </h2>
-                  </div>
-
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-[#fffaf7] border border-[#eadbd4] rounded-full px-5 py-3 outline-none text-[#5B3B32]"
-                  >
-                    <option value="default">Sort By</option>
-                    <option value="newest">Newest First</option>
-                    <option value="low-high">Price: Low to High</option>
-                    <option value="high-low">Price: High to Low</option>
-                    <option value="discount">Best Discount</option>
-                  </select>
-                </div>
-
-                {finalProducts.length === 0 ? (
-                  <div className="bg-[#fffaf7] rounded-3xl p-12 text-center border border-[#eadbd4]">
-                    <h2 className="heading-font text-3xl text-[#5B3B32]">
-                      No products found
-                    </h2>
-                    <p className="text-[#8b746b] mt-2">
-                      Try changing search, category, price or color filter.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-7">
-                    {finalProducts.map((item) => (
-                      <ProductCard
-                        key={item.id}
-                        item={item}
-                        onQuickView={() => setQuickViewProduct(item)}
-                      />
+            ) : (
+              <>
+                <div className="lg:hidden mb-5">
+                  <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`shrink-0 px-5 py-2 rounded-full text-xs tracking-[0.12em] uppercase border ${
+                          selectedCategory === cat
+                            ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
+                            : "bg-[#fffaf7] text-[#5B3B32] border-[#eadbd4]"
+                        }`}
+                      >
+                        {cat}
+                      </button>
                     ))}
                   </div>
-                )}
-              </div>
-            </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setFilterOpen(true)}
+                      className="bg-[#5B3B32] text-white py-3 rounded-xl text-xs tracking-[0.18em] uppercase font-semibold"
+                    >
+                      Filters
+                    </button>
+
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="bg-[#fffaf7] border border-[#eadbd4] rounded-xl px-4 py-3 outline-none text-[#5B3B32] text-sm"
+                    >
+                      <option value="default">Sort</option>
+                      <option value="newest">Newest</option>
+                      <option value="low-high">Low to High</option>
+                      <option value="high-low">High to Low</option>
+                      <option value="discount">Best Discount</option>
+                    </select>
+                  </div>
+
+                  <p className="text-[#8b746b] text-sm mt-4">
+                    {finalProducts.length} product(s) found
+                  </p>
+                </div>
+
+                <div className="grid lg:grid-cols-[280px_1fr] gap-8">
+                  <aside className="hidden lg:block bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 h-fit sticky top-32">
+                    <div className="mb-7">
+                      <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+                        Filters
+                      </p>
+
+                      <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
+                        Refine Style
+                      </h2>
+                    </div>
+
+                    <FilterContent />
+                  </aside>
+
+                  <div>
+                    <div className="hidden lg:flex items-center justify-between mb-7">
+                      <div>
+                        <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+                          Showing Collection
+                        </p>
+
+                        <h2 className="heading-font text-4xl text-[#5B3B32]">
+                          {finalProducts.length} Products
+                        </h2>
+                      </div>
+
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="bg-[#fffaf7] border border-[#eadbd4] rounded-full px-5 py-3 outline-none text-[#5B3B32]"
+                      >
+                        <option value="default">Sort By</option>
+                        <option value="newest">Newest First</option>
+                        <option value="low-high">Price: Low to High</option>
+                        <option value="high-low">Price: High to Low</option>
+                        <option value="discount">Best Discount</option>
+                      </select>
+                    </div>
+
+                    {finalProducts.length === 0 ? (
+                      <div className="bg-[#fffaf7] rounded-3xl p-12 text-center border border-[#eadbd4]">
+                        <h2 className="heading-font text-3xl text-[#5B3B32]">
+                          No products found
+                        </h2>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-7">
+                        {finalProducts.map((item) => (
+                          <ProductCard
+                            key={item._id}
+                            item={item}
+                            onQuickView={() => setQuickViewProduct(item)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </Container>
         </section>
       </main>
 
       {filterOpen && (
         <div className="fixed inset-0 z-[150] lg:hidden">
-          <div
-            onClick={() => setFilterOpen(false)}
-            className="absolute inset-0 bg-black/55"
-          />
+          <div onClick={() => setFilterOpen(false)} className="absolute inset-0 bg-black/55" />
 
           <div className="absolute bottom-0 left-0 right-0 bg-[#fffaf7] rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="heading-font text-3xl text-[#5B3B32]">
-                Filters
-              </h2>
-
-              <button
-                onClick={() => setFilterOpen(false)}
-                className="text-3xl text-[#5B3B32]"
-              >
+              <h2 className="heading-font text-3xl text-[#5B3B32]">Filters</h2>
+              <button onClick={() => setFilterOpen(false)} className="text-3xl text-[#5B3B32]">
                 ×
               </button>
             </div>
@@ -357,7 +365,7 @@ function Products() {
                 <div className="flex gap-3 mt-8">
                   <button
                     onClick={() => {
-                      addToCart(quickViewProduct);
+                      addToCart({ ...quickViewProduct, id: quickViewProduct._id });
                       setQuickViewProduct(null);
                     }}
                     className="flex-1 bg-[#9A3F4D] text-white py-4 rounded-xl font-bold text-sm"
@@ -366,7 +374,7 @@ function Products() {
                   </button>
 
                   <Link
-                    to={`/product/${quickViewProduct.id}`}
+                    to={`/product/${quickViewProduct._id}`}
                     className="flex-1 border-2 border-[#9A3F4D] text-[#9A3F4D] py-4 rounded-xl font-bold text-center text-sm"
                   >
                     DETAILS

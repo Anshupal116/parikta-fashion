@@ -1,40 +1,62 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { products } from "../../data/products";
+import {
+  getProducts,
+  deleteProduct,
+} from "../../services/productService";
 
 function ProductsAdmin() {
-  const [allProducts, setAllProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const loadProducts = () => {
-    const adminProducts =
-      JSON.parse(localStorage.getItem("parikta_admin_products")) || [];
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
 
-    setAllProducts([...adminProducts, ...products]);
+      const data = await getProducts();
+
+      setProducts(data || []);
+    } catch (error) {
+      console.log(error);
+      alert("Failed to load products");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadProducts();
   }, []);
 
-  const deleteProduct = (id) => {
+  const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
     );
 
     if (!confirmDelete) return;
 
-    const adminProducts =
-      JSON.parse(localStorage.getItem("parikta_admin_products")) || [];
+    try {
+      const response = await deleteProduct(id);
 
-    const updatedProducts = adminProducts.filter((item) => item.id !== id);
-
-    localStorage.setItem(
-      "parikta_admin_products",
-      JSON.stringify(updatedProducts)
-    );
-
-    loadProducts();
+      if (response.success) {
+        alert("Product deleted successfully");
+        loadProducts();
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Delete failed");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold text-[#5B3B32]">
+          Loading Products...
+        </h2>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -62,7 +84,7 @@ function ProductsAdmin() {
             <tr>
               <th className="p-4">Image</th>
               <th className="p-4">Product</th>
-              <th className="p-4">Type</th>
+              <th className="p-4">Category</th>
               <th className="p-4">Color</th>
               <th className="p-4">Stock</th>
               <th className="p-4">Price</th>
@@ -72,86 +94,82 @@ function ProductsAdmin() {
           </thead>
 
           <tbody>
-            {allProducts.map((item) => {
-              const isAdminProduct =
-                JSON.parse(
-                  localStorage.getItem("parikta_admin_products")
-                )?.some((product) => product.id === item.id) || false;
+            {products.map((item) => (
+              <tr
+                key={item._id}
+                className="border-t border-[#eadbd4] text-[#5B3B32]"
+              >
+                <td className="p-4">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-16 h-20 object-cover rounded-xl"
+                  />
+                </td>
 
-              return (
-                <tr
-                  key={item.id}
-                  className="border-t border-[#eadbd4] text-[#5B3B32]"
-                >
-                  <td className="p-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-20 object-cover rounded-xl"
-                    />
-                  </td>
+                <td className="p-4">
+                  <p className="font-semibold">{item.name}</p>
 
-                  <td className="p-4">
-                    <p className="font-semibold">{item.name}</p>
+                  {item.badge && (
+                    <span className="inline-block mt-1 bg-[#9A3F4D] text-white text-xs px-2 py-1 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </td>
 
-                    {item.badge && (
-                      <span className="inline-block mt-1 bg-[#9A3F4D] text-white text-xs px-2 py-1 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
-                  </td>
+                <td className="p-4">{item.category}</td>
 
-                  <td className="p-4">{item.type}</td>
-                  <td className="p-4">{item.color || "-"}</td>
-                  <td className="p-4">{item.stock ?? "-"}</td>
+                <td className="p-4">
+                  {item.color || "-"}
+                </td>
 
-                  <td className="p-4 font-bold text-[#9A3F4D]">
-                    ₹{item.price}
-                  </td>
+                <td className="p-4">
+                  {item.stock}
+                </td>
 
-                  <td className="p-4 text-gray-500 line-through">
-                    ₹{item.mrp}
-                  </td>
+                <td className="p-4 font-bold text-[#9A3F4D]">
+                  ₹{item.price}
+                </td>
 
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                     <Link to={`/admin-dashboard/edit-product/${item.id}`}>
-  <button
-    disabled={!isAdminProduct}
-    className={`px-4 py-2 rounded-lg text-sm text-white ${
-      isAdminProduct
-        ? "bg-[#5B3B32]"
-        : "bg-gray-400 cursor-not-allowed"
-    }`}
-  >
-    Edit
-  </button>
-</Link>
+                <td className="p-4 text-gray-500 line-through">
+                  ₹{item.mrp}
+                </td>
 
-                      <button
-                        disabled={!isAdminProduct}
-                        onClick={() => deleteProduct(item.id)}
-                        className={`px-4 py-2 rounded-lg text-sm text-white ${
-                          isAdminProduct
-                            ? "bg-red-500"
-                            : "bg-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        Delete
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/admin-dashboard/edit-product/${item._id}`}
+                    >
+                      <button className="bg-[#5B3B32] text-white px-4 py-2 rounded-lg text-sm">
+                        Edit
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
-      </div>
 
-      <p className="text-sm text-[#8b746b] mt-4">
-        Note: Default products cannot be deleted here. Only admin-added products
-        can be deleted.
-      </p>
+        {products.length === 0 && (
+          <div className="text-center py-16">
+            <h3 className="text-2xl font-semibold text-[#5B3B32]">
+              No Products Found
+            </h3>
+
+            <p className="text-[#8b746b] mt-2">
+              Add your first product.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

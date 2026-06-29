@@ -1,70 +1,83 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getProductById, updateProduct } from "../../services/productService";
 
 function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [form, setForm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const adminProducts =
-      JSON.parse(localStorage.getItem("parikta_admin_products")) || [];
+    const loadProduct = async () => {
+      try {
+        const response = await getProductById(id);
 
-    const product = adminProducts.find((item) => item.id === Number(id));
+        if (response.success) {
+          setForm(response.product);
+        } else {
+          alert("Product not found");
+          navigate("/admin-dashboard/products");
+        }
+      } catch (error) {
+        console.log(error);
+        alert("Product load failed");
+        navigate("/admin-dashboard/products");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (!product) {
-      alert("Only admin-added products can be edited.");
-      navigate("/admin-dashboard/products");
-      return;
-    }
-
-    setForm(product);
+    loadProduct();
   }, [id, navigate]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    if (files && files[0]) {
-      setForm({
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setSaving(true);
+
+      const productData = {
         ...form,
-        [name]: URL.createObjectURL(files[0]),
-      });
-    } else {
-      setForm({
-        ...form,
-        [name]: value,
-      });
+        price: Number(form.price),
+        mrp: Number(form.mrp),
+        stock: Number(form.stock),
+      };
+
+      const response = await updateProduct(id, productData);
+
+      if (response.success) {
+        alert("Product updated successfully ✅");
+        navigate("/admin-dashboard/products");
+      } else {
+        alert(response.message || "Product update failed");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Server error. Product update nahi hua.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const adminProducts =
-      JSON.parse(localStorage.getItem("parikta_admin_products")) || [];
-
-    const updatedProducts = adminProducts.map((item) =>
-      item.id === Number(id)
-        ? {
-            ...form,
-            price: Number(form.price),
-            mrp: Number(form.mrp),
-            stock: Number(form.stock),
-          }
-        : item
+  if (loading || !form) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold text-[#5B3B32]">
+          Loading Product...
+        </h2>
+      </div>
     );
-
-    localStorage.setItem(
-      "parikta_admin_products",
-      JSON.stringify(updatedProducts)
-    );
-
-    alert("Product updated successfully ✅");
-    navigate("/admin-dashboard/products");
-  };
-
-  if (!form) return null;
+  }
 
   return (
     <div>
@@ -72,8 +85,9 @@ function EditProduct() {
         <h1 className="heading-font text-4xl text-[#5B3B32]">
           Edit Product
         </h1>
+
         <p className="text-[#8b746b] mt-2">
-          Update admin-added product details.
+          Update product directly in MongoDB.
         </p>
       </div>
 
@@ -97,9 +111,31 @@ function EditProduct() {
             onChange={handleChange}
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           >
-            <option>Ready-made</option>
-            <option>Customize</option>
+            <option value="Ready-made">Ready-made</option>
+            <option value="Customize">Customize</option>
           </select>
+
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+          >
+            <option value="Suit">Suit</option>
+            <option value="Saree">Saree</option>
+            <option value="Kurti">Kurti</option>
+            <option value="Lehenga">Lehenga</option>
+            <option value="Gown">Gown</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <input
+            name="color"
+            value={form.color}
+            onChange={handleChange}
+            placeholder="Color"
+            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+          />
 
           <input
             name="price"
@@ -122,11 +158,10 @@ function EditProduct() {
           />
 
           <input
-            name="color"
-            value={form.color}
+            name="discount"
+            value={form.discount}
             onChange={handleChange}
-            placeholder="Color"
-            required
+            placeholder="Discount e.g. 30% OFF"
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
@@ -137,10 +172,10 @@ function EditProduct() {
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           >
             <option value="">Select Badge</option>
-            <option>New Arrival</option>
-            <option>Best Seller</option>
-            <option>Trending</option>
-            <option>Limited Edition</option>
+            <option value="New Arrival">New Arrival</option>
+            <option value="Best Seller">Best Seller</option>
+            <option value="Trending">Trending</option>
+            <option value="Limited Edition">Limited Edition</option>
           </select>
 
           <input
@@ -154,18 +189,19 @@ function EditProduct() {
 
           <input
             name="image"
-            type="file"
-            accept="image/*"
+            value={form.image}
             onChange={handleChange}
+            placeholder="Main Image URL"
+            required
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
           <input
             name="hoverImage"
-            type="file"
-            accept="image/*"
+            value={form.hoverImage || ""}
             onChange={handleChange}
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+            placeholder="Hover Image URL"
+            className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
           />
 
           <textarea
@@ -179,40 +215,27 @@ function EditProduct() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-5 mt-6">
-          {form.image && (
-            <div>
-              <p className="font-semibold text-[#5B3B32] mb-2">
-                Main Image Preview
-              </p>
-              <img
-                src={form.image}
-                alt="Main Preview"
-                className="w-40 h-52 object-cover rounded-xl border"
-              />
-            </div>
-          )}
+        {form.image && (
+          <div className="mt-6">
+            <p className="font-semibold text-[#5B3B32] mb-2">
+              Image Preview
+            </p>
 
-          {form.hoverImage && (
-            <div>
-              <p className="font-semibold text-[#5B3B32] mb-2">
-                Hover Image Preview
-              </p>
-              <img
-                src={form.hoverImage}
-                alt="Hover Preview"
-                className="w-40 h-52 object-cover rounded-xl border"
-              />
-            </div>
-          )}
-        </div>
+            <img
+              src={form.image}
+              alt="Preview"
+              className="w-40 h-52 object-cover rounded-xl border"
+            />
+          </div>
+        )}
 
         <div className="flex gap-4 mt-8">
           <button
             type="submit"
-            className="bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold"
+            disabled={saving}
+            className="bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold disabled:opacity-60"
           >
-            UPDATE PRODUCT
+            {saving ? "UPDATING..." : "UPDATE PRODUCT"}
           </button>
 
           <button

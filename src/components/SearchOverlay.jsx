@@ -1,10 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { products } from "../data/products";
+import { getProducts } from "../services/productService";
 
 function SearchOverlay({ isOpen, onClose }) {
   const [query, setQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+        setProducts(data || []);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -14,9 +35,11 @@ function SearchOverlay({ isOpen, onClose }) {
     const search = query.toLowerCase();
 
     return (
-      item.name.toLowerCase().includes(search) ||
-      item.type.toLowerCase().includes(search) ||
-      item.description.toLowerCase().includes(search)
+      item.name?.toLowerCase().includes(search) ||
+      item.type?.toLowerCase().includes(search) ||
+      item.category?.toLowerCase().includes(search) ||
+      item.description?.toLowerCase().includes(search) ||
+      item.color?.toLowerCase().includes(search)
     );
   });
 
@@ -25,8 +48,14 @@ function SearchOverlay({ isOpen, onClose }) {
 
     if (query.trim()) {
       navigate(`/products?search=${query}`);
+      setQuery("");
       onClose();
     }
+  };
+
+  const closeSearch = () => {
+    setQuery("");
+    onClose();
   };
 
   return (
@@ -38,15 +67,13 @@ function SearchOverlay({ isOpen, onClose }) {
               <p className="text-xs tracking-[0.3em] uppercase text-[#BFA996]">
                 Parikta Search
               </p>
+
               <h2 className="heading-font text-4xl text-[#5B3B32]">
                 Find Your Style
               </h2>
             </div>
 
-            <button
-              onClick={onClose}
-              className="text-4xl text-[#5B3B32]"
-            >
+            <button onClick={closeSearch} className="text-4xl text-[#5B3B32]">
               ×
             </button>
           </div>
@@ -79,7 +106,15 @@ function SearchOverlay({ isOpen, onClose }) {
             </div>
           </div>
 
-          {query && (
+          {loading && (
+            <div className="mt-8 bg-[#f7f2ee] rounded-2xl p-6 text-center">
+              <p className="text-[#5B3B32] font-semibold">
+                Loading products...
+              </p>
+            </div>
+          )}
+
+          {query && !loading && (
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-xs tracking-[0.25em] uppercase text-[#BFA996]">
@@ -89,6 +124,7 @@ function SearchOverlay({ isOpen, onClose }) {
                 <button
                   onClick={() => {
                     navigate(`/products?search=${query}`);
+                    setQuery("");
                     onClose();
                   }}
                   className="text-[#9A3F4D] text-xs tracking-[0.18em] uppercase font-bold"
@@ -107,9 +143,9 @@ function SearchOverlay({ isOpen, onClose }) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {filteredProducts.slice(0, 4).map((item) => (
                     <Link
-                      key={item.id}
-                      to={`/product/${item.id}`}
-                      onClick={onClose}
+                      key={item._id}
+                      to={`/product/${item._id}`}
+                      onClick={closeSearch}
                       className="bg-[#f7f2ee] rounded-2xl overflow-hidden border border-[#eadbd4]"
                     >
                       <img
@@ -136,10 +172,7 @@ function SearchOverlay({ isOpen, onClose }) {
         </div>
       </div>
 
-      <button
-        onClick={onClose}
-        className="absolute inset-0 -z-10"
-      ></button>
+      <button onClick={closeSearch} className="absolute inset-0 -z-10"></button>
     </div>
   );
 }

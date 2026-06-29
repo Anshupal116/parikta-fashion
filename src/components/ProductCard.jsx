@@ -4,12 +4,13 @@ import { useWishlist } from "../context/WishlistContext";
 function ProductCard({ item }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const liked = isInWishlist(item.id);
+  const productId = item._id || item.id;
+  const liked = isInWishlist(productId);
 
   return (
     <div className="group">
       <div className="relative overflow-hidden rounded-xl bg-[#f7f2ee]">
-        <Link to={`/product/${item.id}`}>
+        <Link to={`/product/${productId}`}>
           <img
             src={item.image}
             alt={item.name}
@@ -18,14 +19,10 @@ function ProductCard({ item }) {
         </Link>
 
         <button
-          onClick={() => toggleWishlist(item)}
+          onClick={() => toggleWishlist({ ...item, id: productId })}
           className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-sm flex items-center justify-center"
         >
-          <span
-            className={`text-sm ${
-              liked ? "text-[#9A3F4D]" : "text-[#777]"
-            }`}
-          >
+          <span className={`text-sm ${liked ? "text-[#9A3F4D]" : "text-[#777]"}`}>
             ♥
           </span>
         </button>
@@ -42,7 +39,7 @@ function ProductCard({ item }) {
           {item.type}
         </p>
 
-        <Link to={`/product/${item.id}`}>
+        <Link to={`/product/${productId}`}>
           <h3 className="mt-2 text-sm md:text-base font-medium text-[#3f2d28] leading-6">
             {item.name}
           </h3>
@@ -60,7 +57,7 @@ function ProductCard({ item }) {
           )}
         </div>
 
-        <Link to={`/product/${item.id}`}>
+        <Link to={`/product/${productId}`}>
           <button className="mt-4 text-[11px] tracking-[0.18em] uppercase text-[#9A3F4D] font-semibold">
             View Details →
           </button>

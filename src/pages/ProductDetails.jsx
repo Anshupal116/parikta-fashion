@@ -6,26 +6,83 @@ import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import Container from "../components/Container";
 import { useCart } from "../context/CartContext";
-import { products } from "../data/products";
 import { useRecentlyViewed } from "../context/RecentlyViewedContext";
+import { getProductById, getProducts } from "../services/productService";
 
 function ProductDetails() {
   const { id } = useParams();
   const { addToCart } = useCart();
   const { addRecentlyViewed } = useRecentlyViewed();
 
-  const product = products.find((item) => item.id === Number(id));
-
+  const [product, setProduct] = useState(null);
+  const [similarProducts, setSimilarProducts] = useState([]);
+  const [mainImage, setMainImage] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [added, setAdded] = useState(false);
-  const [mainImage, setMainImage] = useState(product?.image);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (product) {
-      addRecentlyViewed(product);
-      setMainImage(product.image);
-    }
-  }, [product]);
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+
+        const response = await getProductById(id);
+
+        if (response.success) {
+          const productData = response.product;
+
+          setProduct(productData);
+          setMainImage(productData.image);
+          addRecentlyViewed({
+            ...productData,
+            id: productData._id,
+          });
+
+          const allProducts = await getProducts();
+
+          const similar = allProducts
+            .filter((item) => item._id !== productData._id)
+            .slice(0, 4);
+
+          setSimilarProducts(similar);
+        }
+      } catch (error) {
+        console.log(error);
+        alert("Product load failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [id]);
+
+  const handleAddToBag = () => {
+    addToCart({
+      ...product,
+      id: product._id,
+    });
+
+    setAdded(true);
+
+    setTimeout(() => {
+      setAdded(false);
+    }, 2000);
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
+          <h1 className="heading-font text-4xl text-[#5B3B32]">
+            Loading Product...
+          </h1>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!product) {
     return (
@@ -41,18 +98,11 @@ function ProductDetails() {
     );
   }
 
-  const handleAddToBag = () => {
-    addToCart(product);
-    setAdded(true);
-
-    setTimeout(() => {
-      setAdded(false);
-    }, 2000);
-  };
-
-  const similarProducts = products
-    .filter((item) => item.id !== product.id)
-    .slice(0, 4);
+  const galleryImages = [
+    product.image,
+    product.hoverImage,
+    ...(product.images || []),
+  ].filter(Boolean);
 
   return (
     <>
@@ -84,25 +134,23 @@ function ProductDetails() {
                 </div>
 
                 <div className="grid grid-cols-4 gap-3 mt-3">
-                  {[product.image, product.image, product.image, product.image].map(
-                    (img, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setMainImage(img)}
-                        className={`h-24 md:h-32 rounded-2xl overflow-hidden border ${
-                          mainImage === img
-                            ? "border-[#9A3F4D]"
-                            : "border-[#eadbd4]"
-                        }`}
-                      >
-                        <img
-                          src={img}
-                          alt={product.name}
-                          className="w-full h-full object-cover object-top"
-                        />
-                      </button>
-                    )
-                  )}
+                  {galleryImages.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setMainImage(img)}
+                      className={`h-24 md:h-32 rounded-2xl overflow-hidden border ${
+                        mainImage === img
+                          ? "border-[#9A3F4D]"
+                          : "border-[#eadbd4]"
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={product.name}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -150,6 +198,13 @@ function ProductDetails() {
                   <p className="text-green-600 text-sm mt-2">
                     Inclusive of all taxes
                   </p>
+
+                  <p className="text-sm mt-3 text-[#5B3B32]">
+                    Stock:{" "}
+                    <span className="font-bold">
+                      {product.stock > 0 ? `${product.stock} available` : "Out of stock"}
+                    </span>
+                  </p>
                 </div>
 
                 <div className="mt-6">
@@ -183,7 +238,8 @@ function ProductDetails() {
                 <div className="grid grid-cols-2 gap-4 mt-7">
                   <button
                     onClick={handleAddToBag}
-                    className="bg-[#9A3F4D] text-white py-4 rounded-xl font-bold text-sm tracking-[0.12em] uppercase hover:bg-[#7d3140]"
+                    disabled={product.stock <= 0}
+                    className="bg-[#9A3F4D] text-white py-4 rounded-xl font-bold text-sm tracking-[0.12em] uppercase hover:bg-[#7d3140] disabled:opacity-50"
                   >
                     Add To Bag
                   </button>
@@ -280,7 +336,7 @@ function ProductDetails() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
               {similarProducts.map((item) => (
-                <ProductCard key={item.id} item={item} />
+                <ProductCard key={item._id} item={item} />
               ))}
             </div>
           </Container>
@@ -295,7 +351,8 @@ function ProductDetails() {
 
         <button
           onClick={handleAddToBag}
-          className="bg-[#9A3F4D] text-white px-8 py-3 rounded-full text-xs tracking-[0.18em] uppercase font-bold"
+          disabled={product.stock <= 0}
+          className="bg-[#9A3F4D] text-white px-8 py-3 rounded-full text-xs tracking-[0.18em] uppercase font-bold disabled:opacity-50"
         >
           Add To Bag
         </button>

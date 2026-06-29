@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import Container from "../components/Container";
 
+
 import heroDress from "../assets/hero-dress.png";
 import suitsImg from "../assets/categories/suits.png";
 import sareeImg from "../assets/categories/saree.png";
@@ -12,7 +13,9 @@ import kurtiImg from "../assets/categories/kurti.png";
 import lehengaImg from "../assets/categories/lehenga.png";
 import { useRecentlyViewed } from "../context/RecentlyViewedContext"; 
 
-import { products } from "../data/products";
+
+import { useEffect, useState } from "react";
+import { getProducts } from "../services/productService";
 
 const banners = [
   {
@@ -53,6 +56,24 @@ const reviews = [
 
 function Home() {
   const { recentlyViewed } = useRecentlyViewed();
+
+  const [products, setProducts] = useState([]);
+const [loadingProducts, setLoadingProducts] = useState(true);
+
+useEffect(() => {
+  const loadProducts = async () => {
+    try {
+      const data = await getProducts();
+      setProducts(data || []);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  loadProducts();
+}, []);
 
   return (
     <>
@@ -338,10 +359,16 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
-            {products.slice(0, 4).map((item) => (
-              <ProductCard key={item.id} item={item} />
-            ))}
-          </div>
+  {loadingProducts ? (
+    <p className="text-center text-[#8b746b] col-span-full">
+      Loading products...
+    </p>
+  ) : (
+    products.slice(0, 4).map((item) => (
+      <ProductCard key={item._id} item={item} />
+    ))
+  )}
+</div>
         </Container>
       </section>
 
@@ -397,10 +424,16 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
-            {products.slice(0, 4).map((item) => (
-              <ProductCard key={item.id} item={item} />
-            ))}
-          </div>
+  {loadingProducts ? (
+    <p className="text-center text-[#8b746b] col-span-full">
+      Loading products...
+    </p>
+  ) : (
+    products.slice(0, 4).map((item) => (
+      <ProductCard key={item._id} item={item} />
+    ))
+  )}
+</div>
         </Container>
       </section>
 {recentlyViewed.length > 0 && (
@@ -426,10 +459,16 @@ function Home() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
-        {recentlyViewed.map((item) => (
-          <ProductCard key={item.id} item={item} />
-        ))}
-      </div>
+  {loadingProducts ? (
+    <p className="text-center text-[#8b746b] col-span-full">
+      Loading products...
+    </p>
+  ) : (
+    products.slice(0, 4).map((item) => (
+      <ProductCard key={item._id} item={item} />
+    ))
+  )}
+</div>
     </Container>
   </section>
 )}

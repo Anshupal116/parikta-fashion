@@ -1,11 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createProduct } from "../../services/productService";
 
 function AddProduct() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: "",
     type: "Ready-made",
+    category: "Suit",
     price: "",
     mrp: "",
+    discount: "",
     color: "",
     badge: "",
     stock: "",
@@ -14,57 +20,47 @@ function AddProduct() {
     hoverImage: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-
-    if (files && files[0]) {
-      const imageUrl = URL.createObjectURL(files[0]);
-
-      setForm({
-        ...form,
-        [name]: imageUrl,
-      });
-    } else {
-      setForm({
-        ...form,
-        [name]: value,
-      });
-    }
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const existingProducts =
-      JSON.parse(localStorage.getItem("parikta_admin_products")) || [];
+    if (!form.image.trim()) {
+      alert("Image URL required hai");
+      return;
+    }
 
-    const newProduct = {
-      ...form,
-      id: Date.now(),
-      price: Number(form.price),
-      mrp: Number(form.mrp),
-      stock: Number(form.stock),
-    };
+    try {
+      setLoading(true);
 
-    localStorage.setItem(
-      "parikta_admin_products",
-      JSON.stringify([newProduct, ...existingProducts])
-    );
+      const productData = {
+        ...form,
+        price: Number(form.price),
+        mrp: Number(form.mrp),
+        stock: Number(form.stock),
+      };
 
-    alert("Product added successfully ✅");
+      const response = await createProduct(productData);
 
-    setForm({
-      name: "",
-      type: "Ready-made",
-      price: "",
-      mrp: "",
-      color: "",
-      badge: "",
-      stock: "",
-      description: "",
-      image: "",
-      hoverImage: "",
-    });
+      if (response.success) {
+        alert("Product added successfully ✅");
+        navigate("/admin-dashboard/products");
+      } else {
+        alert(response.message || "Product add failed");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Server error. Product add nahi hua.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,7 +70,7 @@ function AddProduct() {
           Add Product
         </h1>
         <p className="text-[#8b746b] mt-2">
-          Add a new product to Parikta Fashion collection.
+          Product directly MongoDB me save hoga.
         </p>
       </div>
 
@@ -98,9 +94,31 @@ function AddProduct() {
             onChange={handleChange}
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           >
-            <option>Ready-made</option>
-            <option>Customize</option>
+            <option value="Ready-made">Ready-made</option>
+            <option value="Customize">Customize</option>
           </select>
+
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+          >
+            <option value="Suit">Suit</option>
+            <option value="Saree">Saree</option>
+            <option value="Kurti">Kurti</option>
+            <option value="Lehenga">Lehenga</option>
+            <option value="Gown">Gown</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <input
+            name="color"
+            value={form.color}
+            onChange={handleChange}
+            placeholder="Color"
+            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+          />
 
           <input
             name="price"
@@ -123,11 +141,10 @@ function AddProduct() {
           />
 
           <input
-            name="color"
-            value={form.color}
+            name="discount"
+            value={form.discount}
             onChange={handleChange}
-            placeholder="Color"
-            required
+            placeholder="Discount e.g. 30% OFF"
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
@@ -138,10 +155,10 @@ function AddProduct() {
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           >
             <option value="">Select Badge</option>
-            <option>New Arrival</option>
-            <option>Best Seller</option>
-            <option>Trending</option>
-            <option>Limited Edition</option>
+            <option value="New Arrival">New Arrival</option>
+            <option value="Best Seller">Best Seller</option>
+            <option value="Trending">Trending</option>
+            <option value="Limited Edition">Limited Edition</option>
           </select>
 
           <input
@@ -155,18 +172,19 @@ function AddProduct() {
 
           <input
             name="image"
-            type="file"
-            accept="image/*"
+            value={form.image}
             onChange={handleChange}
+            placeholder="Main Image URL"
+            required
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
           <input
             name="hoverImage"
-            type="file"
-            accept="image/*"
+            value={form.hoverImage}
             onChange={handleChange}
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+            placeholder="Hover Image URL"
+            className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
           />
 
           <textarea
@@ -180,41 +198,25 @@ function AddProduct() {
           />
         </div>
 
-        {(form.image || form.hoverImage) && (
-          <div className="grid grid-cols-2 gap-5 mt-6">
-            {form.image && (
-              <div>
-                <p className="font-semibold text-[#5B3B32] mb-2">
-                  Main Image Preview
-                </p>
-                <img
-                  src={form.image}
-                  alt="Preview"
-                  className="w-40 h-52 object-cover rounded-xl border"
-                />
-              </div>
-            )}
-
-            {form.hoverImage && (
-              <div>
-                <p className="font-semibold text-[#5B3B32] mb-2">
-                  Hover Image Preview
-                </p>
-                <img
-                  src={form.hoverImage}
-                  alt="Preview"
-                  className="w-40 h-52 object-cover rounded-xl border"
-                />
-              </div>
-            )}
+        {form.image && (
+          <div className="mt-6">
+            <p className="font-semibold text-[#5B3B32] mb-2">
+              Image Preview
+            </p>
+            <img
+              src={form.image}
+              alt="Preview"
+              className="w-40 h-52 object-cover rounded-xl border"
+            />
           </div>
         )}
 
         <button
           type="submit"
-          className="mt-8 bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold"
+          disabled={loading}
+          className="mt-8 bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold disabled:opacity-60"
         >
-          SAVE PRODUCT
+          {loading ? "SAVING..." : "SAVE PRODUCT"}
         </button>
       </form>
     </div>

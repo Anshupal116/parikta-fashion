@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createProduct } from "../../services/productService";
+import { uploadImage } from "../../services/uploadService";
 
 function AddProduct() {
   const navigate = useNavigate();
@@ -20,7 +21,9 @@ function AddProduct() {
     hoverImage: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploadingMain, setUploadingMain] = useState(false);
+  const [uploadingHover, setUploadingHover] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -29,16 +32,43 @@ function AddProduct() {
     });
   };
 
+  const handleImageUpload = async (e, fieldName) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      if (fieldName === "image") setUploadingMain(true);
+      if (fieldName === "hoverImage") setUploadingHover(true);
+
+      const response = await uploadImage(file);
+
+      if (response.success) {
+        setForm((prev) => ({
+          ...prev,
+          [fieldName]: response.imageUrl,
+        }));
+      } else {
+        alert(response.message || "Image upload failed");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Image upload nahi hui");
+    } finally {
+      setUploadingMain(false);
+      setUploadingHover(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.image.trim()) {
-      alert("Image URL required hai");
+    if (!form.image) {
+      alert("Main image required hai");
       return;
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
 
       const productData = {
         ...form,
@@ -59,7 +89,7 @@ function AddProduct() {
       console.log(error);
       alert("Server error. Product add nahi hua.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -70,7 +100,7 @@ function AddProduct() {
           Add Product
         </h1>
         <p className="text-[#8b746b] mt-2">
-          Product directly MongoDB me save hoga.
+          Upload images to Cloudinary and save product in MongoDB.
         </p>
       </div>
 
@@ -170,22 +200,59 @@ function AddProduct() {
             className="border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
-          <input
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-            placeholder="Main Image URL"
-            required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+          <div className="border border-[#eadbd4] rounded-xl p-4 bg-white">
+            <p className="font-semibold text-[#5B3B32] mb-2">
+              Main Image *
+            </p>
 
-          <input
-            name="hoverImage"
-            value={form.hoverImage}
-            onChange={handleChange}
-            placeholder="Hover Image URL"
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
-          />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload(e, "image")}
+              className="w-full"
+            />
+
+            {uploadingMain && (
+              <p className="text-sm text-[#9A3F4D] mt-2">
+                Uploading main image...
+              </p>
+            )}
+
+            {form.image && (
+              <img
+                src={form.image}
+                alt="Main Preview"
+                className="w-32 h-40 object-cover rounded-xl border mt-4"
+              />
+            )}
+          </div>
+
+          <div className="border border-[#eadbd4] rounded-xl p-4 bg-white">
+            <p className="font-semibold text-[#5B3B32] mb-2">
+              Hover Image
+            </p>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload(e, "hoverImage")}
+              className="w-full"
+            />
+
+            {uploadingHover && (
+              <p className="text-sm text-[#9A3F4D] mt-2">
+                Uploading hover image...
+              </p>
+            )}
+
+            {form.hoverImage && (
+              <img
+                src={form.hoverImage}
+                alt="Hover Preview"
+                className="w-32 h-40 object-cover rounded-xl border mt-4"
+              />
+            )}
+          </div>
 
           <textarea
             name="description"
@@ -198,25 +265,12 @@ function AddProduct() {
           />
         </div>
 
-        {form.image && (
-          <div className="mt-6">
-            <p className="font-semibold text-[#5B3B32] mb-2">
-              Image Preview
-            </p>
-            <img
-              src={form.image}
-              alt="Preview"
-              className="w-40 h-52 object-cover rounded-xl border"
-            />
-          </div>
-        )}
-
         <button
           type="submit"
-          disabled={loading}
+          disabled={saving || uploadingMain || uploadingHover}
           className="mt-8 bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold disabled:opacity-60"
         >
-          {loading ? "SAVING..." : "SAVE PRODUCT"}
+          {saving ? "SAVING..." : "SAVE PRODUCT"}
         </button>
       </form>
     </div>

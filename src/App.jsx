@@ -24,6 +24,9 @@ import OrdersAdmin from "./pages/admin/OrdersAdmin";
 import CustomOrdersAdmin from "./pages/admin/CustomOrdersAdmin";
 import CustomersAdmin from "./pages/admin/CustomersAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
+import TrackOrder from "./pages/TrackOrder";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -49,6 +52,10 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/lookbook" element={<Lookbook />} />
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/track-order/:orderId" element={<TrackOrder />} /> 
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         <Route path="/pf-x7-admin-2026" element={<AdminLogin />} />
 

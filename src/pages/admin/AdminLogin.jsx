@@ -1,23 +1,43 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAdmin } from "../../context/AdminContext";
 
 function AdminLogin() {
   const navigate = useNavigate();
+  const { loginAdmin } = useAdmin();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleLogin = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (
-      email === "admin@parikta.com" &&
-      password === "Parikta@2026"
-    ) {
-      localStorage.setItem("parikta_admin", "true");
-      navigate("/admin-dashboard");
-    } else {
-      alert("Invalid Login");
+    try {
+      setLoading(true);
+
+      const response = await loginAdmin(form);
+
+      if (response.success) {
+        navigate("/admin-dashboard");
+      } else {
+        alert(response.message || "Invalid admin login");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Admin login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,28 +48,37 @@ function AdminLogin() {
           Admin Login
         </h1>
 
+        <p className="text-center text-[#8b746b] mt-3">
+          Secure Parikta Fashion admin access
+        </p>
+
         <form onSubmit={handleLogin} className="mt-8 space-y-4">
           <input
+            name="email"
             type="email"
             placeholder="Admin Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-[#eadbd4] rounded-xl p-4"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
           <input
+            name="password"
             type="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-[#eadbd4] rounded-xl p-4"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none"
           />
 
           <button
             type="submit"
-            className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold"
+            disabled={loading}
+            className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold disabled:opacity-60"
           >
-            LOGIN
+            {loading ? "LOGIN..." : "LOGIN"}
           </button>
         </form>
       </div>

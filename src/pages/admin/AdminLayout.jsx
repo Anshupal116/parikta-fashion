@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useAdmin } from "../../context/AdminContext";
 
 function AdminLayout() {
   const [isMobile, setIsMobile] = useState(false);
+
+  const { logoutAdmin, admin } = useAdmin();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkScreen = () => {
@@ -14,6 +18,11 @@ function AdminLayout() {
 
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
+
+  const handleLogout = () => {
+    logoutAdmin();
+    navigate("/pf-x7-admin-2026");
+  };
 
   if (isMobile) {
     return (
@@ -40,7 +49,7 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-[#f7f2ee] flex">
       <aside className="w-72 bg-[#2f241f] text-white min-h-screen p-7">
-        <Link to="/admin">
+        <Link to="/admin-dashboard">
           <h1 className="logo-font text-6xl text-[#E8D7CC] leading-none">
             Parikta
           </h1>
@@ -56,12 +65,13 @@ function AdminLayout() {
           >
             Dashboard
           </Link>
+
           <Link
-  className="block px-4 py-3 rounded-xl hover:bg-white/10"
-  to="/admin-dashboard/customers"
->
-  Customers
-</Link>
+            className="block px-4 py-3 rounded-xl hover:bg-white/10"
+            to="/admin-dashboard/customers"
+          >
+            Customers
+          </Link>
 
           <Link
             className="block px-4 py-3 rounded-xl hover:bg-white/10"
@@ -90,12 +100,13 @@ function AdminLayout() {
           >
             Custom Orders
           </Link>
+
           <Link
-  className="block px-4 py-3 rounded-xl hover:bg-white/10"
-  to="/admin-dashboard/settings"
->
-  Settings
-</Link>
+            className="block px-4 py-3 rounded-xl hover:bg-white/10"
+            to="/admin-dashboard/settings"
+          >
+            Settings
+          </Link>
 
           <Link
             className="block px-4 py-3 rounded-xl text-[#BFA996] hover:bg-white/10 mt-8"
@@ -117,9 +128,22 @@ function AdminLayout() {
             </p>
           </div>
 
-          <div className="text-right">
-            <p className="font-semibold text-[#5B3B32]">Admin</p>
-            <p className="text-xs text-[#8b746b]">Parikta Fashion</p>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="font-semibold text-[#5B3B32]">
+                {admin?.name || "Admin"}
+              </p>
+              <p className="text-xs text-[#8b746b]">
+                {admin?.email || "Parikta Fashion"}
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+            >
+              Logout
+            </button>
           </div>
         </header>
 

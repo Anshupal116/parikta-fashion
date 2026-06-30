@@ -7,6 +7,7 @@ import { CartProvider } from "./context/CartContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { RecentlyViewedProvider } from "./context/RecentlyViewedContext.jsx";
 import { CustomerProvider } from "./context/CustomerContext.jsx";
+import { AdminProvider } from "./context/AdminContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <WishlistProvider>
       <RecentlyViewedProvider>
         <CustomerProvider>
-          <App />
+          <AdminProvider>
+            <App />
+          </AdminProvider>
         </CustomerProvider>
       </RecentlyViewedProvider>
     </WishlistProvider>

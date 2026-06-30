@@ -19,14 +19,10 @@ app.get("/", (req, res) => {
   res.send("Parikta Fashion API is running");
 });
 
-app.get("/api/test-admin-route", (req, res) => {
-  res.json({ success: true, message: "Admin route code deployed" });
-});
-
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);
-app.use("/api/admins", adminRoutes);
+app.use("/api/admin", adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -63,12 +63,34 @@ const productSchema = new mongoose.Schema(
 
     hoverImage: {
       type: String,
-      default: "",
+      required: true,
     },
 
-    images: {
-      type: [String],
-      default: [],
+    galleryImages: {
+      front: {
+        type: String,
+        required: true,
+      },
+
+      back: {
+        type: String,
+        required: true,
+      },
+
+      side: {
+        type: String,
+        required: true,
+      },
+
+      closeUp: {
+        type: String,
+        required: true,
+      },
+
+      modelPose: {
+        type: String,
+        required: true,
+      },
     },
 
     isActive: {
@@ -79,4 +101,4 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model("Product", productSchema);  

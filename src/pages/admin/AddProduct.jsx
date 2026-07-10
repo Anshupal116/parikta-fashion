@@ -5,20 +5,27 @@ import { createProduct } from "../../services/productService";
 function AddProduct() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    type: "Ready-made",
-    category: "Suit",
-    price: "",
-    mrp: "",
-    discount: "",
-    color: "",
-    badge: "",
-    stock: "",
-    description: "",
-    image: "",
-    hoverImage: "",
-  });
+const [form, setForm] = useState({
+  name: "",
+  type: "Ready-made",
+  category: "Suit",
+  price: "",
+  mrp: "",
+  discount: "",
+  color: "",
+  badge: "",
+  stock: "",
+  description: "",
+
+  image: "",
+  hoverImage: "",
+
+  galleryFront: "",
+  galleryBack: "",
+  gallerySide: "",
+  galleryCloseUp: "",
+  galleryModelPose: "",
+});
 
   const [saving, setSaving] = useState(false);
 
@@ -41,11 +48,28 @@ function AddProduct() {
       setSaving(true);
 
       const productData = {
-        ...form,
-        price: Number(form.price),
-        mrp: Number(form.mrp),
-        stock: Number(form.stock || 0),
-      };
+  name: form.name,
+  type: form.type,
+  category: form.category,
+  price: Number(form.price),
+  mrp: Number(form.mrp),
+  discount: form.discount,
+  color: form.color,
+  badge: form.badge,
+  stock: Number(form.stock || 0),
+  description: form.description,
+
+  image: form.image,
+  hoverImage: form.hoverImage,
+
+  galleryImages: {
+    front: form.galleryFront,
+    back: form.galleryBack,
+    side: form.gallerySide,
+    closeUp: form.galleryCloseUp,
+    modelPose: form.galleryModelPose,
+  },
+};
 
       const response = await createProduct(productData);
 
@@ -110,22 +134,76 @@ function AddProduct() {
 
           <input name="stock" type="number" value={form.stock} onChange={handleChange} placeholder="Stock Qty" className="border border-[#eadbd4] rounded-xl p-4 outline-none" />
 
-          <input
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-            placeholder="Main Image URL"
-            required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+          <div className="col-span-2">
+  <h2 className="heading-font text-3xl text-[#5B3B32] mb-5">
+    Product Images
+  </h2>
 
-          <input
-            name="hoverImage"
-            value={form.hoverImage}
-            onChange={handleChange}
-            placeholder="Hover Image URL"
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
-          />
+  <div className="grid grid-cols-2 gap-5">
+    <input
+      name="image"
+      value={form.image}
+      onChange={handleChange}
+      placeholder="Main Image URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+    />
+
+    <input
+      name="hoverImage"
+      value={form.hoverImage}
+      onChange={handleChange}
+      placeholder="Hover Image URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+    />
+
+    <input
+      name="galleryFront"
+      value={form.galleryFront}
+      onChange={handleChange}
+      placeholder="Gallery Image 1 — Front URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+    />
+
+    <input
+      name="galleryBack"
+      value={form.galleryBack}
+      onChange={handleChange}
+      placeholder="Gallery Image 2 — Back URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+    />
+
+    <input
+      name="gallerySide"
+      value={form.gallerySide}
+      onChange={handleChange}
+      placeholder="Gallery Image 3 — Side URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+    />
+
+    <input
+      name="galleryCloseUp"
+      value={form.galleryCloseUp}
+      onChange={handleChange}
+      placeholder="Gallery Image 4 — Close-up Work URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none"
+    />
+
+    <input
+      name="galleryModelPose"
+      value={form.galleryModelPose}
+      onChange={handleChange}
+      placeholder="Gallery Image 5 — Model Pose URL"
+      required
+      className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
+    />
+  </div>
+</div>
 
           <textarea
             name="description"
@@ -138,30 +216,29 @@ function AddProduct() {
           />
         </div>
 
-        {form.image && (
-          <div className="mt-6">
-            <p className="font-semibold text-[#5B3B32] mb-2">
-              Main Image Preview
-            </p>
-            <img
-              src={form.image}
-              alt="Preview"
-              className="w-36 h-48 object-cover rounded-xl border"
-            />
-          </div>
-        )}
-        {form.hoverImage && (
-          <div className="mt-6">
-            <p className="font-semibold text-[#5B3B32] mb-2">
-              2nd Image Preview (Hover Image)
-            </p>
-            <img
-              src={form.hoverImage}
-              alt="Preview"
-              className="w-36 h-48 object-cover rounded-xl border"
-            />
-          </div>
-        )}
+       <div className="grid grid-cols-4 gap-5 mt-7">
+  {[
+    ["Main", form.image],
+    ["Hover", form.hoverImage],
+    ["Front", form.galleryFront],
+    ["Back", form.galleryBack],
+    ["Side", form.gallerySide],
+    ["Close-up", form.galleryCloseUp],
+    ["Model Pose", form.galleryModelPose],
+  ].map(([label, url]) =>
+    url ? (
+      <div key={label}>
+        <p className="font-semibold text-[#5B3B32] mb-2">{label}</p>
+
+        <img
+          src={url}
+          alt={label}
+          className="w-full h-48 object-cover rounded-xl border border-[#eadbd4]"
+        />
+      </div>
+    ) : null
+  )}
+</div>
 
         <button
           type="submit"

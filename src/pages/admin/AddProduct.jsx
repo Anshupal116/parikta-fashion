@@ -150,6 +150,18 @@ function AddProduct() {
             />
           </div>
         )}
+        {form.image && (
+          <div className="mt-6">
+            <p className="font-semibold text-[#5B3B32] mb-2">
+              Main Image Preview
+            </p>
+            <img
+              src={form.image}
+              alt="Preview"
+              className="w-36 h-48 object-cover rounded-xl border"
+            />
+          </div>
+        )}
 
         <button
           type="submit"

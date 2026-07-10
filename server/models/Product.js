@@ -57,41 +57,41 @@ const productSchema = new mongoose.Schema(
     },
 
     image: {
-      type: String,
-      required: true,
-    },
+  type: String,
+  required: true,
+},
 
-    hoverImage: {
-      type: String,
-      required: true,
-    },
+hoverImage: {
+  type: String,
+  required: true,
+},
 
-    galleryImages: {
-      front: {
-        type: String,
-        required: true,
-      },
+galleryImages: {
+  front: {
+    type: String,
+    required: true,
+  },
 
-      back: {
-        type: String,
-        required: true,
-      },
+  back: {
+    type: String,
+    required: true,
+  },
 
-      side: {
-        type: String,
-        required: false,
-      },
+  side: {
+    type: String,
+    default: "",
+  },
 
-      closeUp: {
-        type: String,
-        required: false,
-      },
+  closeUp: {
+    type: String,
+    default: "",
+  },
 
-      modelPose: {
-        type: String,
-        required: false,
-      },
-    },
+  modelPose: {
+    type: String,
+    default: "",
+  },
+},
 
     isActive: {
       type: Boolean,

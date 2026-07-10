@@ -79,17 +79,17 @@ const productSchema = new mongoose.Schema(
 
       side: {
         type: String,
-        required: true,
+        required: false,
       },
 
       closeUp: {
         type: String,
-        required: true,
+        required: false,
       },
 
       modelPose: {
         type: String,
-        required: true,
+        required: false,
       },
     },
 

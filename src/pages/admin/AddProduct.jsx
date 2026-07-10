@@ -150,13 +150,13 @@ function AddProduct() {
             />
           </div>
         )}
-        {form.image && (
+        {form.hoverImage && (
           <div className="mt-6">
             <p className="font-semibold text-[#5B3B32] mb-2">
-              Main Image Preview
+              2nd Image Preview (Hover Image)
             </p>
             <img
-              src={form.image}
+              src={form.hoverImage}
               alt="Preview"
               className="w-36 h-48 object-cover rounded-xl border"
             />

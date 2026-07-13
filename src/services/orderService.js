@@ -1,43 +1,42 @@
-const API_URL = `${import.meta.env.VITE_API_URL}/orders`;
+import axios from "axios";
 
-export const createOrder = async (orderData) => {
-  const res = await fetch(API_URL, {
-    method: "POST",
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const getAuthConfig = () => {
+  const token = localStorage.getItem("token");
+
+  return {
     headers: {
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(orderData),
-  });
-
-  return await res.json();
+  };
 };
 
-export const getOrders = async () => {
-  const res = await fetch(API_URL);
-  return await res.json();
+export const getMyOrders = async () => {
+  const response = await axios.get(
+    `${API_URL}/orders/my-orders`,
+    getAuthConfig()
+  );
+
+  return response.data;
+};
+
+export const cancelOrder = async (orderId) => {
+  const response = await axios.patch(
+    `${API_URL}/orders/${orderId}/cancel`,
+    {},
+    getAuthConfig()
+  );
+
+  return response.data;
 };
 
 export const getOrderById = async (orderId) => {
-  const res = await fetch(`${API_URL}/${orderId}`);
-  return await res.json();
-};
+  const response = await axios.get(
+    `${API_URL}/orders/${orderId}`,
+    getAuthConfig()
+  );
 
-export const updateOrderStatus = async (id, status) => {
-  const res = await fetch(`${API_URL}/${id}/status`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ status }),
-  });
-
-  return await res.json();
-};
-
-export const deleteOrder = async (id) => {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-
-  return await res.json();
+  return response.data;
 };

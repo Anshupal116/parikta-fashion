@@ -141,7 +141,7 @@ function Navbar() {
 
                         <Link
                           onClick={() => setShowAccountMenu(false)}
-                          to="/my-orderss"
+                          to="/my-orders"
                           className="block px-5 py-4 hover:bg-[#f7f2ee]"
                         >
                           My Orders

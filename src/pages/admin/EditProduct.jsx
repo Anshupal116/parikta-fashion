@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getProductById, updateProduct } from "../../services/productService";
+import {
+  getProductById,
+  updateProduct,
+} from "../../services/productService";
 
 function EditProduct() {
   const { id } = useParams();
@@ -16,13 +19,33 @@ function EditProduct() {
         const response = await getProductById(id);
 
         if (response.success) {
-          setForm(response.product);
+          const product = response.product;
+
+          setForm({
+            name: product.name || "",
+            type: product.type || "Ready-made",
+            category: product.category || "Suit",
+            color: product.color || "",
+            price: product.price || "",
+            mrp: product.mrp || "",
+            discount: product.discount || "",
+            badge: product.badge || "",
+            stock: product.stock || "",
+            image: product.image || "",
+            hoverImage: product.hoverImage || "",
+            galleryImage1: product.galleryImage1 || "",
+            galleryImage2: product.galleryImage2 || "",
+            galleryImage3: product.galleryImage3 || "",
+            galleryImage4: product.galleryImage4 || "",
+            galleryImage5: product.galleryImage5 || "",
+            description: product.description || "",
+          });
         } else {
           alert("Product not found");
           navigate("/admin-dashboard/products");
         }
       } catch (error) {
-        console.log(error);
+        console.error("Product load error:", error);
         alert("Product load failed");
         navigate("/admin-dashboard/products");
       } finally {
@@ -34,10 +57,12 @@ function EditProduct() {
   }, [id, navigate]);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setForm((previousForm) => ({
+      ...previousForm,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -62,186 +87,318 @@ function EditProduct() {
         alert(response.message || "Product update failed");
       }
     } catch (error) {
-      console.log(error);
-      alert("Server error. Product update nahi hua.");
+      console.error("Product update error:", error);
+      alert(
+        error?.response?.data?.message ||
+          "Server error. Product update nahi hua."
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  const imageFields = [
+    {
+      name: "image",
+      label: "Main Image",
+      placeholder: "Main Image URL",
+      required: true,
+    },
+    {
+      name: "hoverImage",
+      label: "Hover Image",
+      placeholder: "Hover Image URL",
+    },
+    {
+      name: "galleryImage1",
+      label: "Gallery Image 1 - Front",
+      placeholder: "Front Image URL",
+    },
+    {
+      name: "galleryImage2",
+      label: "Gallery Image 2 - Back",
+      placeholder: "Back Image URL",
+    },
+    {
+      name: "galleryImage3",
+      label: "Gallery Image 3 - Side",
+      placeholder: "Side Image URL",
+    },
+    {
+      name: "galleryImage4",
+      label: "Gallery Image 4 - Close-up Work",
+      placeholder: "Close-up Work Image URL",
+    },
+    {
+      name: "galleryImage5",
+      label: "Gallery Image 5 - Model Pose",
+      placeholder: "Model Pose Image URL",
+    },
+  ];
+
   if (loading || !form) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-[#5B3B32]">
-          Loading Product...
-        </h2>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#eadbd4] border-t-[#9A3F4D]" />
+
+          <h2 className="text-2xl font-bold text-[#5B3B32]">
+            Loading Product...
+          </h2>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="w-full">
       <div className="mb-8">
-        <h1 className="heading-font text-4xl text-[#5B3B32]">
+        <h1 className="heading-font text-3xl text-[#5B3B32] md:text-4xl">
           Edit Product
         </h1>
 
-        <p className="text-[#8b746b] mt-2">
-          Update product directly in MongoDB.
+        <p className="mt-2 text-[#8b746b]">
+          Product details aur images update karein.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-8"
+        className="rounded-3xl border border-[#eadbd4] bg-[#fffaf7] p-5 shadow-sm md:p-8"
       >
-        <div className="grid grid-cols-2 gap-5">
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Product Name"
-            required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Product Name
+            </label>
 
-          <select
-            name="type"
-            value={form.type}
-            onChange={handleChange}
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          >
-            <option value="Ready-made">Ready-made</option>
-            <option value="Customize">Customize</option>
-          </select>
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Product Name"
+              required
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            />
+          </div>
 
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          >
-            <option value="Suit">Suit</option>
-            <option value="Saree">Saree</option>
-            <option value="Kurti">Kurti</option>
-            <option value="Lehenga">Lehenga</option>
-            <option value="Gown">Gown</option>
-            <option value="Other">Other</option>
-          </select>
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Product Type
+            </label>
 
-          <input
-            name="color"
-            value={form.color}
-            onChange={handleChange}
-            placeholder="Color"
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+            <select
+              name="type"
+              value={form.type}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            >
+              <option value="Ready-made">Ready-made</option>
+              <option value="Customize">Customize</option>
+            </select>
+          </div>
 
-          <input
-            name="price"
-            type="number"
-            value={form.price}
-            onChange={handleChange}
-            placeholder="Selling Price"
-            required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Category
+            </label>
 
-          <input
-            name="mrp"
-            type="number"
-            value={form.mrp}
-            onChange={handleChange}
-            placeholder="MRP"
-            required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            >
+              <option value="Suit">Suit</option>
+              <option value="Saree">Saree</option>
+              <option value="Kurti">Kurti</option>
+              <option value="Lehenga">Lehenga</option>
+              <option value="Gown">Gown</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
 
-          <input
-            name="discount"
-            value={form.discount}
-            onChange={handleChange}
-            placeholder="Discount e.g. 30% OFF"
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Color
+            </label>
 
-          <select
-            name="badge"
-            value={form.badge}
-            onChange={handleChange}
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          >
-            <option value="">Select Badge</option>
-            <option value="New Arrival">New Arrival</option>
-            <option value="Best Seller">Best Seller</option>
-            <option value="Trending">Trending</option>
-            <option value="Limited Edition">Limited Edition</option>
-          </select>
+            <input
+              name="color"
+              value={form.color}
+              onChange={handleChange}
+              placeholder="Color"
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            />
+          </div>
 
-          <input
-            name="stock"
-            type="number"
-            value={form.stock}
-            onChange={handleChange}
-            placeholder="Stock Qty"
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Selling Price
+            </label>
 
-          <input
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-            placeholder="Main Image URL"
-            required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none"
-          />
+            <input
+              name="price"
+              type="number"
+              min="0"
+              value={form.price}
+              onChange={handleChange}
+              placeholder="Selling Price"
+              required
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            />
+          </div>
 
-          <input
-            name="hoverImage"
-            value={form.hoverImage || ""}
-            onChange={handleChange}
-            placeholder="Hover Image URL"
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
-          />
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              MRP
+            </label>
+
+            <input
+              name="mrp"
+              type="number"
+              min="0"
+              value={form.mrp}
+              onChange={handleChange}
+              placeholder="MRP"
+              required
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Discount
+            </label>
+
+            <input
+              name="discount"
+              value={form.discount}
+              onChange={handleChange}
+              placeholder="Example: 30% OFF"
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Badge
+            </label>
+
+            <select
+              name="badge"
+              value={form.badge}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            >
+              <option value="">Select Badge</option>
+              <option value="New Arrival">New Arrival</option>
+              <option value="Best Seller">Best Seller</option>
+              <option value="Trending">Trending</option>
+              <option value="Limited Edition">Limited Edition</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block font-semibold text-[#5B3B32]">
+              Stock Quantity
+            </label>
+
+            <input
+              name="stock"
+              type="number"
+              min="0"
+              value={form.stock}
+              onChange={handleChange}
+              placeholder="Stock Quantity"
+              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+            />
+          </div>
+        </div>
+
+        <div className="my-8 border-t border-[#eadbd4]" />
+
+        <div>
+          <h2 className="heading-font text-2xl text-[#5B3B32]">
+            Product Images
+          </h2>
+
+          <p className="mt-1 text-sm text-[#8b746b]">
+            Main, hover aur gallery images ke URLs update karein.
+          </p>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {imageFields.map((field) => (
+            <div
+              key={field.name}
+              className={
+                field.name === "image" || field.name === "hoverImage"
+                  ? "md:col-span-1"
+                  : ""
+              }
+            >
+              <label className="mb-2 block font-semibold text-[#5B3B32]">
+                {field.label}
+              </label>
+
+              <input
+                name={field.name}
+                value={form[field.name] || ""}
+                onChange={handleChange}
+                placeholder={field.placeholder}
+                required={field.required}
+                className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              />
+
+              {form[field.name] && (
+                <div className="mt-3 rounded-2xl border border-[#eadbd4] bg-white p-3">
+                  <img
+                    src={form[field.name]}
+                    alt={`${field.label} Preview`}
+                    className="h-64 w-full rounded-xl object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="my-8 border-t border-[#eadbd4]" />
+
+        <div>
+          <label className="mb-2 block font-semibold text-[#5B3B32]">
+            Product Description
+          </label>
 
           <textarea
             name="description"
             value={form.description}
             onChange={handleChange}
             placeholder="Product Description"
-            rows="5"
+            rows="6"
             required
-            className="border border-[#eadbd4] rounded-xl p-4 outline-none col-span-2"
+            className="w-full resize-none rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
           />
         </div>
 
-        {form.image && (
-          <div className="mt-6">
-            <p className="font-semibold text-[#5B3B32] mb-2">
-              Image Preview
-            </p>
-
-            <img
-              src={form.image}
-              alt="Preview"
-              className="w-40 h-52 object-cover rounded-xl border"
-            />
-          </div>
-        )}
-
-        <div className="flex gap-4 mt-8">
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
           <button
             type="submit"
             disabled={saving}
-            className="bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold disabled:opacity-60"
+            className="rounded-xl bg-[#9A3F4D] px-8 py-4 font-bold text-white transition hover:bg-[#833642] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "UPDATING..." : "UPDATE PRODUCT"}
           </button>
 
           <button
             type="button"
+            disabled={saving}
             onClick={() => navigate("/admin-dashboard/products")}
-            className="bg-[#5B3B32] text-white px-8 py-4 rounded-xl font-bold"
+            className="rounded-xl bg-[#5B3B32] px-8 py-4 font-bold text-white transition hover:bg-[#432b25] disabled:opacity-60"
           >
             CANCEL
           </button>

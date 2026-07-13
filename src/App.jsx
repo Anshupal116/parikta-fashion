@@ -27,6 +27,7 @@ import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import TrackOrder from "./pages/TrackOrder";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import MyOrders from "./pages/MyOrders";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -56,6 +57,7 @@ function App() {
         <Route path="/track-order/:orderId" element={<TrackOrder />} /> 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/my-orders" element={<MyOrders />} />
 
         <Route path="/pf-x7-admin-2026" element={<AdminLogin />} />
 

@@ -6,12 +6,15 @@ import Footer from "../components/Footer";
 import Container from "../components/Container";
 import { useCart } from "../context/CartContext";
 import { createOrder } from "../services/orderService";
+import { useCustomer } from "../context/CustomerContext";
 
 function Checkout() {
   const navigate = useNavigate();
   const { cartItems, clearCart } = useCart();
+  const { token, isLoggedIn } = useCustomer();
 
   const [loading, setLoading] = useState(false);
+  
 
   const [address, setAddress] = useState({
     name: "",
@@ -30,6 +33,11 @@ function Checkout() {
   );
 
   const handleChange = (e) => {
+    if (!isLoggedIn) {
+  alert("Order place karne ke liye login karo");
+  navigate("/login");
+  return;
+}
     setAddress({
       ...address,
       [e.target.name]: e.target.value,

@@ -7,6 +7,7 @@ exports.createOrder = async (req, res) => {
 
     const order = await Order.create({
       ...req.body,
+      customerId: req.customer._id,
       orderId,
     });
 
@@ -19,6 +20,63 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Order create failed",
+      error: error.message,
+    });
+  }
+};
+
+exports.getCustomerOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      customerId: req.customer._id,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Customer orders fetch failed",
+      error: error.message,
+    });
+  }
+};
+
+exports.cancelCustomerOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      customerId: req.customer._id,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (!["Pending", "Confirmed"].includes(order.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "This order cannot be cancelled now",
+      });
+    }
+
+    order.status = "Cancelled";
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Order cancellation failed",
       error: error.message,
     });
   }

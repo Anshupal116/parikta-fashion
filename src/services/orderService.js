@@ -40,3 +40,37 @@ export const getOrderById = async (orderId) => {
 
   return response.data;
 };
+
+export const getMyOrders = async (token) => {
+  const res = await fetch(`${API_URL}/my-orders`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return await res.json();
+};
+
+export const cancelMyOrder = async (id, token) => {
+  const res = await fetch(`${API_URL}/my-orders/${id}/cancel`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return await res.json();
+};
+
+export const createOrder = async (orderData, token) => {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  return await res.json();
+};

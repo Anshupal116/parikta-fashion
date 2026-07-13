@@ -23,6 +23,11 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema(
   {
+  customerId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Customer",
+  required: true,
+},
     orderId: {
       type: String,
       unique: true,

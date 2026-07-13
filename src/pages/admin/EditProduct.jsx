@@ -14,53 +14,78 @@ function EditProduct() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let active = true;
+
     const loadProduct = async () => {
       try {
+        setLoading(true);
+
         const response = await getProductById(id);
 
-        if (response.success) {
-          const product = response.product;
+        if (!active) return;
 
-          setForm({
-            name: product.name || "",
-            type: product.type || "Ready-made",
-            category: product.category || "Suit",
-            color: product.color || "",
-            price: product.price || "",
-            mrp: product.mrp || "",
-            discount: product.discount || "",
-            badge: product.badge || "",
-            stock: product.stock || "",
-            image: product.image || "",
-            hoverImage: product.hoverImage || "",
-            galleryImage1: product.galleryImage1 || "",
-            galleryImage2: product.galleryImage2 || "",
-            galleryImage3: product.galleryImage3 || "",
-            galleryImage4: product.galleryImage4 || "",
-            galleryImage5: product.galleryImage5 || "",
-            description: product.description || "",
-          });
-        } else {
+        if (!response?.success || !response?.product) {
           alert("Product not found");
           navigate("/admin-dashboard/products");
+          return;
         }
+
+        const product = response.product;
+
+        setForm({
+          name: product.name || "",
+          type: product.type || "Ready-made",
+          category: product.category || "Suit",
+          price: product.price ?? "",
+          mrp: product.mrp ?? "",
+          discount: product.discount || "",
+          color: product.color || "",
+          badge: product.badge || "",
+          stock: product.stock ?? "",
+          description: product.description || "",
+
+          fabric: product.fabric || "",
+          work: product.work || "",
+          occasion: product.occasion || "",
+          care: product.care || "",
+
+          image: product.image || "",
+          hoverImage: product.hoverImage || "",
+
+          galleryFront:
+            product.galleryImages?.front || "",
+          galleryBack:
+            product.galleryImages?.back || "",
+          gallerySide:
+            product.galleryImages?.side || "",
+          galleryCloseUp:
+            product.galleryImages?.closeUp || "",
+          galleryModelPose:
+            product.galleryImages?.modelPose || "",
+        });
       } catch (error) {
-        console.error("Product load error:", error);
+        console.error("Product load failed:", error);
         alert("Product load failed");
         navigate("/admin-dashboard/products");
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     loadProduct();
+
+    return () => {
+      active = false;
+    };
   }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setForm((previousForm) => ({
-      ...previousForm,
+    setForm((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
@@ -68,146 +93,161 @@ function EditProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (
+      !form.image.trim() ||
+      !form.hoverImage.trim() ||
+      !form.galleryFront.trim() ||
+      !form.galleryBack.trim()
+    ) {
+      alert(
+        "Main Image, Hover Image, Gallery Front aur Gallery Back compulsory hain."
+      );
+      return;
+    }
+
+    if (Number(form.price) <= 0 || Number(form.mrp) <= 0) {
+      alert("Price aur MRP valid hone chahiye.");
+      return;
+    }
+
+    if (Number(form.mrp) < Number(form.price)) {
+      alert("MRP selling price se kam nahi ho sakta.");
+      return;
+    }
+
     try {
       setSaving(true);
 
       const productData = {
-        ...form,
+        name: form.name.trim(),
+        type: form.type,
+        category: form.category,
         price: Number(form.price),
         mrp: Number(form.mrp),
-        stock: Number(form.stock),
+        discount: form.discount.trim(),
+        color: form.color.trim(),
+        badge: form.badge,
+        stock: Number(form.stock || 0),
+        description: form.description.trim(),
+
+        fabric: form.fabric.trim(),
+        work: form.work.trim(),
+        occasion: form.occasion.trim(),
+        care: form.care.trim(),
+
+        image: form.image.trim(),
+        hoverImage: form.hoverImage.trim(),
+
+        galleryImages: {
+          front: form.galleryFront.trim(),
+          back: form.galleryBack.trim(),
+          side: form.gallerySide.trim(),
+          closeUp: form.galleryCloseUp.trim(),
+          modelPose: form.galleryModelPose.trim(),
+        },
       };
 
-      const response = await updateProduct(id, productData);
+      const response = await updateProduct(
+        id,
+        productData
+      );
 
       if (response.success) {
         alert("Product updated successfully ✅");
         navigate("/admin-dashboard/products");
       } else {
-        alert(response.message || "Product update failed");
+        alert(
+          response.message || "Product update failed"
+        );
       }
     } catch (error) {
       console.error("Product update error:", error);
-      alert(
-        error?.response?.data?.message ||
-          "Server error. Product update nahi hua."
-      );
+      alert("Server error. Product update nahi hua.");
     } finally {
       setSaving(false);
     }
   };
 
-  const imageFields = [
-    {
-      name: "image",
-      label: "Main Image",
-      placeholder: "Main Image URL",
-      required: true,
-    },
-    {
-      name: "hoverImage",
-      label: "Hover Image",
-      placeholder: "Hover Image URL",
-    },
-    {
-      name: "galleryImage1",
-      label: "Gallery Image 1 - Front",
-      placeholder: "Front Image URL",
-    },
-    {
-      name: "galleryImage2",
-      label: "Gallery Image 2 - Back",
-      placeholder: "Back Image URL",
-    },
-    {
-      name: "galleryImage3",
-      label: "Gallery Image 3 - Side",
-      placeholder: "Side Image URL",
-    },
-    {
-      name: "galleryImage4",
-      label: "Gallery Image 4 - Close-up Work",
-      placeholder: "Close-up Work Image URL",
-    },
-    {
-      name: "galleryImage5",
-      label: "Gallery Image 5 - Model Pose",
-      placeholder: "Model Pose Image URL",
-    },
-  ];
-
   if (loading || !form) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#eadbd4] border-t-[#9A3F4D]" />
+      <div className="text-center py-20">
+        <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
 
-          <h2 className="text-2xl font-bold text-[#5B3B32]">
-            Loading Product...
-          </h2>
-        </div>
+        <h2 className="text-2xl font-bold text-[#5B3B32] mt-5">
+          Loading Product...
+        </h2>
       </div>
     );
   }
 
+  const imagePreviews = [
+    ["Main Image", form.image, true],
+    ["Hover Image", form.hoverImage, true],
+    ["Gallery Front", form.galleryFront, true],
+    ["Gallery Back", form.galleryBack, true],
+    ["Gallery Side", form.gallerySide, false],
+    ["Close-up Work", form.galleryCloseUp, false],
+    ["Model Pose", form.galleryModelPose, false],
+  ];
+
   return (
-    <div className="w-full">
+    <div>
       <div className="mb-8">
-        <h1 className="heading-font text-3xl text-[#5B3B32] md:text-4xl">
+        <h1 className="heading-font text-4xl text-[#5B3B32]">
           Edit Product
         </h1>
 
-        <p className="mt-2 text-[#8b746b]">
-          Product details aur images update karein.
+        <p className="text-[#8b746b] mt-2">
+          Update complete product information and image
+          gallery.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-3xl border border-[#eadbd4] bg-[#fffaf7] p-5 shadow-sm md:p-8"
+        className="space-y-8"
       >
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Product Name
-            </label>
+        {/* BASIC DETAILS */}
+        <section className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-8">
+          <div className="mb-6">
+            <p className="text-xs tracking-[0.25em] uppercase text-[#BFA996]">
+              Product Information
+            </p>
 
+            <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
+              Basic Details
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-5">
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
               placeholder="Product Name"
               required
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Product Type
-            </label>
 
             <select
               name="type"
               value={form.type}
               onChange={handleChange}
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             >
-              <option value="Ready-made">Ready-made</option>
-              <option value="Customize">Customize</option>
+              <option value="Ready-made">
+                Ready-made
+              </option>
+              <option value="Customize">
+                Customize
+              </option>
             </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Category
-            </label>
 
             <select
               name="category"
               value={form.category}
               onChange={handleChange}
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             >
               <option value="Suit">Suit</option>
               <option value="Saree">Saree</option>
@@ -216,26 +256,14 @@ function EditProduct() {
               <option value="Gown">Gown</option>
               <option value="Other">Other</option>
             </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Color
-            </label>
 
             <input
               name="color"
               value={form.color}
               onChange={handleChange}
               placeholder="Color"
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Selling Price
-            </label>
 
             <input
               name="price"
@@ -245,14 +273,8 @@ function EditProduct() {
               onChange={handleChange}
               placeholder="Selling Price"
               required
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              MRP
-            </label>
 
             <input
               name="mrp"
@@ -262,47 +284,39 @@ function EditProduct() {
               onChange={handleChange}
               placeholder="MRP"
               required
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Discount
-            </label>
 
             <input
               name="discount"
               value={form.discount}
               onChange={handleChange}
-              placeholder="Example: 30% OFF"
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              placeholder="Discount e.g. 30% OFF"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             />
-          </div>
-
-          <div>
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Badge
-            </label>
 
             <select
               name="badge"
               value={form.badge}
               onChange={handleChange}
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             >
-              <option value="">Select Badge</option>
-              <option value="New Arrival">New Arrival</option>
-              <option value="Best Seller">Best Seller</option>
-              <option value="Trending">Trending</option>
-              <option value="Limited Edition">Limited Edition</option>
+              <option value="">
+                Select Badge
+              </option>
+              <option value="New Arrival">
+                New Arrival
+              </option>
+              <option value="Best Seller">
+                Best Seller
+              </option>
+              <option value="Trending">
+                Trending
+              </option>
+              <option value="Limited Edition">
+                Limited Edition
+              </option>
             </select>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="mb-2 block font-semibold text-[#5B3B32]">
-              Stock Quantity
-            </label>
 
             <input
               name="stock"
@@ -311,94 +325,247 @@ function EditProduct() {
               value={form.stock}
               onChange={handleChange}
               placeholder="Stock Quantity"
-              className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
             />
           </div>
-        </div>
+        </section>
 
-        <div className="my-8 border-t border-[#eadbd4]" />
+        {/* PRODUCT SPECIFICATION */}
+        <section className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-8">
+          <div className="mb-6">
+            <p className="text-xs tracking-[0.25em] uppercase text-[#BFA996]">
+              Product Specification
+            </p>
 
-        <div>
-          <h2 className="heading-font text-2xl text-[#5B3B32]">
-            Product Images
-          </h2>
+            <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
+              Fabric & Design Details
+            </h2>
+          </div>
 
-          <p className="mt-1 text-sm text-[#8b746b]">
-            Main, hover aur gallery images ke URLs update karein.
-          </p>
-        </div>
+          <div className="grid grid-cols-2 gap-5">
+            <input
+              name="fabric"
+              value={form.fabric}
+              onChange={handleChange}
+              placeholder="Fabric e.g. Premium Georgette"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+            />
 
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {imageFields.map((field) => (
-            <div
-              key={field.name}
-              className={
-                field.name === "image" || field.name === "hoverImage"
-                  ? "md:col-span-1"
-                  : ""
-              }
-            >
-              <label className="mb-2 block font-semibold text-[#5B3B32]">
-                {field.label}
+            <input
+              name="work"
+              value={form.work}
+              onChange={handleChange}
+              placeholder="Work e.g. Hand Embroidery"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+            />
+
+            <input
+              name="occasion"
+              value={form.occasion}
+              onChange={handleChange}
+              placeholder="Occasion e.g. Wedding, Festive, Party"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+            />
+
+            <input
+              name="care"
+              value={form.care}
+              onChange={handleChange}
+              placeholder="Care e.g. Dry clean only"
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+            />
+
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Product Description"
+              rows="5"
+              required
+              className="border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D] col-span-2"
+            />
+          </div>
+        </section>
+
+        {/* PRODUCT IMAGES */}
+        <section className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-8">
+          <div className="flex items-start justify-between gap-5 mb-6">
+            <div>
+              <p className="text-xs tracking-[0.25em] uppercase text-[#BFA996]">
+                Product Gallery
+              </p>
+
+              <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
+                Product Images
+              </h2>
+            </div>
+
+            <div className="bg-[#FDEAE6] text-[#9A3F4D] px-4 py-3 rounded-xl text-sm">
+              4 required · 3 optional
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Main Image URL *
               </label>
 
               <input
-                name={field.name}
-                value={form[field.name] || ""}
+                name="image"
+                value={form.image}
                 onChange={handleChange}
-                placeholder={field.placeholder}
-                required={field.required}
-                className="w-full rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
+                placeholder="https://..."
+                required
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
               />
-
-              {form[field.name] && (
-                <div className="mt-3 rounded-2xl border border-[#eadbd4] bg-white p-3">
-                  <img
-                    src={form[field.name]}
-                    alt={`${field.label} Preview`}
-                    className="h-64 w-full rounded-xl object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                </div>
-              )}
             </div>
-          ))}
-        </div>
 
-        <div className="my-8 border-t border-[#eadbd4]" />
+            <div>
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Hover Image URL *
+              </label>
 
-        <div>
-          <label className="mb-2 block font-semibold text-[#5B3B32]">
-            Product Description
-          </label>
+              <input
+                name="hoverImage"
+                value={form.hoverImage}
+                onChange={handleChange}
+                placeholder="https://..."
+                required
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+              />
+            </div>
 
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Product Description"
-            rows="6"
-            required
-            className="w-full resize-none rounded-xl border border-[#eadbd4] bg-white p-4 outline-none transition focus:border-[#9A3F4D]"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Gallery Front URL *
+              </label>
 
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <input
+                name="galleryFront"
+                value={form.galleryFront}
+                onChange={handleChange}
+                placeholder="https://..."
+                required
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Gallery Back URL *
+              </label>
+
+              <input
+                name="galleryBack"
+                value={form.galleryBack}
+                onChange={handleChange}
+                placeholder="https://..."
+                required
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Gallery Side URL
+              </label>
+
+              <input
+                name="gallerySide"
+                value={form.gallerySide}
+                onChange={handleChange}
+                placeholder="Optional image URL"
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Close-up Work URL
+              </label>
+
+              <input
+                name="galleryCloseUp"
+                value={form.galleryCloseUp}
+                onChange={handleChange}
+                placeholder="Optional image URL"
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-[#5B3B32] mb-2">
+                Model Pose URL
+              </label>
+
+              <input
+                name="galleryModelPose"
+                value={form.galleryModelPose}
+                onChange={handleChange}
+                placeholder="Optional image URL"
+                className="w-full border border-[#eadbd4] rounded-xl p-4 outline-none focus:border-[#9A3F4D]"
+              />
+            </div>
+          </div>
+
+          {/* IMAGE PREVIEW */}
+          {imagePreviews.some(([, url]) => url) && (
+            <div className="mt-8 border-t border-[#eadbd4] pt-7">
+              <h3 className="heading-font text-2xl text-[#5B3B32] mb-5">
+                Gallery Preview
+              </h3>
+
+              <div className="grid grid-cols-4 gap-5">
+                {imagePreviews.map(
+                  ([label, url, required]) =>
+                    url ? (
+                      <div key={label}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-[#5B3B32] text-sm">
+                            {label}
+                          </p>
+
+                          {required && (
+                            <span className="text-[10px] bg-[#9A3F4D] text-white px-2 py-1 rounded-full">
+                              Required
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="bg-[#f7f2ee] border border-[#eadbd4] rounded-2xl overflow-hidden">
+                          <img
+                            src={url}
+                            alt={label}
+                            className="w-full h-52 object-cover object-top"
+                          />
+                        </div>
+                      </div>
+                    ) : null
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex items-center gap-4">
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-[#9A3F4D] px-8 py-4 font-bold text-white transition hover:bg-[#833642] disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-[#9A3F4D] text-white px-9 py-4 rounded-xl font-bold disabled:opacity-60"
           >
-            {saving ? "UPDATING..." : "UPDATE PRODUCT"}
+            {saving
+              ? "UPDATING PRODUCT..."
+              : "UPDATE PRODUCT"}
           </button>
 
           <button
             type="button"
-            disabled={saving}
-            onClick={() => navigate("/admin-dashboard/products")}
-            className="rounded-xl bg-[#5B3B32] px-8 py-4 font-bold text-white transition hover:bg-[#432b25] disabled:opacity-60"
+            onClick={() =>
+              navigate("/admin-dashboard/products")
+            }
+            className="border border-[#5B3B32] text-[#5B3B32] px-9 py-4 rounded-xl font-bold"
           >
             CANCEL
           </button>

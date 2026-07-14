@@ -103,75 +103,59 @@ const getAllCustomers = async (req, res) => {
       .lean();
 
     const orders = await Order.find()
-      .select("customer amount status createdAt")
-      .lean();
+  .select("customer customerId amount status createdAt")
+  .lean();
 
-    const customersWithStats = customers.map((customer) => {
-      const customerOrders = orders.filter((order) => {
-        const orderCustomerId =
-          order.customer?._id?.toString() ||
-          order.customerId?.toString();
+const customersWithStats = customers.map((customer) => {
+  const customerId = customer._id.toString();
 
-        const customerId = customer._id.toString();
+  const customerOrders = orders.filter((order) => {
+    const orderCustomerId =
+      order.customerId?.toString() ||
+      order.customer?._id?.toString() ||
+      order.customer?.id?.toString() ||
+      (typeof order.customer === "string"
+        ? order.customer
+        : null);
 
-        const sameId = orderCustomerId === customerId;
+    const sameId = orderCustomerId === customerId;
 
-        const samePhone =
-          order.customer?.phone &&
-          customer.phone &&
-          order.customer.phone === customer.phone;
+    const samePhone =
+      order.customer?.phone &&
+      customer.phone &&
+      String(order.customer.phone) === String(customer.phone);
 
-        const sameEmail =
-          order.customer?.email &&
-          customer.email &&
-          order.customer.email.toLowerCase() ===
-            customer.email.toLowerCase();
+    const sameEmail =
+      order.customer?.email &&
+      customer.email &&
+      order.customer.email.toLowerCase().trim() ===
+        customer.email.toLowerCase().trim();
 
-        return sameId || samePhone || sameEmail;
-      });
+    return sameId || samePhone || sameEmail;
+  });
 
-      const validOrders = customerOrders.filter(
-        (order) => order.status !== "Cancelled"
-      );
+  const validOrders = customerOrders.filter(
+    (order) => order.status !== "Cancelled"
+  );
 
-      const totalSpend = validOrders.reduce(
-        (sum, order) => sum + Number(order.amount || 0),
-        0
-      );
+  const totalSpend = validOrders.reduce(
+    (sum, order) => sum + Number(order.amount || 0),
+    0
+  );
 
-      const lastOrder = customerOrders.length
-        ? customerOrders
-            .map((order) => order.createdAt)
-            .filter(Boolean)
-            .sort(
-              (a, b) =>
-                new Date(b).getTime() -
-                new Date(a).getTime()
-            )[0]
-        : null;
+  const lastOrder = customerOrders
+    .map((order) => order.createdAt)
+    .filter(Boolean)
+    .sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    )[0] || null;
 
-      return {
-        ...customer,
-        totalOrders: customerOrders.length,
-        totalSpend,
-        lastOrder,
-      };
-    });
-
-    return res.status(200).json({
-      success: true,
-      count: customersWithStats.length,
-      customers: customersWithStats,
-    });
-  } catch (error) {
-    console.error("Get customers error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Customers load failed",
-      error: error.message,
-    });
-  }
-};
+  return {
+    ...customer,
+    totalOrders: customerOrders.length,
+    totalSpend,
+    lastOrder,
+  };
+});
 
 exports.getAllCustomers = getAllCustomers;

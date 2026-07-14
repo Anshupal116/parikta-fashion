@@ -50,6 +50,8 @@ export const getOrderById = async (orderId, token) => {
 
 // Customer apna order cancel karega
 export const cancelOrder = async (orderId) => {
+  console.log("NEW CANCEL FUNCTION RUNNING");
+  
   const token = localStorage.getItem("parikta_customer_token");
 
   const response = await axios.put(

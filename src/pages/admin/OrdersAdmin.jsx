@@ -179,12 +179,7 @@ function OrdersAdmin() {
         <p className="text-[#8b746b] mt-2">
           Manage, track and update customer orders.
         </p>
-        <button
-            onClick={loadCustomers}
-            className="bg-[#5B3B32] text-white px-5 py-3 rounded-xl font-semibold"
-          >
-            Refresh
-          </button>
+        
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-8">

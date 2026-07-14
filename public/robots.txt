@@ -10,4 +10,4 @@ Disallow: /profile
 Disallow: /wishlist
 Disallow: /cart
 
-Sitemap: https://parikta.com/sitemap.xml
+Sitemap: https://www.parikta.com/sitemap.xml

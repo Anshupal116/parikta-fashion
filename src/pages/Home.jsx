@@ -81,8 +81,8 @@ useEffect(() => {
     <SEO
     title="Parikta Fashion | Premium Women's Ethnic Wear Online"
     description="Discover premium suits, kurtis, sarees, dresses and designer ethnic wear for women at Parikta Fashion. Shop elegant styles online."
-    canonical="https://parikta.com/"
-    image="https://parikta.com/og-image.jpg"
+    canonical="https://www.parikta.com/"
+    image="https://www.parikta.com/og-image.jpg"
   />
 
       <Navbar />

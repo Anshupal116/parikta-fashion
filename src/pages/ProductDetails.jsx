@@ -124,7 +124,7 @@ function ProductDetails() {
         <SEO
           title="Loading Product | Parikta Fashion"
           description="Loading product details from Parikta Fashion."
-          canonical={`https://parikta.com/product/${id}`}
+          canonical={`https://www.parikta.com/product/${id}`}
           noIndex
         />
 
@@ -151,7 +151,7 @@ function ProductDetails() {
       <SEO
         title="Product Not Found | Parikta Fashion"
         description="The requested product could not be found at Parikta Fashion."
-        canonical={`https://parikta.com/product/${id}`}
+        canonical={`https://www.parikta.com/product/${id}`}
         noIndex
       />
 
@@ -177,7 +177,7 @@ function ProductDetails() {
   );
 }
 
-const productUrl = `https://parikta.com/product/${product._id}`;
+const productUrl = `https://www.parikta.com/product/${product._id}`;
 
 const productSchema = {
   "@context": "https://schema.org",

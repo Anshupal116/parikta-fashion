@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Customer = require("../models/Customer");
+const Order = require("../models/Order");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -92,4 +93,90 @@ exports.loginCustomer = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+const getAllCustomers = async (req, res) => {
+  try {
+    const customers = await Customer.find()
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const orders = await Order.find()
+      .select("customer amount status createdAt")
+      .lean();
+
+    const customersWithStats = customers.map((customer) => {
+      const customerOrders = orders.filter((order) => {
+        const orderCustomerId =
+          order.customer?._id?.toString() ||
+          order.customerId?.toString();
+
+        const customerId = customer._id.toString();
+
+        const sameId = orderCustomerId === customerId;
+
+        const samePhone =
+          order.customer?.phone &&
+          customer.phone &&
+          order.customer.phone === customer.phone;
+
+        const sameEmail =
+          order.customer?.email &&
+          customer.email &&
+          order.customer.email.toLowerCase() ===
+            customer.email.toLowerCase();
+
+        return sameId || samePhone || sameEmail;
+      });
+
+      const validOrders = customerOrders.filter(
+        (order) => order.status !== "Cancelled"
+      );
+
+      const totalSpend = validOrders.reduce(
+        (sum, order) =>
+          sum + Number(order.amount || 0),
+        0
+      );
+
+      const lastOrder = customerOrders.length
+        ? customerOrders
+            .map((order) => order.createdAt)
+            .filter(Boolean)
+            .sort(
+              (a, b) =>
+                new Date(b).getTime() -
+                new Date(a).getTime()
+            )[0]
+        : null;
+
+      return {
+        ...customer,
+        totalOrders: customerOrders.length,
+        totalSpend,
+        lastOrder,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: customersWithStats.length,
+      customers: customersWithStats,
+    });
+  } catch (error) {
+    console.error("Get customers error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Customers load failed",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  registerCustomer,
+  loginCustomer,
+  getAllCustomers,
 };

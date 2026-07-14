@@ -135,8 +135,7 @@ const getAllCustomers = async (req, res) => {
       );
 
       const totalSpend = validOrders.reduce(
-        (sum, order) =>
-          sum + Number(order.amount || 0),
+        (sum, order) => sum + Number(order.amount || 0),
         0
       );
 
@@ -175,8 +174,4 @@ const getAllCustomers = async (req, res) => {
   }
 };
 
-module.exports = {
-  registerCustomer,
-  loginCustomer,
-  getAllCustomers,
-};
+exports.getAllCustomers = getAllCustomers;

@@ -65,8 +65,6 @@ export const cancelOrder = async (orderId) => {
   return response.data;
 };
 
-export const cancelMyOrder = cancelOrder;
-
 // Purane component me cancelMyOrder use ho raha ho to ye bhi kaam karega
 export const cancelMyOrder = async (orderId, token) => {
   return cancelOrder(orderId, token);

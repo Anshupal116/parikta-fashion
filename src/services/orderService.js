@@ -77,20 +77,15 @@ export const cancelMyOrder = async (orderId, token) => {
 
 // Admin: sabhi orders fetch karna
 export const getOrders = async () => {
-  const response = await axios.get(
-    `${API_URL}/orders/admin/all`,
-    getAuthConfig()
-  );
-
+  const response = await axios.get(`${API_URL}/orders`);
   return response.data;
 };
 
 // Admin: order status update karna
 export const updateOrderStatus = async (orderId, status) => {
-  const response = await axios.patch(
-    `${API_URL}/orders/admin/${orderId}/status`,
-    { status },
-    getAuthConfig()
+  const response = await axios.put(
+    `${API_URL}/orders/${orderId}/status`,
+    { status }
   );
 
   return response.data;
@@ -99,8 +94,7 @@ export const updateOrderStatus = async (orderId, status) => {
 // Admin: order delete karna
 export const deleteOrder = async (orderId) => {
   const response = await axios.delete(
-    `${API_URL}/orders/admin/${orderId}`,
-    getAuthConfig()
+    `${API_URL}/orders/${orderId}`
   );
 
   return response.data;

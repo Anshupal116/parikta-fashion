@@ -1,0 +1,13 @@
+User-agent: *
+
+Allow: /
+
+Disallow: /admin-login
+Disallow: /admin-dashboard/
+Disallow: /checkout
+Disallow: /my-orders
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /cart
+
+Sitemap: https://parikta.com/sitemap.xml

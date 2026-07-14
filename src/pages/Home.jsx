@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import Container from "../components/Container";
+import SEO from "../components/SEO";
 
 
 import heroDress from "../assets/hero-dress.png";
@@ -77,6 +78,13 @@ useEffect(() => {
 
   return (
     <>
+    <SEO
+    title="Parikta Fashion | Premium Women's Ethnic Wear Online"
+    description="Discover premium suits, kurtis, sarees, dresses and designer ethnic wear for women at Parikta Fashion. Shop elegant styles online."
+    canonical="https://parikta.com/"
+    image="https://parikta.com/og-image.jpg"
+  />
+
       <Navbar />
 
       {/* CINEMATIC HERO */}

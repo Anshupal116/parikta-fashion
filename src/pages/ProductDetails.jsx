@@ -12,6 +12,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import Container from "../components/Container";
+import SEO from "../components/SEO";
 
 import { useCart } from "../context/CartContext";
 import { useRecentlyViewed } from "../context/RecentlyViewedContext";
@@ -120,6 +121,13 @@ function ProductDetails() {
   if (loading) {
     return (
       <>
+        <SEO
+          title="Loading Product | Parikta Fashion"
+          description="Loading product details from Parikta Fashion."
+          canonical={`https://parikta.com/product/${id}`}
+          noIndex
+        />
+
         <Navbar />
 
         <main className="min-h-screen bg-[#fffaf7] flex items-center justify-center">
@@ -138,29 +146,79 @@ function ProductDetails() {
   }
 
   if (!product) {
-    return (
-      <>
-        <Navbar />
+  return (
+    <>
+      <SEO
+        title="Product Not Found | Parikta Fashion"
+        description="The requested product could not be found at Parikta Fashion."
+        canonical={`https://parikta.com/product/${id}`}
+        noIndex
+      />
 
-        <main className="min-h-screen bg-[#fffaf7] flex items-center justify-center px-5">
-          <div className="text-center">
-            <h1 className="heading-font text-5xl text-[#5B3B32]">
-              Product Not Found
-            </h1>
+      <Navbar />
 
-            <Link
-              to="/products"
-              className="inline-block mt-6 bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold"
-            >
-              Back To Collection
-            </Link>
-          </div>
-        </main>
+      <main className="min-h-screen bg-[#fffaf7] flex items-center justify-center px-5">
+        <div className="text-center">
+          <h1 className="heading-font text-5xl text-[#5B3B32]">
+            Product Not Found
+          </h1>
 
-        <Footer />
-      </>
-    );
-  }
+          <Link
+            to="/products"
+            className="inline-block mt-6 bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold"
+          >
+            Back To Collection
+          </Link>
+        </div>
+      </main>
+
+      <Footer />
+    </>
+  );
+}
+
+const productUrl = `https://parikta.com/product/${product._id}`;
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+
+  name: product.name,
+
+  image: [
+    product.image,
+    product.hoverImage,
+    product.galleryImages?.front,
+    product.galleryImages?.back,
+    product.galleryImages?.side,
+    product.galleryImages?.closeUp,
+    product.galleryImages?.modelPose,
+    ...(Array.isArray(product.images) ? product.images : []),
+  ].filter(Boolean),
+
+  description:
+    product.description ||
+    `Shop ${product.name} online at Parikta Fashion.`,
+
+  sku: product.sku || product._id,
+
+  brand: {
+    "@type": "Brand",
+    name: "Parikta Fashion",
+  },
+
+  offers: {
+    "@type": "Offer",
+    url: productUrl,
+    priceCurrency: "INR",
+    price: Number(product.price),
+    availability:
+      Number(product.stock) > 0
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    itemCondition: "https://schema.org/NewCondition",
+  },
+};
 
   const galleryImages = [
     product.image,
@@ -264,6 +322,19 @@ function ProductDetails() {
 
   return (
     <>
+      <SEO
+        title={`${product.name} | Parikta Fashion`}
+        description={
+          product.description
+            ? product.description.slice(0, 160)
+            : `Shop ${product.name} online at Parikta Fashion. Premium women's designer wear with elegant styling.`
+        }
+        canonical={productUrl}
+        image={product.image}
+        type="product"
+        structuredData={productSchema}
+      />
+
       <Navbar />
 
       <main className="bg-[#fffaf7] min-h-screen pb-24 md:pb-0">

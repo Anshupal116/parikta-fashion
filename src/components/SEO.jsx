@@ -77,6 +77,62 @@ function SEO({
           {JSON.stringify(structuredData)}
         </script>
       )}
+{/* Organization Schema */}
+<script type="application/ld+json">
+{JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+
+  name: "Parikta Fashion",
+
+  url: "https://www.parikta.com",
+
+  logo: "https://www.parikta.com/logo.png",
+
+  description:
+    "Parikta Fashion is a premium women's ethnic wear brand offering designer sarees, suits, kurtis, lehengas and customized fashion.",
+
+  email: "support@parikta.com",
+
+  telephone: "+91-9999999999",
+
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Delhi",
+    addressRegion: "Delhi",
+    postalCode: "110001",
+    addressCountry: "IN",
+  },
+
+  sameAs: [
+    "https://www.instagram.com/pariktafashion",
+    "https://www.facebook.com/pariktafashion",
+  ],
+})}
+</script>
+
+{/* Website Schema */}
+<script type="application/ld+json">
+{JSON.stringify({
+  "@context": "https://schema.org",
+
+  "@type": "WebSite",
+
+  name: "Parikta Fashion",
+
+  url: "https://www.parikta.com",
+
+  potentialAction: {
+    "@type": "SearchAction",
+
+    target:
+      "https://www.parikta.com/products?search={search_term_string}",
+
+    "query-input": "required name=search_term_string",
+  },
+})}
+</script>
+
     </Helmet>
   );
 }

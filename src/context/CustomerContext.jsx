@@ -1,4 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 const CustomerContext = createContext();
 
@@ -8,13 +13,33 @@ export function CustomerProvider({ children }) {
   const [customer, setCustomer] = useState(null);
   const [token, setToken] = useState(null);
 
-  useEffect(() => {
-    const savedCustomer = localStorage.getItem("parikta_customer");
-    const savedToken = localStorage.getItem("parikta_customer_token");
+  // Local storage check complete hua ya nahi
+  const [authLoading, setAuthLoading] = useState(true);
 
-    if (savedCustomer && savedToken) {
-      setCustomer(JSON.parse(savedCustomer));
-      setToken(savedToken);
+  useEffect(() => {
+    try {
+      const savedCustomer = localStorage.getItem(
+        "parikta_customer"
+      );
+
+      const savedToken = localStorage.getItem(
+        "parikta_customer_token"
+      );
+
+      if (savedCustomer && savedToken) {
+        setCustomer(JSON.parse(savedCustomer));
+        setToken(savedToken);
+      }
+    } catch (error) {
+      console.error("Customer session load error:", error);
+
+      localStorage.removeItem("parikta_customer");
+      localStorage.removeItem("parikta_customer_token");
+
+      setCustomer(null);
+      setToken(null);
+    } finally {
+      setAuthLoading(false);
     }
   }, []);
 
@@ -30,8 +55,15 @@ export function CustomerProvider({ children }) {
     const data = await res.json();
 
     if (data.success) {
-      localStorage.setItem("parikta_customer", JSON.stringify(data.customer));
-      localStorage.setItem("parikta_customer_token", data.token);
+      localStorage.setItem(
+        "parikta_customer",
+        JSON.stringify(data.customer)
+      );
+
+      localStorage.setItem(
+        "parikta_customer_token",
+        data.token
+      );
 
       setCustomer(data.customer);
       setToken(data.token);
@@ -52,8 +84,15 @@ export function CustomerProvider({ children }) {
     const data = await res.json();
 
     if (data.success) {
-      localStorage.setItem("parikta_customer", JSON.stringify(data.customer));
-      localStorage.setItem("parikta_customer_token", data.token);
+      localStorage.setItem(
+        "parikta_customer",
+        JSON.stringify(data.customer)
+      );
+
+      localStorage.setItem(
+        "parikta_customer_token",
+        data.token
+      );
 
       setCustomer(data.customer);
       setToken(data.token);
@@ -75,7 +114,8 @@ export function CustomerProvider({ children }) {
       value={{
         customer,
         token,
-        isLoggedIn: !!customer && !!token,
+        authLoading,
+        isLoggedIn: Boolean(customer && token),
         registerCustomer,
         loginCustomer,
         logoutCustomer,

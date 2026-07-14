@@ -27,7 +27,7 @@ const statusSteps = [
 
 function MyOrders() {
   const navigate = useNavigate();
-  const { token, isLoggedIn } = useCustomer();
+  const { token, isLoggedIn, authLoading } = useCustomer();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +53,22 @@ function MyOrders() {
   };
 
   useEffect(() => {
-    if (!isLoggedIn || !token) {
-      navigate("/login");
-      return;
-    }
+  // Pehle localStorage session check complete hone do
+  if (authLoading) return;
 
-    loadOrders();
-  }, [isLoggedIn, token, navigate]);
+  if (!isLoggedIn || !token) {
+    navigate("/login", {
+      replace: true,
+      state: {
+        from: window.location.pathname,
+      },
+    });
+
+    return;
+  }
+
+  loadOrders();
+}, [authLoading, isLoggedIn, token, navigate]);
 
   const handleCancelOrder = async (id) => {
     const confirmCancel = window.confirm(
@@ -113,25 +122,25 @@ function MyOrders() {
     return classes[status] || "bg-gray-100 text-gray-700";
   };
 
-  if (loading) {
-    return (
-      <>
-        <Navbar />
+  if (authLoading || loading) {
+  return (
+    <>
+      <Navbar />
 
-        <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
+      <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
 
-            <h1 className="heading-font text-4xl text-[#5B3B32] mt-5">
-              Loading Orders...
-            </h1>
-          </div>
-        </main>
+          <h1 className="heading-font text-4xl text-[#5B3B32] mt-5">
+            Loading Orders...
+          </h1>
+        </div>
+      </main>
 
-        <Footer />
-      </>
-    );
-  }
+      <Footer />
+    </>
+  );
+}
 
   return (
     <>

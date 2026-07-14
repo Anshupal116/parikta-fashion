@@ -34,10 +34,12 @@ import NewsletterPopup from "./components/NewsletterPopup";
 import WhatsAppButton from "./components/WhatsAppButton";
 import MobileBottomNav from "./components/MobileBottomNav";
 import BackToTop from "./components/BackToTop";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <LoadingScreen />
 
       <Routes>

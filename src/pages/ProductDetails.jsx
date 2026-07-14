@@ -13,14 +13,23 @@ import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import Container from "../components/Container";
 import SEO from "../components/SEO";
+import RatingStars from "../components/reviews/RatingStars";
+import ReviewSummary from "../components/reviews/ReviewSummary";
+import ReviewCard from "../components/reviews/ReviewCard";
+import WriteReviewModal from "../components/reviews/WriteReviewModal";
 
 import { useCart } from "../context/CartContext";
 import { useRecentlyViewed } from "../context/RecentlyViewedContext";
+import { useCustomer } from "../context/CustomerContext";
 
 import {
   getProductById,
   getProducts,
 } from "../services/productService";
+import {
+  getProductReviews,
+  checkReviewEligibility,
+} from "../services/reviewService";
 
 const sizes = ["S", "M", "L", "XL", "XXL"];
 
@@ -30,6 +39,7 @@ function ProductDetails() {
 
   const { addToCart } = useCart();
   const { addRecentlyViewed } = useRecentlyViewed();
+  const { token, isLoggedIn } = useCustomer();
 
   const [product, setProduct] = useState(null);
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -40,6 +50,20 @@ function ProductDetails() {
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [ratingBreakdown, setRatingBreakdown] = useState({
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0,
+  });
+  const [reviewEligibility, setReviewEligibility] = useState(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -117,6 +141,80 @@ function ProductDetails() {
       active = false;
     };
   }, [id]);
+
+  const loadReviews = async () => {
+    try {
+      setReviewsLoading(true);
+
+      const response = await getProductReviews(id);
+
+      if (response.success) {
+        setReviews(response.reviews || []);
+        setAverageRating(Number(response.averageRating || 0));
+        setTotalReviews(Number(response.totalReviews || 0));
+        setRatingBreakdown(
+          response.ratingBreakdown || {
+            5: 0,
+            4: 0,
+            3: 0,
+            2: 0,
+            1: 0,
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Reviews load error:", error);
+      setReviews([]);
+      setAverageRating(0);
+      setTotalReviews(0);
+      setRatingBreakdown({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const loadReviewEligibility = async () => {
+    if (!isLoggedIn || !token) {
+      setReviewEligibility(null);
+      return;
+    }
+
+    try {
+      const response = await checkReviewEligibility(id);
+      setReviewEligibility(response);
+    } catch (error) {
+      console.error("Review eligibility error:", error);
+      setReviewEligibility(null);
+    }
+  };
+
+  useEffect(() => {
+    loadReviews();
+    loadReviewEligibility();
+  }, [id, isLoggedIn, token]);
+
+  const handleOpenReviewModal = () => {
+    if (!isLoggedIn || !token) {
+      navigate("/login", {
+        state: { from: `/product/${id}` },
+      });
+      return;
+    }
+
+    if (!reviewEligibility?.eligible && !reviewEligibility?.alreadyReviewed) {
+      alert(
+        reviewEligibility?.message ||
+          "Review is available after product delivery"
+      );
+      return;
+    }
+
+    setReviewModalOpen(true);
+  };
+
+  const handleReviewSuccess = async () => {
+    await Promise.all([loadReviews(), loadReviewEligibility()]);
+  };
 
   if (loading) {
     return (
@@ -218,6 +316,18 @@ const productSchema = {
         : "https://schema.org/OutOfStock",
     itemCondition: "https://schema.org/NewCondition",
   },
+
+  ...(totalReviews > 0
+    ? {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: averageRating,
+          reviewCount: totalReviews,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }
+    : {}),
 };
 
   const galleryImages = [
@@ -444,6 +554,25 @@ const productSchema = {
                     : product.category ||
                       product.type}
                 </p>
+
+                <div className="flex flex-wrap items-center gap-3 mt-4">
+                  <RatingStars
+                    value={averageRating}
+                    readOnly
+                    size={20}
+                  />
+
+                  <a
+                    href="#customer-reviews"
+                    className="text-sm font-semibold text-[#9A3F4D] hover:underline"
+                  >
+                    {totalReviews > 0
+                      ? `${averageRating.toFixed(1)} (${totalReviews} review${
+                          totalReviews === 1 ? "" : "s"
+                        })`
+                      : "No reviews yet"}
+                  </a>
+                </div>
 
                 <div className="flex flex-wrap items-end gap-3 mt-5">
                   <span className="text-3xl md:text-4xl font-semibold text-[#9A213A]">
@@ -689,6 +818,65 @@ const productSchema = {
           </Container>
         </section>
 
+        <section
+          id="customer-reviews"
+          className="py-12 md:py-16 bg-[#fffaf7] border-t border-[#eadbd4]"
+        >
+          <Container>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8">
+              <div>
+                <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+                  Real Customer Experience
+                </p>
+
+                <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-2">
+                  Ratings & Reviews
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenReviewModal}
+                className="bg-[#9A3F4D] text-white px-6 py-3 rounded-xl font-semibold"
+              >
+                {reviewEligibility?.alreadyReviewed
+                  ? "Edit Your Review"
+                  : "Write A Review"}
+              </button>
+            </div>
+
+            <ReviewSummary
+              averageRating={averageRating}
+              totalReviews={totalReviews}
+              ratingBreakdown={ratingBreakdown}
+            />
+
+            <div className="mt-8">
+              {reviewsLoading ? (
+                <div className="text-center py-12 text-[#8b746b]">
+                  Loading reviews...
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="grid lg:grid-cols-2 gap-5">
+                  {reviews.map((review) => (
+                    <ReviewCard key={review._id} review={review} />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-[#eadbd4] rounded-3xl p-10 text-center">
+                  <h3 className="heading-font text-3xl text-[#5B3B32]">
+                    No Reviews Yet
+                  </h3>
+
+                  <p className="text-[#8b746b] mt-3">
+                    Be the first verified customer to review this product.
+                  </p>
+                </div>
+              )}
+            </div>
+          </Container>
+        </section>
+
         {similarProducts.length > 0 && (
           <section className="py-12 md:py-16 bg-[#f7f2ee] border-t border-[#eadbd4]">
             <Container>
@@ -767,6 +955,18 @@ const productSchema = {
           />
         </div>
       )}
+
+      <WriteReviewModal
+        open={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        productId={product._id}
+        existingReview={
+          reviewEligibility?.alreadyReviewed
+            ? reviewEligibility.review
+            : null
+        }
+        onSuccess={handleReviewSuccess}
+      />
 
       <Footer />
     </>

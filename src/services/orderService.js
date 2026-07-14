@@ -64,11 +64,7 @@ export const cancelOrder = async (orderId, token) => {
   );
 
   return response.data;
-};
-
-export const cancelMyOrder = async (orderId, token) => {
-  return cancelOrder(orderId, token);
-};
+  };
 
 // Purane component me cancelMyOrder use ho raha ho to ye bhi kaam karega
 export const cancelMyOrder = async (orderId, token) => {

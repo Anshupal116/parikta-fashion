@@ -4,6 +4,8 @@ import {
   FiBox,
   FiCheckCircle,
   FiClock,
+  FiEdit3,
+  FiStar,
   FiTruck,
   FiXCircle,
 } from "react-icons/fi";
@@ -11,12 +13,16 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Container from "../components/Container";
+import WriteReviewModal from "../components/reviews/WriteReviewModal";
 
 import { useCustomer } from "../context/CustomerContext";
 import {
   getMyOrders,
   cancelMyOrder,
 } from "../services/orderService";
+import {
+  checkReviewEligibility,
+} from "../services/reviewService";
 
 const statusSteps = [
   "Pending",
@@ -33,6 +39,10 @@ function MyOrders() {
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState("");
 
+  const [reviewStatusByProduct, setReviewStatusByProduct] = useState({});
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedReviewProduct, setSelectedReviewProduct] = useState(null);
+
   const loadOrders = async () => {
     try {
       setLoading(true);
@@ -46,29 +56,168 @@ function MyOrders() {
       }
     } catch (error) {
       console.error("My orders error:", error);
-      alert("Orders load nahi hue");
+      alert(
+        error.response?.data?.message || "Orders load nahi hue"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-  // Pehle localStorage session check complete hone do
-  if (authLoading) return;
+    if (authLoading) return;
 
-  if (!isLoggedIn || !token) {
-    navigate("/login", {
-      replace: true,
-      state: {
-        from: window.location.pathname,
-      },
+    if (!isLoggedIn || !token) {
+      navigate("/login", {
+        replace: true,
+        state: {
+          from: window.location.pathname,
+        },
+      });
+
+      return;
+    }
+
+    loadOrders();
+  }, [authLoading, isLoggedIn, token, navigate]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !token || orders.length === 0) return;
+
+    const deliveredProductIds = [
+      ...new Set(
+        orders
+          .filter((order) => order.status === "Delivered")
+          .flatMap((order) => order.items || [])
+          .map((item) => item.productId)
+          .filter(Boolean)
+      ),
+    ];
+
+    if (deliveredProductIds.length === 0) return;
+
+    let active = true;
+
+    const loadReviewStatuses = async () => {
+      const loadingState = {};
+
+      deliveredProductIds.forEach((productId) => {
+        loadingState[productId] = {
+          loading: true,
+        };
+      });
+
+      setReviewStatusByProduct((current) => ({
+        ...current,
+        ...loadingState,
+      }));
+
+      const results = await Promise.allSettled(
+        deliveredProductIds.map(async (productId) => {
+          const response = await checkReviewEligibility(productId);
+          return { productId, response };
+        })
+      );
+
+      if (!active) return;
+
+      setReviewStatusByProduct((current) => {
+        const nextState = { ...current };
+
+        results.forEach((result, index) => {
+          const productId = deliveredProductIds[index];
+
+          if (result.status === "fulfilled") {
+            nextState[result.value.productId] = {
+              loading: false,
+              ...result.value.response,
+            };
+          } else {
+            nextState[productId] = {
+              loading: false,
+              eligible: false,
+              alreadyReviewed: false,
+              message:
+                result.reason?.response?.data?.message ||
+                "Review status check failed",
+            };
+          }
+        });
+
+        return nextState;
+      });
+    };
+
+    loadReviewStatuses();
+
+    return () => {
+      active = false;
+    };
+  }, [orders, isLoggedIn, token]);
+
+  const refreshReviewStatus = async (productId) => {
+    if (!productId) return;
+
+    try {
+      setReviewStatusByProduct((current) => ({
+        ...current,
+        [productId]: {
+          ...(current[productId] || {}),
+          loading: true,
+        },
+      }));
+
+      const response = await checkReviewEligibility(productId);
+
+      setReviewStatusByProduct((current) => ({
+        ...current,
+        [productId]: {
+          loading: false,
+          ...response,
+        },
+      }));
+    } catch (error) {
+      console.error("Review eligibility refresh error:", error);
+
+      setReviewStatusByProduct((current) => ({
+        ...current,
+        [productId]: {
+          loading: false,
+          eligible: false,
+          alreadyReviewed: false,
+          message:
+            error.response?.data?.message ||
+            "Review status check failed",
+        },
+      }));
+    }
+  };
+
+  const openReviewModal = (item) => {
+    if (!item?.productId) return;
+
+    setSelectedReviewProduct({
+      productId: item.productId,
+      name: item.name,
+      image: item.image,
     });
+    setReviewModalOpen(true);
+  };
 
-    return;
-  }
+  const closeReviewModal = () => {
+    setReviewModalOpen(false);
+    setSelectedReviewProduct(null);
+  };
 
-  loadOrders();
-}, [authLoading, isLoggedIn, token, navigate]);
+  const handleReviewSuccess = async () => {
+    const productId = selectedReviewProduct?.productId;
+
+    closeReviewModal();
+
+    if (productId) {
+      await refreshReviewStatus(productId);
+    }
+  };
 
   const handleCancelOrder = async (id) => {
     const confirmCancel = window.confirm(
@@ -90,7 +239,9 @@ function MyOrders() {
       }
     } catch (error) {
       console.error(error);
-      alert("Order cancel nahi hua");
+      alert(
+        error.response?.data?.message || "Order cancel nahi hua"
+      );
     } finally {
       setCancellingId("");
     }
@@ -122,25 +273,84 @@ function MyOrders() {
     return classes[status] || "bg-gray-100 text-gray-700";
   };
 
-  if (authLoading || loading) {
-  return (
-    <>
-      <Navbar />
+  const renderReviewAction = (item) => {
+    if (!item?.productId) {
+      return (
+        <p className="text-xs text-[#8b746b] mt-3">
+          Review is unavailable for this product.
+        </p>
+      );
+    }
 
-      <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
+    const reviewStatus = reviewStatusByProduct[item.productId];
 
-          <h1 className="heading-font text-4xl text-[#5B3B32] mt-5">
-            Loading Orders...
-          </h1>
+    if (!reviewStatus || reviewStatus.loading) {
+      return (
+        <p className="text-xs text-[#8b746b] mt-3">
+          Checking review status...
+        </p>
+      );
+    }
+
+    if (reviewStatus.alreadyReviewed) {
+      return (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => openReviewModal(item)}
+            className="inline-flex items-center gap-2 border border-[#9A3F4D] text-[#9A3F4D] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#fff1f3] transition"
+          >
+            <FiEdit3 />
+            Edit Review
+          </button>
+
+          <span className="text-xs bg-yellow-50 border border-yellow-200 text-yellow-700 px-3 py-2 rounded-full font-semibold">
+            {reviewStatus.review?.status || "Pending"}
+          </span>
         </div>
-      </main>
+      );
+    }
 
-      <Footer />
-    </>
-  );
-}
+    if (reviewStatus.eligible) {
+      return (
+        <button
+          type="button"
+          onClick={() => openReviewModal(item)}
+          className="mt-4 inline-flex items-center gap-2 bg-[#9A3F4D] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#7d1930] transition"
+        >
+          <FiStar />
+          Write Review
+        </button>
+      );
+    }
+
+    return (
+      <p className="text-xs text-[#8b746b] mt-3">
+        {reviewStatus.message ||
+          "Review is available after product delivery."}
+      </p>
+    );
+  };
+
+  if (authLoading || loading) {
+    return (
+      <>
+        <Navbar />
+
+        <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
+
+            <h1 className="heading-font text-4xl text-[#5B3B32] mt-5">
+              Loading Orders...
+            </h1>
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -295,18 +505,36 @@ function MyOrders() {
                         {order.items?.map((item, index) => (
                           <div
                             key={`${item.productId}-${index}`}
-                            className="flex gap-4 border-b border-[#eadbd4] pb-4 last:border-b-0"
+                            className="flex flex-col sm:flex-row gap-4 border-b border-[#eadbd4] pb-5 last:border-b-0"
                           >
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-24 h-32 object-cover object-top rounded-2xl bg-[#f7f2ee]"
-                            />
+                            {item.productId ? (
+                              <Link to={`/product/${item.productId}`}>
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-24 h-32 object-cover object-top rounded-2xl bg-[#f7f2ee]"
+                                />
+                              </Link>
+                            ) : (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-24 h-32 object-cover object-top rounded-2xl bg-[#f7f2ee]"
+                              />
+                            )}
 
                             <div className="flex-1">
-                              <h3 className="heading-font text-2xl text-[#5B3B32]">
-                                {item.name}
-                              </h3>
+                              {item.productId ? (
+                                <Link to={`/product/${item.productId}`}>
+                                  <h3 className="heading-font text-2xl text-[#5B3B32] hover:text-[#9A3F4D]">
+                                    {item.name}
+                                  </h3>
+                                </Link>
+                              ) : (
+                                <h3 className="heading-font text-2xl text-[#5B3B32]">
+                                  {item.name}
+                                </h3>
+                              )}
 
                               <p className="text-[#8b746b] text-sm mt-2">
                                 Quantity: {item.qty || 1}
@@ -318,6 +546,9 @@ function MyOrders() {
                                   item.price
                                 ).toLocaleString("en-IN")}
                               </p>
+
+                              {order.status === "Delivered" &&
+                                renderReviewAction(item)}
                             </div>
                           </div>
                         ))}
@@ -338,7 +569,9 @@ function MyOrders() {
                                       : "bg-[#FDEAE6] text-[#9A3F4D]"
                                   }`}
                                 >
-                                  {index < currentStepIndex ? "✓" : index + 1}
+                                  {index < currentStepIndex
+                                    ? "✓"
+                                    : index + 1}
                                 </div>
 
                                 <p className="text-[10px] md:text-xs text-[#5B3B32] font-semibold mt-2">
@@ -409,6 +642,20 @@ function MyOrders() {
       </main>
 
       <Footer />
+
+      <WriteReviewModal
+        open={reviewModalOpen}
+        onClose={closeReviewModal}
+        productId={selectedReviewProduct?.productId}
+        existingReview={
+          selectedReviewProduct?.productId
+            ? reviewStatusByProduct[
+                selectedReviewProduct.productId
+              ]?.review || null
+            : null
+        }
+        onSuccess={handleReviewSuccess}
+      />
     </>
   );
 }

@@ -49,22 +49,25 @@ export const getOrderById = async (orderId, token) => {
 };
 
 // Customer apna order cancel karega
-export const cancelOrder = async (orderId) => {
-  console.log("NEW CANCEL FUNCTION RUNNING");
-  
-  const token = localStorage.getItem("parikta_customer_token");
+export const cancelOrder = async (orderId, token) => {
+  const authToken =
+    token || localStorage.getItem("parikta_customer_token");
 
   const response = await axios.put(
-    `${API_URL}/my-orders/${orderId}/cancel`,
+    `${API_URL}/orders/my-orders/${orderId}/cancel`,
     {},
     {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
     }
   );
 
   return response.data;
+};
+
+export const cancelMyOrder = async (orderId, token) => {
+  return cancelOrder(orderId, token);
 };
 
 // Purane component me cancelMyOrder use ho raha ho to ye bhi kaam karega

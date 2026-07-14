@@ -4,7 +4,8 @@ const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const getAuthConfig = (token) => {
-  const authToken = token || localStorage.getItem("parikta_customer_token");
+  const authToken =
+    token || localStorage.getItem("parikta_customer_token");
 
   return {
     headers: {
@@ -17,7 +18,6 @@ const getAuthConfig = (token) => {
 // CUSTOMER ORDER FUNCTIONS
 // ===============================
 
-// New order create karna
 export const createOrder = async (orderData, token) => {
   const response = await axios.post(
     `${API_URL}/orders`,
@@ -28,7 +28,6 @@ export const createOrder = async (orderData, token) => {
   return response.data;
 };
 
-// Logged-in customer ke orders
 export const getMyOrders = async (token) => {
   const response = await axios.get(
     `${API_URL}/orders/my-orders`,
@@ -38,7 +37,6 @@ export const getMyOrders = async (token) => {
   return response.data;
 };
 
-// Single order ki details
 export const getOrderById = async (orderId, token) => {
   const response = await axios.get(
     `${API_URL}/orders/${orderId}`,
@@ -48,25 +46,16 @@ export const getOrderById = async (orderId, token) => {
   return response.data;
 };
 
-// Customer apna order cancel karega
 export const cancelOrder = async (orderId, token) => {
-  const authToken =
-    token || localStorage.getItem("parikta_customer_token");
-
   const response = await axios.put(
     `${API_URL}/orders/my-orders/${orderId}/cancel`,
     {},
-    {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    }
+    getAuthConfig(token)
   );
 
   return response.data;
-  };
+};
 
-// Purane component me cancelMyOrder use ho raha ho to ye bhi kaam karega
 export const cancelMyOrder = async (orderId, token) => {
   return cancelOrder(orderId, token);
 };
@@ -75,13 +64,12 @@ export const cancelMyOrder = async (orderId, token) => {
 // ADMIN ORDER FUNCTIONS
 // ===============================
 
-// Admin: sabhi orders fetch karna
 export const getOrders = async () => {
   const response = await axios.get(`${API_URL}/orders`);
+
   return response.data;
 };
 
-// Admin: order status update karna
 export const updateOrderStatus = async (orderId, status) => {
   const response = await axios.put(
     `${API_URL}/orders/${orderId}/status`,
@@ -91,7 +79,6 @@ export const updateOrderStatus = async (orderId, status) => {
   return response.data;
 };
 
-// Admin: order delete karna
 export const deleteOrder = async (orderId) => {
   const response = await axios.delete(
     `${API_URL}/orders/${orderId}`

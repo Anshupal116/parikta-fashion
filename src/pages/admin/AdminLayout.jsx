@@ -93,7 +93,12 @@ function AdminLayout() {
           >
             Orders
           </Link>
-
+          <Link
+  className="block px-4 py-3 rounded-xl hover:bg-white/10"
+  to="/admin-dashboard/reviews"
+>
+  Reviews
+</Link>
           <Link
             className="block px-4 py-3 rounded-xl hover:bg-white/10"
             to="/admin-dashboard/custom-orders"

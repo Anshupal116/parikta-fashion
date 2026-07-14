@@ -31,6 +31,7 @@ import TrackOrder from "./pages/TrackOrder";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import MyOrders from "./pages/MyOrders";
+import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -97,6 +98,7 @@ function App() {
           <Route path="add-product" element={<AddProduct />} />
           <Route path="edit-product/:id" element={<EditProduct />} />
           <Route path="orders" element={<OrdersAdmin />} />
+          <Route path="reviews" element={<ReviewsAdmin />} />
           <Route path="custom-orders" element={<CustomOrdersAdmin />} />
           <Route path="customers" element={<CustomersAdmin />} />
           <Route path="settings" element={<SettingsAdmin />} />

@@ -1,13 +1,60 @@
 const Product = require("../models/Product");
+const Review = require("../models/Review");
 
 // GET all products
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const productIds = products.map((p) => p._id);
+
+    const reviewStats = await Review.aggregate([
+      {
+        $match: {
+          status: "Approved",
+          productId: { $in: productIds },
+        },
+      },
+      {
+        $group: {
+          _id: "$productId",
+          averageRating: {
+            $avg: "$rating",
+          },
+          reviewCount: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+
+    const ratingMap = {};
+
+    reviewStats.forEach((item) => {
+      ratingMap[item._id.toString()] = {
+        averageRating: Number(
+          item.averageRating.toFixed(1)
+        ),
+        reviewCount: item.reviewCount,
+      };
+    });
+
+    const finalProducts = products.map((product) => ({
+      ...product,
+      averageRating:
+        ratingMap[product._id.toString()]
+          ?.averageRating || 0,
+
+      reviewCount:
+        ratingMap[product._id.toString()]
+          ?.reviewCount || 0,
+    }));
 
     res.status(200).json({
       success: true,
-      products,
+      products: finalProducts,
     });
   } catch (error) {
     res.status(500).json({
@@ -17,7 +64,6 @@ exports.getProducts = async (req, res) => {
     });
   }
 };
-
 // GET single product
 exports.getProductById = async (req, res) => {
   try {

@@ -44,7 +44,19 @@ function ProductCard({ item }) {
             {item.name}
           </h3>
         </Link>
+        <div className="flex items-center justify-center gap-1 mt-2">
+  <span className="text-[#C9A227] text-sm">
+    ★★★★★
+  </span>
 
+  <span className="text-xs font-semibold text-[#5B3B32]">
+    {item.averageRating || 0}
+  </span>
+
+  <span className="text-xs text-[#8b746b]">
+    ({item.reviewCount || 0})
+  </span>
+</div>
         <div className="flex items-center justify-center gap-2 mt-3">
           <span className="text-[#9A3F4D] font-semibold text-sm md:text-base">
             ₹{item.price}

@@ -32,14 +32,7 @@ export const cancelOrder = async (orderId) => {
   return response.data;
 };
 
-export const getOrderById = async (orderId) => {
-  const response = await axios.get(
-    `${API_URL}/orders/${orderId}`,
-    getAuthConfig()
-  );
 
-  return response.data;
-};
 
 export const getMyOrders = async (token) => {
   const res = await fetch(`${API_URL}/my-orders`, {

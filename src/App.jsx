@@ -1,6 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import ReactGA from "react-ga4";
 
 import Home from "./pages/Home";
@@ -43,13 +42,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import CartDrawer from "./components/CartDrawer";
 import FloatingCartButton from "./components/FloatingCartButton";
 
-const location = useLocation();
-
-const isAdminPage =
-  location.pathname.startsWith("/admin-dashboard");
-  location.pathname.startsWith("/admin-login");
-
-
 function AnalyticsTracker() {
   const location = useLocation();
 
@@ -67,6 +59,29 @@ function AnalyticsTracker() {
   return null;
 }
 
+
+function GlobalCustomerUI() {
+  const location = useLocation();
+
+  const isAdminPage =
+    location.pathname.startsWith("/admin-dashboard") ||
+    location.pathname === "/pf-x7-admin-2026";
+
+  if (isAdminPage) {
+    return null;
+  }
+
+  return (
+    <>
+      <CartDrawer />
+      <FloatingCartButton />
+      <NewsletterPopup />
+      <BackToTop />
+      <WhatsAppButton />
+      <MobileBottomNav />
+    </>
+  );
+}
 
 function App() {
   return (
@@ -116,17 +131,8 @@ function App() {
           <Route path="coupons" element={<CouponsAdmin />} />
         </Route>
       </Routes>
-      
-      {!isAdminPage && (
-  <>
-    <CartDrawer />
-    <FloatingCartButton />
-  </>
-)} 
-      <NewsletterPopup />
-      <BackToTop />
-      <WhatsAppButton />
-      <MobileBottomNav />
+
+      <GlobalCustomerUI />
     </BrowserRouter>
   );
 }

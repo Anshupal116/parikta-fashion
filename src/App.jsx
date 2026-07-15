@@ -32,6 +32,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import MyOrders from "./pages/MyOrders";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
+import CouponsAdmin from "./pages/admin/CouponsAdmin";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -104,6 +105,7 @@ function App() {
           <Route path="custom-orders" element={<CustomOrdersAdmin />} />
           <Route path="customers" element={<CustomersAdmin />} />
           <Route path="settings" element={<SettingsAdmin />} />
+          <Route path="coupons" element={<CouponsAdmin />} />
         </Route>
       </Routes>
       

@@ -17,16 +17,18 @@ import { useCustomer } from "../context/CustomerContext";
 import Container from "./Container";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
-import MiniCartDrawer from "./MiniCartDrawer";
+import CartDrawer from "./CartDrawer";
 
 function Navbar() {
-  const { cartCount } = useCart();
+  const {
+  cartCount,
+  openCart,
+} = useCart();
   const { wishlistCount } = useWishlist();
   const { customer, isLoggedIn, logoutCustomer } = useCustomer();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const handleLogout = () => {
@@ -84,7 +86,7 @@ function Navbar() {
                 )}
               </Link>
 
-              <button onClick={() => setCartOpen(true)} className="relative">
+              <button onClick={openCart} className="relative" >
                 <FiShoppingBag size={21} />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-3 bg-[#9A3F4D] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
@@ -218,7 +220,7 @@ function Navbar() {
       </nav>
 
       <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-      <MiniCartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer />
     </>
   );
 }

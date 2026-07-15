@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
 import {
+  FiEye,
+  FiMapPin,
+  FiPrinter,
+  FiShoppingBag,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
+
+import {
   getOrders,
   updateOrderStatus,
   deleteOrder,
@@ -10,6 +19,8 @@ function OrdersAdmin() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
   const [deletingId, setDeletingId] = useState("");
+
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const loadOrders = async () => {
     try {
@@ -24,7 +35,11 @@ function OrdersAdmin() {
       }
     } catch (error) {
       console.error("Orders load error:", error);
-      alert(error.response?.data?.message || "Orders load failed");
+
+      alert(
+        error.response?.data?.message ||
+          "Orders load failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -34,11 +49,21 @@ function OrdersAdmin() {
     loadOrders();
   }, []);
 
-  const handleStatusChange = async (id, currentStatus, newStatus) => {
+  const handleStatusChange = async (
+    id,
+    currentStatus,
+    newStatus
+  ) => {
     if (currentStatus === newStatus) return;
 
-    if (["Cancelled", "Delivered"].includes(currentStatus)) {
-      alert(`${currentStatus} order ka status change nahi ho sakta`);
+    if (
+      ["Cancelled", "Delivered"].includes(
+        currentStatus
+      )
+    ) {
+      alert(
+        `${currentStatus} order ka status change nahi ho sakta`
+      );
       return;
     }
 
@@ -51,7 +76,10 @@ function OrdersAdmin() {
     try {
       setUpdatingId(id);
 
-      const response = await updateOrderStatus(id, newStatus);
+      const response = await updateOrderStatus(
+        id,
+        newStatus
+      );
 
       if (response.success) {
         setOrders((currentOrders) =>
@@ -65,13 +93,27 @@ function OrdersAdmin() {
           )
         );
 
+        if (selectedOrder?._id === id) {
+          setSelectedOrder((current) => ({
+            ...current,
+            status: newStatus,
+          }));
+        }
+
         alert("Order status updated successfully");
       } else {
-        alert(response.message || "Status update failed");
+        alert(
+          response.message ||
+            "Status update failed"
+        );
+
         loadOrders();
       }
     } catch (error) {
-      console.error("Status update error:", error);
+      console.error(
+        "Status update error:",
+        error
+      );
 
       alert(
         error.response?.data?.message ||
@@ -84,7 +126,10 @@ function OrdersAdmin() {
     }
   };
 
-  const handleDelete = async (id, orderId) => {
+  const handleDelete = async (
+    id,
+    orderId
+  ) => {
     const ok = window.confirm(
       `Are you sure you want to permanently delete order ${orderId}?`
     );
@@ -98,12 +143,21 @@ function OrdersAdmin() {
 
       if (response.success) {
         setOrders((currentOrders) =>
-          currentOrders.filter((order) => order._id !== id)
+          currentOrders.filter(
+            (order) => order._id !== id
+          )
         );
+
+        if (selectedOrder?._id === id) {
+          setSelectedOrder(null);
+        }
 
         alert("Order deleted successfully");
       } else {
-        alert(response.message || "Order delete failed");
+        alert(
+          response.message ||
+            "Order delete failed"
+        );
       }
     } catch (error) {
       console.error("Order delete error:", error);
@@ -137,11 +191,16 @@ function OrdersAdmin() {
     );
   };
 
-  const totalRevenue = orders.reduce((sum, order) => {
-    if (order.status === "Cancelled") return sum;
+  const totalRevenue = orders.reduce(
+    (sum, order) => {
+      if (order.status === "Cancelled") {
+        return sum;
+      }
 
-    return sum + Number(order.amount || 0);
-  }, 0);
+      return sum + Number(order.amount || 0);
+    },
+    0
+  );
 
   const pendingOrders = orders.filter(
     (order) => order.status === "Pending"
@@ -154,6 +213,10 @@ function OrdersAdmin() {
   const cancelledOrders = orders.filter(
     (order) => order.status === "Cancelled"
   ).length;
+
+  const printOrder = () => {
+    window.print();
+  };
 
   if (loading) {
     return (
@@ -179,7 +242,6 @@ function OrdersAdmin() {
         <p className="text-[#8b746b] mt-2">
           Manage, track and update customer orders.
         </p>
-        
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
@@ -190,7 +252,9 @@ function OrdersAdmin() {
           ["Cancelled", cancelledOrders],
           [
             "Revenue",
-            `₹${totalRevenue.toLocaleString("en-IN")}`,
+            `₹${totalRevenue.toLocaleString(
+              "en-IN"
+            )}`,
           ],
         ].map(([label, value]) => (
           <div
@@ -210,18 +274,34 @@ function OrdersAdmin() {
 
       <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-left">
+          <table className="w-full min-w-[1280px] text-left">
             <thead className="bg-[#FDEAE6] text-[#5B3B32]">
               <tr>
-                <th className="p-4 whitespace-nowrap">Order ID</th>
-                <th className="p-4 whitespace-nowrap">Customer</th>
-                <th className="p-4 whitespace-nowrap">Phone</th>
+                <th className="p-4 whitespace-nowrap">
+                  Order ID
+                </th>
+                <th className="p-4 whitespace-nowrap">
+                  Customer
+                </th>
+                <th className="p-4 whitespace-nowrap">
+                  Phone
+                </th>
                 <th className="p-4">Items</th>
-                <th className="p-4 whitespace-nowrap">Amount</th>
-                <th className="p-4 whitespace-nowrap">Payment</th>
-                <th className="p-4 whitespace-nowrap">Date</th>
-                <th className="p-4 whitespace-nowrap">Status</th>
-                <th className="p-4 whitespace-nowrap">Action</th>
+                <th className="p-4 whitespace-nowrap">
+                  Amount
+                </th>
+                <th className="p-4 whitespace-nowrap">
+                  Payment
+                </th>
+                <th className="p-4 whitespace-nowrap">
+                  Date
+                </th>
+                <th className="p-4 whitespace-nowrap">
+                  Status
+                </th>
+                <th className="p-4 whitespace-nowrap">
+                  Action
+                </th>
               </tr>
             </thead>
 
@@ -232,8 +312,11 @@ function OrdersAdmin() {
                   "Delivered",
                 ].includes(order.status);
 
-                const isUpdating = updatingId === order._id;
-                const isDeleting = deletingId === order._id;
+                const isUpdating =
+                  updatingId === order._id;
+
+                const isDeleting =
+                  deletingId === order._id;
 
                 return (
                   <tr
@@ -245,7 +328,8 @@ function OrdersAdmin() {
                     </td>
 
                     <td className="p-4 font-semibold whitespace-nowrap">
-                      {order.customer?.name || "Guest Customer"}
+                      {order.customer?.name ||
+                        "Guest Customer"}
                     </td>
 
                     <td className="p-4 whitespace-nowrap">
@@ -258,7 +342,9 @@ function OrdersAdmin() {
                           ? order.items
                               .map(
                                 (item) =>
-                                  `${item.name} × ${item.qty || 1}`
+                                  `${item.name} × ${
+                                    item.qty || 1
+                                  }`
                               )
                               .join(", ")
                           : "No items"}
@@ -280,11 +366,14 @@ function OrdersAdmin() {
                       {order.createdAt
                         ? new Date(
                             order.createdAt
-                          ).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })
+                          ).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )
                         : "-"}
                     </td>
 
@@ -301,7 +390,8 @@ function OrdersAdmin() {
 
                           <p
                             className={`text-[11px] mt-2 ${
-                              order.status === "Cancelled"
+                              order.status ===
+                              "Cancelled"
                                 ? "text-red-600"
                                 : "text-green-700"
                             }`}
@@ -325,15 +415,12 @@ function OrdersAdmin() {
                           <option value="Pending">
                             Pending
                           </option>
-
                           <option value="Confirmed">
                             Confirmed
                           </option>
-
                           <option value="Shipped">
                             Shipped
                           </option>
-
                           <option value="Delivered">
                             Delivered
                           </option>
@@ -348,18 +435,34 @@ function OrdersAdmin() {
                     </td>
 
                     <td className="p-4">
-                      <button
-                        onClick={() =>
-                          handleDelete(
-                            order._id,
-                            order.orderId
-                          )
-                        }
-                        disabled={isDeleting}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isDeleting ? "Deleting..." : "Delete"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedOrder(order)
+                          }
+                          className="bg-[#5B3B32] hover:bg-[#3e2f29] text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2"
+                        >
+                          <FiEye />
+                          View
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(
+                              order._id,
+                              order.orderId
+                            )
+                          }
+                          disabled={isDeleting}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isDeleting
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -380,6 +483,255 @@ function OrdersAdmin() {
           </div>
         )}
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 print:bg-white">
+          <div className="w-full max-w-5xl max-h-[94vh] overflow-y-auto bg-[#fffaf7] rounded-3xl shadow-2xl print:max-w-none print:max-h-none print:shadow-none print:rounded-none">
+            <header className="px-6 md:px-8 py-6 border-b border-[#eadbd4] flex items-start justify-between gap-4 print:border-b-2">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-[#BFA996]">
+                  Order Details
+                </p>
+
+                <h2 className="heading-font text-4xl text-[#5B3B32] mt-1">
+                  {selectedOrder.orderId}
+                </h2>
+
+                <p className="text-sm text-[#8b746b] mt-2">
+                  {selectedOrder.createdAt
+                    ? new Date(
+                        selectedOrder.createdAt
+                      ).toLocaleString("en-IN")
+                    : "-"}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 print:hidden">
+                <button
+                  type="button"
+                  onClick={printOrder}
+                  className="border border-[#9A3F4D] text-[#9A3F4D] px-4 py-3 rounded-xl font-semibold flex items-center gap-2"
+                >
+                  <FiPrinter />
+                  Print
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedOrder(null)
+                  }
+                  className="w-11 h-11 rounded-full border border-[#eadbd4] text-[#5B3B32] flex items-center justify-center"
+                >
+                  <FiX size={21} />
+                </button>
+              </div>
+            </header>
+
+            <div className="p-6 md:p-8 space-y-7">
+              <div className="grid md:grid-cols-2 gap-5">
+                <section className="bg-white border border-[#eadbd4] rounded-2xl p-5">
+                  <div className="flex items-center gap-3">
+                    <FiUser className="text-[#9A3F4D]" />
+                    <h3 className="font-bold text-[#5B3B32]">
+                      Customer Information
+                    </h3>
+                  </div>
+
+                  <div className="mt-4 space-y-2 text-sm text-[#6d554d]">
+                    <p>
+                      <strong>Name:</strong>{" "}
+                      {selectedOrder.customer?.name ||
+                        "-"}
+                    </p>
+                    <p>
+                      <strong>Phone:</strong>{" "}
+                      {selectedOrder.customer?.phone ||
+                        "-"}
+                    </p>
+                    <p>
+                      <strong>Email:</strong>{" "}
+                      {selectedOrder.customer?.email ||
+                        "-"}
+                    </p>
+                  </div>
+                </section>
+
+                <section className="bg-white border border-[#eadbd4] rounded-2xl p-5">
+                  <div className="flex items-center gap-3">
+                    <FiMapPin className="text-[#9A3F4D]" />
+                    <h3 className="font-bold text-[#5B3B32]">
+                      Shipping Address
+                    </h3>
+                  </div>
+
+                  <p className="mt-4 text-sm text-[#6d554d] leading-6">
+                    {[
+                      selectedOrder.address?.house,
+                      selectedOrder.address?.city,
+                      selectedOrder.address?.state,
+                      selectedOrder.address?.pincode,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "-"}
+                  </p>
+                </section>
+              </div>
+
+              <section className="bg-white border border-[#eadbd4] rounded-2xl p-5">
+                <div className="flex items-center gap-3">
+                  <FiShoppingBag className="text-[#9A3F4D]" />
+                  <h3 className="font-bold text-[#5B3B32]">
+                    Ordered Items
+                  </h3>
+                </div>
+
+                <div className="mt-5 space-y-4">
+                  {selectedOrder.items?.map(
+                    (item, index) => (
+                      <div
+                        key={`${item.productId}-${index}`}
+                        className="grid grid-cols-[80px_1fr_auto] gap-4 items-center border-b border-[#eadbd4] pb-4 last:border-b-0"
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-20 h-24 object-cover object-top rounded-xl bg-[#FDEAE6]"
+                        />
+
+                        <div>
+                          <h4 className="font-bold text-[#5B3B32]">
+                            {item.name}
+                          </h4>
+
+                          <p className="text-sm text-[#8b746b] mt-1">
+                            Size:{" "}
+                            {item.selectedSize ||
+                              "Free Size"}
+                          </p>
+
+                          <p className="text-sm text-[#8b746b]">
+                            Qty: {item.qty || 1} × ₹
+                            {Number(
+                              item.price || 0
+                            ).toLocaleString(
+                              "en-IN"
+                            )}
+                          </p>
+                        </div>
+
+                        <p className="font-bold text-[#9A3F4D] whitespace-nowrap">
+                          ₹
+                          {(
+                            Number(item.price || 0) *
+                            Number(item.qty || 1)
+                          ).toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
+
+              <div className="grid md:grid-cols-2 gap-5">
+                <section className="bg-white border border-[#eadbd4] rounded-2xl p-5">
+                  <h3 className="font-bold text-[#5B3B32]">
+                    Payment & Status
+                  </h3>
+
+                  <div className="mt-4 space-y-3 text-sm text-[#6d554d]">
+                    <div className="flex justify-between">
+                      <span>Payment Method</span>
+                      <strong>
+                        {selectedOrder.paymentMethod ||
+                          "-"}
+                      </strong>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Payment Status</span>
+                      <strong>
+                        {selectedOrder.paymentStatus ||
+                          "Pending"}
+                      </strong>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span>Order Status</span>
+                      <span
+                        className={`px-3 py-1.5 rounded-full border text-xs font-bold ${getStatusClass(
+                          selectedOrder.status
+                        )}`}
+                      >
+                        {selectedOrder.status}
+                      </span>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="bg-white border border-[#eadbd4] rounded-2xl p-5">
+                  <h3 className="font-bold text-[#5B3B32]">
+                    Price Breakdown
+                  </h3>
+
+                  <div className="mt-4 space-y-3 text-sm text-[#6d554d]">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <strong>
+                        ₹
+                        {Number(
+                          selectedOrder.subtotal ??
+                            selectedOrder.amount ??
+                            0
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
+                      </strong>
+                    </div>
+
+                    <div className="flex justify-between text-green-700">
+                      <span>
+                        Coupon{" "}
+                        {selectedOrder.couponCode
+                          ? `(${selectedOrder.couponCode})`
+                          : ""}
+                      </span>
+                      <strong>
+                        -₹
+                        {Number(
+                          selectedOrder.discountAmount ||
+                            0
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
+                      </strong>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Shipping</span>
+                      <strong className="text-green-700">
+                        Free
+                      </strong>
+                    </div>
+
+                    <div className="border-t border-[#eadbd4] pt-3 flex justify-between text-lg text-[#5B3B32]">
+                      <span>Grand Total</span>
+                      <strong>
+                        ₹
+                        {Number(
+                          selectedOrder.amount || 0
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
+                      </strong>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

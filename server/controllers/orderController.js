@@ -4,6 +4,9 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
 
+const crypto = require("crypto");
+const razorpay = require("../config/razorpay");
+
 const normalizeCode = (code = "") => {
   return String(code).trim().toUpperCase();
 };
@@ -443,6 +446,88 @@ exports.createOrder = async (req, res) => {
           error.message ||
           "Order create failed",
       });
+  }
+};
+
+exports.createRazorpayOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid amount",
+      });
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), // ₹ -> Paise
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    return res.status(200).json({
+      success: true,
+      order: razorpayOrder,
+      key: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Razorpay order create failed",
+    });
+  }
+};
+
+exports.verifyRazorpayPayment = async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId,
+    } = req.body;
+
+    const generatedSignature = crypto
+      .createHmac(
+        "sha256",
+        process.env.RAZORPAY_KEY_SECRET
+      )
+      .update(
+        razorpay_order_id + "|" + razorpay_payment_id
+      )
+      .digest("hex");
+
+    if (generatedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+      });
+    }
+
+    await Order.findByIdAndUpdate(orderId, {
+      paymentStatus: "Paid",
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+      paidAt: new Date(),
+    });
+
+    return res.json({
+      success: true,
+      message: "Payment verified successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Verification failed",
+    });
   }
 };
 

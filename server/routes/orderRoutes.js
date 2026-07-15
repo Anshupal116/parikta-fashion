@@ -2,6 +2,8 @@ const express = require("express");
 
 const {
   createOrder,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
   getOrders,
   getOrderById,
   getCustomerOrders,
@@ -22,5 +24,8 @@ router.get("/", getOrders);
 router.get("/:orderId", getOrderById);
 router.put("/:id/status", updateOrderStatus);
 router.delete("/:id", deleteOrder);
+
+router.post("/razorpay/create",customerAuth,createRazorpayOrder);
+router.post("/razorpay/verify",customerAuth,verifyRazorpayPayment);
 
 module.exports = router;

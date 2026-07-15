@@ -221,16 +221,16 @@ function OrdersAdmin() {
     window.print();
   };
 
-  const downloadInvoice = () => {
-    if (!selectedOrder) return;
+  const downloadInvoice = async () => {
+  if (!selectedOrder) return;
 
-    try {
-      generateInvoicePDF(selectedOrder);
-    } catch (error) {
-      console.error("Invoice download error:", error);
-      alert("Invoice download failed");
-    }
-  };
+  try {
+    await generateInvoicePDF(selectedOrder);
+  } catch (error) {
+    console.error("Invoice download error:", error);
+    alert("Invoice download failed");
+  }
+};
 
   if (loading) {
     return (

@@ -233,8 +233,7 @@ function Checkout() {
               </h2>
 
               <div className="grid md:grid-cols-3 gap-4">
-                {["COD", "UPI", "Card"].map(
-                  (method) => (
+                {["COD", "Razorpay"].map((method) => (
                     <button
                       type="button"
                       key={method}
@@ -252,19 +251,21 @@ function Checkout() {
                           : "bg-white border-[#eadbd4] text-[#5B3B32] hover:border-[#9A3F4D]"
                       }`}
                     >
-                      {method}
+                     {method === "Razorpay"
+  ? "Pay Online"
+  : "Cash on Delivery"}
                     </button>
                   )
                 )}
               </div>
 
-              {address.payment !== "COD" && (
-                <div className="mt-5 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-2xl p-4 text-sm leading-6">
-                  Online payment gateway abhi connect nahi
-                  hai. Filhaal testing ke liye order
-                  payment status Pending rahega.
-                </div>
-              )}
+              {address.payment === "Razorpay" && (
+  <div className="mt-5 bg-green-50 border border-green-200 text-green-800 rounded-2xl p-4 text-sm leading-6">
+    Secure online payment via Razorpay.
+    UPI, Card, Net Banking aur Wallet options
+    payment popup ke andar milenge.
+  </div>
+)}
             </div>
 
             <aside className="bg-[#fffaf7] rounded-3xl p-6 shadow-sm border border-[#eadbd4] h-fit lg:sticky lg:top-28">

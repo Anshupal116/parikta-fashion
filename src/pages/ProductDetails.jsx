@@ -6,6 +6,12 @@ import {
   FiShoppingBag,
   FiZoomIn,
   FiX,
+  FiMapPin,
+  FiShare2,
+  FiCopy,
+  FiShield,
+  FiRefreshCw,
+  FiCreditCard,
 } from "react-icons/fi";
 
 import Navbar from "../components/Navbar";
@@ -50,6 +56,11 @@ function ProductDetails() {
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
+
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [pincode, setPincode] = useState("");
+  const [deliveryMessage, setDeliveryMessage] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -401,6 +412,45 @@ const productSchema = {
     setLightboxImage("");
   };
 
+  const handleCheckDelivery = () => {
+    const cleanPincode = pincode.trim();
+
+    if (!/^\d{6}$/.test(cleanPincode)) {
+      setDeliveryMessage("Please enter a valid 6-digit pincode");
+      return;
+    }
+
+    const estimatedDate = new Date();
+    estimatedDate.setDate(estimatedDate.getDate() + 5);
+
+    setDeliveryMessage(
+      `Estimated delivery by ${estimatedDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`
+    );
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      console.error("Copy link error:", error);
+      alert("Link copy nahi hua");
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const message = encodeURIComponent(
+      `Check out ${product.name} at Parikta Fashion: ${productUrl}`
+    );
+
+    window.open(`https://wa.me/?text=${message}`, "_blank", "noopener,noreferrer");
+  };
+
   const featureItems = [
     ["Premium", "Quality"],
     ["Lightweight", "Fabric"],
@@ -574,6 +624,26 @@ const productSchema = {
                   </a>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-3 mt-5">
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppShare}
+                    className="inline-flex items-center gap-2 border border-[#eadbd4] bg-white px-4 py-2 rounded-full text-sm font-semibold text-[#5B3B32] hover:border-[#9A3F4D]"
+                  >
+                    <FiShare2 />
+                    WhatsApp
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="inline-flex items-center gap-2 border border-[#eadbd4] bg-white px-4 py-2 rounded-full text-sm font-semibold text-[#5B3B32] hover:border-[#9A3F4D]"
+                  >
+                    <FiCopy />
+                    {copied ? "Copied" : "Copy Link"}
+                  </button>
+                </div>
+
                 <div className="flex flex-wrap items-end gap-3 mt-5">
                   <span className="text-3xl md:text-4xl font-semibold text-[#9A213A]">
                     ₹
@@ -646,6 +716,7 @@ const productSchema = {
 
                     <button
                       type="button"
+                      onClick={() => setSizeGuideOpen(true)}
                       className="text-sm text-[#59291f] underline underline-offset-4"
                     >
                       Size Guide
@@ -717,6 +788,66 @@ const productSchema = {
                       : "Out of stock"}
                   </span>
                 </p>
+
+                <div className="mt-7 border border-[#eadbd4] bg-white rounded-2xl p-5">
+                  <div className="flex items-center gap-2 text-[#5B3B32] font-bold">
+                    <FiMapPin />
+                    Check Delivery
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={pincode}
+                      onChange={(event) => {
+                        setPincode(event.target.value.replace(/\D/g, ""));
+                        setDeliveryMessage("");
+                      }}
+                      placeholder="Enter 6-digit pincode"
+                      className="flex-1 min-w-0 border border-[#eadbd4] rounded-xl px-4 py-3 outline-none focus:border-[#9A3F4D]"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleCheckDelivery}
+                      className="bg-[#5B3B32] text-white px-5 py-3 rounded-xl font-semibold"
+                    >
+                      Check
+                    </button>
+                  </div>
+
+                  {deliveryMessage && (
+                    <p
+                      className={`text-sm mt-3 ${
+                        deliveryMessage.startsWith("Estimated")
+                          ? "text-green-700"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {deliveryMessage}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mt-5">
+                  {[
+                    [FiShield, "Secure Payment"],
+                    [FiRefreshCw, "Easy Returns"],
+                    [FiCreditCard, "COD Available"],
+                  ].map(([Icon, label]) => (
+                    <div
+                      key={label}
+                      className="bg-[#FDEAE6] border border-[#eadbd4] rounded-2xl p-4 text-center"
+                    >
+                      <Icon className="mx-auto text-[#9A3F4D]" size={20} />
+                      <p className="text-[10px] md:text-xs text-[#5B3B32] font-semibold mt-2">
+                        {label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
 
                 {/* Product Details */}
                 <div className="mt-9">
@@ -912,30 +1043,103 @@ const productSchema = {
         )}
       </main>
 
-      {/* Mobile Sticky Button */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-4 py-3 flex items-center justify-between gap-4 shadow-lg">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#8b746b]">
-            Total
-          </p>
+      {/* Mobile Sticky Purchase Bar */}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-3 py-3 shadow-lg">
+        <div className="flex items-center justify-between gap-3">
+          <div className="shrink-0">
+            <p className="text-[9px] uppercase tracking-[0.14em] text-[#8b746b]">
+              Total
+            </p>
 
-          <p className="font-bold text-lg text-[#9A213A]">
-            ₹
-            {Number(product.price).toLocaleString(
-              "en-IN"
-            )}
-          </p>
+            <p className="font-bold text-base text-[#9A213A]">
+              ₹{Number(product.price).toLocaleString("en-IN")}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={Number(product.stock) <= 0}
+            className="flex-1 border border-[#9A213A] text-[#9A213A] px-3 py-3 rounded-full text-[10px] tracking-[0.1em] uppercase font-bold disabled:opacity-50"
+          >
+            Add To Cart
+          </button>
+
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={Number(product.stock) <= 0}
+            className="flex-1 bg-[#9A213A] text-white px-3 py-3 rounded-full text-[10px] tracking-[0.1em] uppercase font-bold disabled:opacity-50"
+          >
+            Buy Now
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={Number(product.stock) <= 0}
-          className="flex-1 max-w-[220px] bg-[#9A213A] text-white px-6 py-3 rounded-full text-xs tracking-[0.15em] uppercase font-bold disabled:opacity-50"
-        >
-          Add To Cart
-        </button>
       </div>
+
+      {sizeGuideOpen && (
+        <div
+          className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setSizeGuideOpen(false)}
+        >
+          <div
+            className="w-full max-w-2xl bg-[#fffaf7] rounded-3xl shadow-2xl overflow-hidden"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#eadbd4]">
+              <div>
+                <p className="text-xs tracking-[0.2em] uppercase text-[#BFA996]">
+                  Find Your Fit
+                </p>
+                <h2 className="heading-font text-3xl text-[#5B3B32] mt-1">
+                  Size Guide
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSizeGuideOpen(false)}
+                className="w-10 h-10 rounded-full bg-[#FDEAE6] flex items-center justify-center text-[#5B3B32]"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#FDEAE6] text-[#5B3B32]">
+                    <th className="p-3">Size</th>
+                    <th className="p-3">Bust</th>
+                    <th className="p-3">Waist</th>
+                    <th className="p-3">Hip</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["S", "34 in", "28 in", "36 in"],
+                    ["M", "36 in", "30 in", "38 in"],
+                    ["L", "38 in", "32 in", "40 in"],
+                    ["XL", "40 in", "34 in", "42 in"],
+                    ["XXL", "42 in", "36 in", "44 in"],
+                  ].map((row) => (
+                    <tr key={row[0]} className="border-b border-[#eadbd4]">
+                      {row.map((cell) => (
+                        <td key={cell} className="p-3 text-[#5B3B32]">
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <p className="text-sm text-[#8b746b] leading-6 mt-5">
+                Measurements are body measurements. For custom fitting, contact Parikta Fashion before placing the order.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Lightbox */}
       {lightboxOpen && lightboxImage && (

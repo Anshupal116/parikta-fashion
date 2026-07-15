@@ -16,7 +16,7 @@ function QuickViewModal({
   onClose,
 }) {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, closeCart } = useCart();
 
   const [selectedSize, setSelectedSize] =
     useState("");
@@ -90,15 +90,18 @@ function QuickViewModal({
   };
 
   const handleBuyNow = () => {
-    const cartProduct = prepareProduct();
+  const cartProduct = prepareProduct();
 
-    if (!cartProduct) return;
+  if (!cartProduct) return;
 
-    addToCart(cartProduct);
-    onClose();
+  addToCart(cartProduct);
+  onClose();
+
+  setTimeout(() => {
+    closeCart();
     navigate("/checkout");
-  };
-
+  }, 0);
+};
   return (
     <div
       className="fixed inset-0 z-[300] bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 md:p-6"

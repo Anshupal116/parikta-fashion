@@ -39,6 +39,8 @@ import WhatsAppButton from "./components/WhatsAppButton";
 import MobileBottomNav from "./components/MobileBottomNav";
 import BackToTop from "./components/BackToTop";
 import ScrollToTop from "./components/ScrollToTop";
+import CartDrawer from "./components/CartDrawer";
+import FloatingCartButton from "./components/FloatingCartButton";
 
 function AnalyticsTracker() {
   const location = useLocation();
@@ -104,7 +106,9 @@ function App() {
           <Route path="settings" element={<SettingsAdmin />} />
         </Route>
       </Routes>
-
+      
+      <CartDrawer />
+      <FloatingCartButton />   
       <NewsletterPopup />
       <BackToTop />
       <WhatsAppButton />

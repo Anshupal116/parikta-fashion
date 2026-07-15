@@ -10,6 +10,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Container from "../components/Container";
 import FreeShippingProgress from "../components/FreeShippingProgress";
+import CouponBox from "../components/CouponBox";
 
 import { useCart } from "../context/CartContext";
 
@@ -18,6 +19,8 @@ function Cart() {
     cartItems,
     cartCount,
     cartTotal,
+    discountAmount,
+    finalTotal,
     removeFromCart,
     increaseQty,
     decreaseQty,
@@ -68,7 +71,8 @@ function Cart() {
               <div className="space-y-5">
                 {cartItems.map((item) => {
                   const itemTotal =
-                    Number(item.price || 0) * Number(item.qty || 1);
+                    Number(item.price || 0) *
+                    Number(item.qty || 1);
 
                   return (
                     <article
@@ -156,9 +160,9 @@ function Cart() {
 
                           <p className="text-[#8b746b] text-sm">
                             ₹
-                            {Number(item.price || 0).toLocaleString(
-                              "en-IN"
-                            )}{" "}
+                            {Number(
+                              item.price || 0
+                            ).toLocaleString("en-IN")}{" "}
                             each
                           </p>
                         </div>
@@ -168,65 +172,74 @@ function Cart() {
                 })}
               </div>
 
-              <aside className="bg-[#fffaf7] rounded-3xl border border-[#eadbd4] shadow-sm p-6 lg:sticky lg:top-28">
-                <h2 className="heading-font text-3xl text-[#5B3B32]">
-                  Price Details
-                </h2>
+              <aside className="space-y-5 lg:sticky lg:top-28">
+                <div className="bg-[#fffaf7] rounded-3xl border border-[#eadbd4] shadow-sm p-6">
+                  <h2 className="heading-font text-3xl text-[#5B3B32]">
+                    Price Details
+                  </h2>
 
-                <div className="mt-6">
-                  <FreeShippingProgress cartTotal={cartTotal} />
-                </div>
+                  <div className="mt-6">
+                    <FreeShippingProgress cartTotal={cartTotal} />
+                  </div>
 
-                <div className="mt-6 space-y-4 text-[#5B3B32]">
-                  <div className="flex justify-between">
+                  <div className="mt-6">
+                    <CouponBox />
+                  </div>
+
+                  <div className="mt-6 space-y-4 text-[#5B3B32]">
+                    <div className="flex justify-between">
+                      <span>
+                        Subtotal ({cartCount} item
+                        {cartCount !== 1 ? "s" : ""})
+                      </span>
+
+                      <span className="font-semibold">
+                        ₹{cartTotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Coupon Discount</span>
+
+                      <span className="text-green-600 font-semibold">
+                        -₹
+                        {discountAmount.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Delivery Charges</span>
+
+                      <span className="text-green-600 font-semibold">
+                        Free
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[#eadbd4] mt-6 pt-6 flex justify-between text-2xl font-bold text-[#5B3B32]">
+                    <span>Total</span>
+
                     <span>
-                      Subtotal ({cartCount} item
-                      {cartCount !== 1 ? "s" : ""})
-                    </span>
-
-                    <span className="font-semibold">
-                      ₹{cartTotal.toLocaleString("en-IN")}
+                      ₹{finalTotal.toLocaleString("en-IN")}
                     </span>
                   </div>
 
-                  <div className="flex justify-between">
-                    <span>Delivery Charges</span>
+                  <p className="text-xs text-[#8b746b] mt-2">
+                    Inclusive of all taxes.
+                  </p>
 
-                    <span className="text-green-600 font-semibold">
-                      Free
-                    </span>
-                  </div>
+                  <Link to="/checkout">
+                    <button className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold mt-6 hover:bg-[#7d3140] transition">
+                      PROCEED TO CHECKOUT
+                    </button>
+                  </Link>
 
-                  <div className="flex justify-between">
-                    <span>Discount</span>
-
-                    <span className="text-green-600">₹0</span>
-                  </div>
+                  <Link to="/products">
+                    <button className="w-full border-2 border-[#9A3F4D] text-[#9A3F4D] py-4 rounded-xl font-bold mt-3 hover:bg-[#FDEAE6] transition">
+                      CONTINUE SHOPPING
+                    </button>
+                  </Link>
                 </div>
-
-                <div className="border-t border-[#eadbd4] mt-6 pt-6 flex justify-between text-2xl font-bold text-[#5B3B32]">
-                  <span>Total</span>
-
-                  <span>
-                    ₹{cartTotal.toLocaleString("en-IN")}
-                  </span>
-                </div>
-
-                <p className="text-xs text-[#8b746b] mt-2">
-                  Inclusive of all taxes.
-                </p>
-
-                <Link to="/checkout">
-                  <button className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold mt-6 hover:bg-[#7d3140] transition">
-                    PROCEED TO CHECKOUT
-                  </button>
-                </Link>
-
-                <Link to="/products">
-                  <button className="w-full border-2 border-[#9A3F4D] text-[#9A3F4D] py-4 rounded-xl font-bold mt-3 hover:bg-[#FDEAE6] transition">
-                    CONTINUE SHOPPING
-                  </button>
-                </Link>
               </aside>
             </div>
           )}

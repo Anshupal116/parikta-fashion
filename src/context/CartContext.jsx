@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -10,10 +11,7 @@ const CartContext = createContext();
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
     try {
-      return (
-        JSON.parse(localStorage.getItem("parikta_cart")) ||
-        []
-      );
+      return JSON.parse(localStorage.getItem("parikta_cart")) || [];
     } catch {
       return [];
     }
@@ -21,26 +19,63 @@ export function CartProvider({ children }) {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("parikta_applied_coupon")
+      );
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
-    localStorage.setItem(
-      "parikta_cart",
-      JSON.stringify(cartItems)
-    );
+    localStorage.setItem("parikta_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const openCart = () => {
-    setIsCartOpen(true);
-  };
+  useEffect(() => {
+    if (appliedCoupon) {
+      localStorage.setItem(
+        "parikta_applied_coupon",
+        JSON.stringify(appliedCoupon)
+      );
+    } else {
+      localStorage.removeItem("parikta_applied_coupon");
+    }
+  }, [appliedCoupon]);
 
-  const closeCart = () => {
-    setIsCartOpen(false);
-  };
+  const cartTotal = useMemo(
+    () =>
+      cartItems.reduce(
+        (total, item) =>
+          total +
+          Number(item.price || 0) * Number(item.qty || 1),
+        0
+      ),
+    [cartItems]
+  );
+
+  useEffect(() => {
+    if (
+      appliedCoupon &&
+      Number(appliedCoupon.originalAmount) !== Number(cartTotal)
+    ) {
+      setAppliedCoupon(null);
+    }
+  }, [cartTotal, appliedCoupon]);
+
+  const discountAmount = Number(
+    appliedCoupon?.discountAmount || 0
+  );
+
+  const finalTotal = Math.max(cartTotal - discountAmount, 0);
+
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
 
   const addToCart = (product) => {
     const productId = product._id || product.id;
-    const selectedSize =
-      product.selectedSize || "Free Size";
-
+    const selectedSize = product.selectedSize || "Free Size";
     const cartItemId = `${productId}-${selectedSize}`;
 
     setCartItems((previousItems) => {
@@ -51,10 +86,7 @@ export function CartProvider({ children }) {
       if (existingItem) {
         return previousItems.map((item) =>
           item.cartItemId === cartItemId
-            ? {
-                ...item,
-                qty: item.qty + 1,
-              }
+            ? { ...item, qty: Number(item.qty || 1) + 1 }
             : item
         );
       }
@@ -71,7 +103,6 @@ export function CartProvider({ children }) {
       ];
     });
 
-    // Product add hote hi drawer open
     setIsCartOpen(true);
   };
 
@@ -79,10 +110,7 @@ export function CartProvider({ children }) {
     setCartItems((previousItems) =>
       previousItems.map((item) =>
         item.cartItemId === cartItemId
-          ? {
-              ...item,
-              qty: item.qty + 1,
-            }
+          ? { ...item, qty: Number(item.qty || 1) + 1 }
           : item
       )
     );
@@ -93,10 +121,7 @@ export function CartProvider({ children }) {
       previousItems
         .map((item) =>
           item.cartItemId === cartItemId
-            ? {
-                ...item,
-                qty: item.qty - 1,
-              }
+            ? { ...item, qty: Number(item.qty || 1) - 1 }
             : item
         )
         .filter((item) => item.qty > 0)
@@ -113,20 +138,21 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setCartItems([]);
+    setAppliedCoupon(null);
     localStorage.removeItem("parikta_cart");
+    localStorage.removeItem("parikta_applied_coupon");
+  };
+
+  const applyCouponToCart = (couponData) => {
+    setAppliedCoupon(couponData);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
   };
 
   const cartCount = cartItems.reduce(
-    (total, item) =>
-      total + Number(item.qty || 0),
-    0
-  );
-
-  const cartTotal = cartItems.reduce(
-    (total, item) =>
-      total +
-      Number(item.price || 0) *
-        Number(item.qty || 1),
+    (total, item) => total + Number(item.qty || 0),
     0
   );
 
@@ -136,16 +162,19 @@ export function CartProvider({ children }) {
         cartItems,
         cartCount,
         cartTotal,
-
+        discountAmount,
+        finalTotal,
+        appliedCoupon,
         isCartOpen,
         openCart,
         closeCart,
-
         addToCart,
         increaseQty,
         decreaseQty,
         removeFromCart,
         clearCart,
+        applyCouponToCart,
+        removeCoupon,
       }}
     >
       {children}
@@ -157,9 +186,7 @@ export function useCart() {
   const context = useContext(CartContext);
 
   if (!context) {
-    throw new Error(
-      "useCart must be used inside CartProvider"
-    );
+    throw new Error("useCart must be used inside CartProvider");
   }
 
   return context;

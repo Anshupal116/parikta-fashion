@@ -388,17 +388,16 @@ exports.createOrder = async (req, res) => {
         coupon?._id || null,
 
       paymentMethod:
-        ["COD", "UPI", "Card"].includes(
-          paymentMethod
-        )
+        ["COD", "Razorpay"].includes(paymentMethod)
           ? paymentMethod
           : "COD",
 
-      paymentStatus:
-        "Pending",
+      paymentStatus: "Pending",
 
-      status:
-        "Pending",
+status:
+  paymentMethod === "COD"
+    ? "Pending"
+    : "Pending",
     });
 
     if (coupon) {
@@ -451,34 +450,83 @@ exports.createOrder = async (req, res) => {
 
 exports.createRazorpayOrder = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { orderId } = req.body;
 
-    if (!amount || amount <= 0) {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid amount",
+        message: "Invalid order ID",
       });
     }
 
-    const options = {
-      amount: Math.round(amount * 100), // ₹ -> Paise
-      currency: "INR",
-      receipt: `receipt_${Date.now()}`,
-    };
+    const order = await Order.findOne({
+      _id: orderId,
+      customerId: req.customer._id,
+    });
 
-    const razorpayOrder = await razorpay.orders.create(options);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.paymentMethod !== "Razorpay") {
+      return res.status(400).json({
+        success: false,
+        message: "This is not an online payment order",
+      });
+    }
+
+    if (order.paymentStatus === "Paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Order is already paid",
+      });
+    }
+
+    const razorpayOrder = await razorpay.orders.create({
+      amount: Math.round(Number(order.amount) * 100),
+      currency: "INR",
+      receipt: order.orderId,
+      notes: {
+        mongoOrderId: String(order._id),
+        customerId: String(req.customer._id),
+      },
+    });
+
+    order.razorpayOrderId = razorpayOrder.id;
+    await order.save();
 
     return res.status(200).json({
       success: true,
-      order: razorpayOrder,
-      key: process.env.RAZORPAY_KEY_ID,
+
+      razorpayOrder: {
+        id: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+      },
+
+      keyId: process.env.RAZORPAY_KEY_ID,
+
+      appOrder: {
+        _id: order._id,
+        orderId: order.orderId,
+        amount: order.amount,
+      },
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Create Razorpay order error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Razorpay order create failed",
+      message:
+        error.error?.description ||
+        error.message ||
+        "Razorpay order create failed",
     });
   }
 };
@@ -486,11 +534,39 @@ exports.createRazorpayOrder = async (req, res) => {
 exports.verifyRazorpayPayment = async (req, res) => {
   try {
     const {
+      orderId,
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      orderId,
     } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    const order = await Order.findOne({
+      _id: orderId,
+      customerId: req.customer._id,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (
+      order.razorpayOrderId !== razorpay_order_id
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Razorpay order mismatch",
+      });
+    }
 
     const generatedSignature = crypto
       .createHmac(
@@ -498,35 +574,102 @@ exports.verifyRazorpayPayment = async (req, res) => {
         process.env.RAZORPAY_KEY_SECRET
       )
       .update(
-        razorpay_order_id + "|" + razorpay_payment_id
+        `${razorpay_order_id}|${razorpay_payment_id}`
       )
       .digest("hex");
 
-    if (generatedSignature !== razorpay_signature) {
+    const signatureValid =
+      generatedSignature.length ===
+        razorpay_signature.length &&
+      crypto.timingSafeEqual(
+        Buffer.from(generatedSignature),
+        Buffer.from(razorpay_signature)
+      );
+
+    if (!signatureValid) {
+      order.paymentStatus = "Failed";
+      order.paymentFailureReason =
+        "Invalid payment signature";
+
+      await order.save();
+
       return res.status(400).json({
         success: false,
         message: "Payment verification failed",
       });
     }
 
-    await Order.findByIdAndUpdate(orderId, {
-      paymentStatus: "Paid",
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-      razorpaySignature: razorpay_signature,
-      paidAt: new Date(),
-    });
+    order.razorpayPaymentId =
+      razorpay_payment_id;
 
-    return res.json({
+    order.razorpaySignature =
+      razorpay_signature;
+
+    order.paymentStatus = "Paid";
+    order.paidAt = new Date();
+    order.status = "Confirmed";
+    order.paymentFailureReason = "";
+
+    await order.save();
+
+    return res.status(200).json({
       success: true,
       message: "Payment verified successfully",
+      order,
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Verify Razorpay payment error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Verification failed",
+      message: "Payment verification failed",
+      error: error.message,
+    });
+  }
+};
+
+exports.markRazorpayPaymentFailed = async (
+  req,
+  res
+) => {
+  try {
+    const { orderId, reason } = req.body;
+
+    const order = await Order.findOne({
+      _id: orderId,
+      customerId: req.customer._id,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.paymentStatus !== "Paid") {
+      order.paymentStatus = "Failed";
+      order.paymentFailureReason =
+        String(reason || "Payment failed").slice(
+          0,
+          500
+        );
+
+      await order.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment failure recorded",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Payment failure update failed",
+      error: error.message,
     });
   }
 };

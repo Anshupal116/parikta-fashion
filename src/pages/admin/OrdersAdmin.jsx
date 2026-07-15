@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  FiDownload,
   FiEye,
   FiMapPin,
   FiPrinter,
@@ -13,6 +14,8 @@ import {
   updateOrderStatus,
   deleteOrder,
 } from "../../services/orderService";
+
+import { generateInvoicePDF } from "../../utils/invoiceGenerator";
 
 function OrdersAdmin() {
   const [orders, setOrders] = useState([]);
@@ -216,6 +219,17 @@ function OrdersAdmin() {
 
   const printOrder = () => {
     window.print();
+  };
+
+  const downloadInvoice = () => {
+    if (!selectedOrder) return;
+
+    try {
+      generateInvoicePDF(selectedOrder);
+    } catch (error) {
+      console.error("Invoice download error:", error);
+      alert("Invoice download failed");
+    }
   };
 
   if (loading) {
@@ -507,6 +521,15 @@ function OrdersAdmin() {
               </div>
 
               <div className="flex items-center gap-3 print:hidden">
+                <button
+                  type="button"
+                  onClick={downloadInvoice}
+                  className="bg-[#9A3F4D] text-white px-4 py-3 rounded-xl font-semibold flex items-center gap-2"
+                >
+                  <FiDownload />
+                  Download Invoice
+                </button>
+
                 <button
                   type="button"
                   onClick={printOrder}

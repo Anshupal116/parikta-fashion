@@ -105,11 +105,17 @@ const orderSchema = new mongoose.Schema(
 
     items: {
       type: [orderItemSchema],
+
       validate: {
         validator(items) {
-          return Array.isArray(items) && items.length > 0;
+          return (
+            Array.isArray(items) &&
+            items.length > 0
+          );
         },
-        message: "Order must contain at least one item",
+
+        message:
+          "Order must contain at least one item",
       },
     },
 
@@ -146,14 +152,45 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["COD", "UPI", "Card"],
+      enum: ["COD", "Razorpay"],
       default: "COD",
     },
 
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
+      enum: [
+        "Pending",
+        "Paid",
+        "Failed",
+        "Refunded",
+      ],
       default: "Pending",
+    },
+
+    razorpayOrderId: {
+      type: String,
+      default: "",
+      index: true,
+    },
+
+    razorpayPaymentId: {
+      type: String,
+      default: "",
+    },
+
+    razorpaySignature: {
+      type: String,
+      default: "",
+    },
+
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+
+    paymentFailureReason: {
+      type: String,
+      default: "",
     },
 
     status: {
@@ -173,4 +210,7 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+module.exports = mongoose.model(
+  "Order",
+  orderSchema
+);

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import ReactGA from "react-ga4";
+import { useLocation } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -43,6 +44,13 @@ import ScrollToTop from "./components/ScrollToTop";
 import CartDrawer from "./components/CartDrawer";
 import FloatingCartButton from "./components/FloatingCartButton";
 
+const location = useLocation();
+
+const isAdminPage =
+  location.pathname.startsWith("/admin-dashboard");
+  location.pathname.startsWith("/admin-login");
+
+
 function AnalyticsTracker() {
   const location = useLocation();
 
@@ -59,6 +67,7 @@ function AnalyticsTracker() {
 
   return null;
 }
+
 
 function App() {
   return (
@@ -109,8 +118,12 @@ function App() {
         </Route>
       </Routes>
       
-      <CartDrawer />
-      <FloatingCartButton />   
+      {!isAdminPage && (
+  <>
+    <CartDrawer />
+    <FloatingCartButton />
+  </>
+)} 
       <NewsletterPopup />
       <BackToTop />
       <WhatsAppButton />

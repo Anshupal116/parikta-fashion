@@ -28,6 +28,42 @@ export const createOrder = async (orderData, token) => {
   return response.data;
 };
 
+export const createRazorpayOrder = async (orderId, token) => {
+  const response = await axios.post(
+    `${API_URL}/orders/razorpay/create`,
+    { orderId },
+    getAuthConfig(token)
+  );
+
+  return response.data;
+};
+
+export const verifyRazorpayPayment = async (
+  paymentData,
+  token
+) => {
+  const response = await axios.post(
+    `${API_URL}/orders/razorpay/verify`,
+    paymentData,
+    getAuthConfig(token)
+  );
+
+  return response.data;
+};
+
+export const markRazorpayPaymentFailed = async (
+  failureData,
+  token
+) => {
+  const response = await axios.post(
+    `${API_URL}/orders/razorpay/failed`,
+    failureData,
+    getAuthConfig(token)
+  );
+
+  return response.data;
+};
+
 export const getMyOrders = async (token) => {
   const response = await axios.get(
     `${API_URL}/orders/my-orders`,
@@ -82,34 +118,6 @@ export const updateOrderStatus = async (orderId, status) => {
 export const deleteOrder = async (orderId) => {
   const response = await axios.delete(
     `${API_URL}/orders/${orderId}`
-  );
-
-  return response.data;
-};
-
-export const createRazorpayOrder = async (
-  orderId,
-  token
-) => {
-  const response = await axios.post(
-    `${API_URL}/orders/razorpay/create`,
-    {
-      orderId,
-    },
-    getAuthConfig(token)
-  );
-
-  return response.data;
-};
-
-export const verifyRazorpayPayment = async (
-  paymentData,
-  token
-) => {
-  const response = await axios.post(
-    `${API_URL}/orders/razorpay/verify`,
-    paymentData,
-    getAuthConfig(token)
   );
 
   return response.data;

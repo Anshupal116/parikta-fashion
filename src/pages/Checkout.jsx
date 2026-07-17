@@ -7,8 +7,29 @@ import Container from "../components/Container";
 import CouponBox from "../components/CouponBox";
 
 import { useCart } from "../context/CartContext";
-import { createOrder } from "../services/orderService";
+import {
+  createOrder,
+  createRazorpayOrder,
+  markRazorpayPaymentFailed,
+  verifyRazorpayPayment,
+} from "../services/orderService";
 import { useCustomer } from "../context/CustomerContext";
+
+const loadRazorpayScript = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src =
+      "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 
 function Checkout() {
   const navigate = useNavigate();
@@ -42,6 +63,151 @@ function Checkout() {
       ...currentAddress,
       [event.target.name]: event.target.value,
     }));
+  };
+
+  const handleOnlinePayment = async (appOrder) => {
+    const scriptLoaded = await loadRazorpayScript();
+
+    if (!scriptLoaded) {
+      throw new Error(
+        "Razorpay payment window load nahi hui. Internet connection check karo."
+      );
+    }
+
+    const razorpayResponse = await createRazorpayOrder(
+      appOrder._id,
+      token
+    );
+
+    if (!razorpayResponse.success) {
+      throw new Error(
+        razorpayResponse.message ||
+          "Razorpay order create failed"
+      );
+    }
+
+    const options = {
+      key:
+        razorpayResponse.keyId ||
+        import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: razorpayResponse.razorpayOrder.amount,
+      currency:
+        razorpayResponse.razorpayOrder.currency,
+      name: "Parikta Fashion",
+      description: `Payment for order ${appOrder.orderId}`,
+      order_id: razorpayResponse.razorpayOrder.id,
+      prefill: {
+        name: address.name.trim(),
+        email: address.email.trim(),
+        contact: address.phone.trim(),
+      },
+      notes: {
+        appOrderId: appOrder.orderId,
+      },
+      theme: {
+        color: "#9A3F4D",
+      },
+      modal: {
+        confirm_close: true,
+        ondismiss: async () => {
+          setLoading(false);
+
+          try {
+            await markRazorpayPaymentFailed(
+              {
+                orderId: appOrder._id,
+                reason:
+                  "Payment popup closed by customer",
+              },
+              token
+            );
+          } catch (error) {
+            console.error(
+              "Payment dismissal update failed:",
+              error
+            );
+          }
+        },
+      },
+      handler: async (paymentResponse) => {
+        try {
+          setLoading(true);
+
+          const verificationResponse =
+            await verifyRazorpayPayment(
+              {
+                orderId: appOrder._id,
+                razorpay_order_id:
+                  paymentResponse.razorpay_order_id,
+                razorpay_payment_id:
+                  paymentResponse.razorpay_payment_id,
+                razorpay_signature:
+                  paymentResponse.razorpay_signature,
+              },
+              token
+            );
+
+          if (!verificationResponse.success) {
+            throw new Error(
+              verificationResponse.message ||
+                "Payment verification failed"
+            );
+          }
+
+          clearCart();
+          navigate(
+            `/order-success/${appOrder.orderId}`
+          );
+        } catch (error) {
+          console.error(
+            "Payment verification error:",
+            error
+          );
+
+          alert(
+            error.response?.data?.message ||
+              error.message ||
+              "Payment verify nahi hui"
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+    };
+
+    const razorpayCheckout =
+      new window.Razorpay(options);
+
+    razorpayCheckout.on(
+      "payment.failed",
+      async (response) => {
+        const failureReason =
+          response.error?.description ||
+          response.error?.reason ||
+          "Payment failed";
+
+        try {
+          await markRazorpayPaymentFailed(
+            {
+              orderId: appOrder._id,
+              reason: failureReason,
+            },
+            token
+          );
+        } catch (error) {
+          console.error(
+            "Payment failure update error:",
+            error
+          );
+        }
+
+        setLoading(false);
+        alert(`Payment failed: ${failureReason}`);
+      }
+    );
+
+    setLoading(false);
+    razorpayCheckout.open();
   };
 
   const placeOrder = async (event) => {
@@ -87,11 +253,14 @@ function Checkout() {
           image: item.image,
           price: Number(item.price || 0),
           qty: Number(item.qty || 1),
-          selectedSize: item.selectedSize || "Free Size",
+          selectedSize:
+            item.selectedSize || "Free Size",
         })),
 
         subtotal: Number(cartTotal || 0),
-        discountAmount: Number(discountAmount || 0),
+        discountAmount: Number(
+          discountAmount || 0
+        ),
         amount: Number(finalTotal || 0),
 
         couponCode:
@@ -108,23 +277,34 @@ function Checkout() {
         token
       );
 
-      if (response.success) {
+      if (!response.success) {
+        throw new Error(
+          response.message || "Order failed"
+        );
+      }
+
+      const appOrder = response.order;
+
+      if (address.payment === "COD") {
         clearCart();
 
         navigate(
-          `/order-success/${response.order.orderId}`
+          `/order-success/${appOrder.orderId}`
         );
-      } else {
-        alert(response.message || "Order failed");
+
+        return;
       }
+
+      await handleOnlinePayment(appOrder);
     } catch (error) {
       console.error("Order place error:", error);
 
       alert(
         error.response?.data?.message ||
+          error.message ||
           "Server error. Order place nahi hua."
       );
-    } finally {
+
       setLoading(false);
     }
   };
@@ -233,10 +413,11 @@ function Checkout() {
               </h2>
 
               <div className="grid md:grid-cols-3 gap-4">
-                {["COD", "Razorpay"].map((method) => (
+                {["COD", "Razorpay"].map(
+                  (method) => (
                     <button
                       type="button"
-                      key={method}
+                      key={method === "Razorpay" ? "Pay Online" : "Cash on Delivery"}
                       onClick={() =>
                         setAddress(
                           (currentAddress) => ({
@@ -251,21 +432,19 @@ function Checkout() {
                           : "bg-white border-[#eadbd4] text-[#5B3B32] hover:border-[#9A3F4D]"
                       }`}
                     >
-                     {method === "Razorpay"
-  ? "Pay Online"
-  : "Cash on Delivery"}
+                      {method === "Razorpay" ? "Pay Online" : "Cash on Delivery"}
                     </button>
                   )
                 )}
               </div>
 
               {address.payment === "Razorpay" && (
-  <div className="mt-5 bg-green-50 border border-green-200 text-green-800 rounded-2xl p-4 text-sm leading-6">
-    Secure online payment via Razorpay.
-    UPI, Card, Net Banking aur Wallet options
-    payment popup ke andar milenge.
-  </div>
-)}
+                <div className="mt-5 bg-green-50 border border-green-200 text-green-800 rounded-2xl p-4 text-sm leading-6">
+                  Secure online payment via Razorpay.
+                  UPI, Card, Net Banking aur Wallet options
+                  payment popup ke andar milenge.
+                </div>
+              )}
             </div>
 
             <aside className="bg-[#fffaf7] rounded-3xl p-6 shadow-sm border border-[#eadbd4] h-fit lg:sticky lg:top-28">
@@ -402,8 +581,14 @@ function Checkout() {
                 className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold mt-6 hover:bg-[#7d3140] disabled:opacity-60"
               >
                 {loading
-                  ? "PLACING ORDER..."
-                  : `PLACE ORDER • ₹${Number(
+                  ? address.payment === "Razorpay"
+                    ? "OPENING PAYMENT..."
+                    : "PLACING ORDER..."
+                  : address.payment === "Razorpay"
+                  ? `PAY ONLINE • ₹${Number(
+                      finalTotal || 0
+                    ).toLocaleString("en-IN")}`
+                  : `PLACE COD ORDER • ₹${Number(
                       finalTotal || 0
                     ).toLocaleString("en-IN")}`}
               </button>

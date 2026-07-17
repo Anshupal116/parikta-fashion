@@ -86,3 +86,31 @@ export const deleteOrder = async (orderId) => {
 
   return response.data;
 };
+
+export const createRazorpayOrder = async (
+  orderId,
+  token
+) => {
+  const response = await axios.post(
+    `${API_URL}/orders/razorpay/create`,
+    {
+      orderId,
+    },
+    getAuthConfig(token)
+  );
+
+  return response.data;
+};
+
+export const verifyRazorpayPayment = async (
+  paymentData,
+  token
+) => {
+  const response = await axios.post(
+    `${API_URL}/orders/razorpay/verify`,
+    paymentData,
+    getAuthConfig(token)
+  );
+
+  return response.data;
+};

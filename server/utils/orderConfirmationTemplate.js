@@ -76,7 +76,7 @@ const orderConfirmationTemplate = (order) => {
   const statusStyle = getStatusStyle(order?.status);
 
   const trackOrderUrl =
-    `${frontendUrl}/orders/${encodeURIComponent(
+    `${frontendUrl}/my-orders/${encodeURIComponent(
       order?.orderId || ""
     )}`;
 

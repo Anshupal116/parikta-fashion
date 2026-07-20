@@ -7,6 +7,9 @@ const Coupon = require("../models/Coupon");
 const crypto = require("crypto");
 const razorpay = require("../config/razorpay");
 
+const sendEmail = require("/Users/TRiANS ENTERPRISES/Desktop/anshu/website/parikta-fashion/src/utils/sendEmail");
+const orderConfirmationTemplate = require("/Users/TRiANS ENTERPRISES/Desktop/anshu/website/parikta-fashion/src/utils/orderConfirmationTemplate");
+
 const normalizeCode = (code = "") => {
   return String(code).trim().toUpperCase();
 };
@@ -420,6 +423,23 @@ status:
       await coupon.save();
     }
 
+    try {
+  if (
+    order.paymentMethod === "COD" &&
+    order.customer?.email
+  ) {
+    await sendEmail({
+      to: order.customer.email,
+      subject: `Order Placed | ${order.orderId}`,
+      html: orderConfirmationTemplate(order),
+    });
+
+    console.log("COD order email sent");
+  }
+} catch (emailError) {
+  console.error("COD email error:", emailError.message);
+}
+
     return res.status(201).json({
       success: true,
 
@@ -611,6 +631,23 @@ exports.verifyRazorpayPayment = async (req, res) => {
     order.paymentFailureReason = "";
 
     await order.save();
+
+    try {
+  if (order.customer?.email) {
+    await sendEmail({
+      to: order.customer.email,
+      subject: `Payment Successful | ${order.orderId}`,
+      html: orderConfirmationTemplate(order),
+    });
+
+    console.log("Payment email sent");
+  }
+} catch (emailError) {
+  console.error(
+    "Payment email error:",
+    emailError.message
+  );
+}
 
     return res.status(200).json({
       success: true,

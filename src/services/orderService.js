@@ -128,22 +128,21 @@ export const deleteOrder = async (orderId) => {
 // ===============================
 
 
-export const downloadInvoice = async (orderId) => {
-  const token = localStorage.getItem("customerToken");
-
+export const downloadInvoice = async (orderId, token) => {
   const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/orders/invoice/${orderId}`,
+    `${API_URL}/orders/invoice/${orderId}`,
     {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${
+          token || localStorage.getItem("parikta_customer_token")
+        }`,
       },
     }
   );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-
     throw new Error(
       errorData.message || "Invoice download failed"
     );
@@ -153,10 +152,8 @@ export const downloadInvoice = async (orderId) => {
   const url = window.URL.createObjectURL(blob);
 
   const link = document.createElement("a");
-
   link.href = url;
   link.download = `INV-${orderId}.pdf`;
-
   document.body.appendChild(link);
   link.click();
   link.remove();

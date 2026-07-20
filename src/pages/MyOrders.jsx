@@ -158,9 +158,10 @@ function MyOrders() {
 
   const handleDownloadInvoice = async (orderId) => {
   try {
-    await downloadInvoice(orderId);
+    await downloadInvoice(orderId, token);
   } catch (error) {
-    alert(error.message);
+    console.error(error);
+    alert(error.message || "Invoice download failed");
   }
 };
 

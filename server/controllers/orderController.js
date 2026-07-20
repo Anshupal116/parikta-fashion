@@ -7,8 +7,8 @@ const Coupon = require("../models/Coupon");
 const crypto = require("crypto");
 const razorpay = require("../config/razorpay");
 
-const sendEmail = require("../src/utils/sendEmail");
-const orderConfirmationTemplate = require("../src/utils/orderConfirmationTemplate");
+const sendEmail = require("../utils/sendEmail");
+const orderConfirmationTemplate = require("../utils/orderConfirmationTemplate");
 
 const normalizeCode = (code = "") => {
   return String(code).trim().toUpperCase();

@@ -14,6 +14,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Container from "../components/Container";
 import WriteReviewModal from "../components/reviews/WriteReviewModal";
+import { downloadInvoice } from "../../services/orderService";
 
 import { useCustomer } from "../context/CustomerContext";
 import {
@@ -154,6 +155,15 @@ function MyOrders() {
       active = false;
     };
   }, [orders, isLoggedIn, token]);
+
+  const handleDownloadInvoice = async (orderId) => {
+  try {
+    await downloadInvoice(orderId);
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
 
   const refreshReviewStatus = async (productId) => {
     if (!productId) return;
@@ -606,6 +616,17 @@ function MyOrders() {
                               Track Order
                             </button>
                           </Link>
+
+                            {order.status !== "Cancelled" && (
+  <button
+    onClick={() => handleDownloadInvoice(order.orderId)}
+    className="bg-[#8C3F31] text-white px-5 py-3 rounded-xl font-semibold hover:bg-[#713126]"
+  >
+    📄 Download Invoice
+  </button>
+)}
+
+
 
                           <Link to="/products">
                             <button className="border border-[#9A3F4D] text-[#9A3F4D] px-5 py-3 rounded-xl font-semibold">

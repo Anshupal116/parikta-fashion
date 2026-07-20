@@ -122,3 +122,44 @@ export const deleteOrder = async (orderId) => {
 
   return response.data;
 };
+
+// ===============================
+// DOWNLOAD INVOICE FUNCTION
+// ===============================
+
+
+export const downloadInvoice = async (orderId) => {
+  const token = localStorage.getItem("customerToken");
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/api/orders/invoice/${orderId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+
+    throw new Error(
+      errorData.message || "Invoice download failed"
+    );
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `INV-${orderId}.pdf`;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.URL.revokeObjectURL(url);
+};

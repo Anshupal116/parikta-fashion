@@ -3,39 +3,40 @@ const Customer = require("../models/Customer");
 
 const customerAuth = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const authHeader = req.headers.authorization;
 
-    const {
-  downloadInvoice,
-} = require("../controllers/orderController");
-
-router.get(
-  "/invoice/:orderId",
-  verifyCustomer,
-  downloadInvoice
-);
-
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
         message: "No token provided",
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const token = authHeader.split(" ")[1];
 
-    req.customer = await Customer.findById(decoded.id).select("-password");
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
 
-    if (!req.customer) {
+    const customer = await Customer.findById(
+      decoded.id
+    ).select("-password");
+
+    if (!customer) {
       return res.status(401).json({
         success: false,
         message: "Customer not found",
       });
     }
 
+    req.customer = customer;
+
     next();
   } catch (error) {
-    res.status(401).json({
+    console.error("Customer auth error:", error.message);
+
+    return res.status(401).json({
       success: false,
       message: "Unauthorized",
     });

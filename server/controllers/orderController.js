@@ -10,6 +10,8 @@ const razorpay = require("../config/razorpay");
 const sendEmail = require("../utils/sendEmail");
 const orderConfirmationTemplate = require("../utils/orderConfirmationTemplate");
 
+const generateInvoicePdf = require("../utils/generateInvoicePdf");
+
 const normalizeCode = (code = "") => {
   return String(code).trim().toUpperCase();
 };
@@ -1016,5 +1018,54 @@ exports.deleteOrder = async (
       error:
         error.message,
     });
+  }
+};
+
+// =====================================
+// INVOICE DOWNLOAD
+// =====================================
+
+
+
+exports.downloadInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({
+      orderId,
+      customerId: req.customer._id,
+    }).lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (
+      order.paymentMethod === "Razorpay" &&
+      order.paymentStatus !== "Paid"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invoice is available only after successful payment",
+      });
+    }
+
+    generateInvoicePdf(order, res);
+  } catch (error) {
+    console.error("Invoice download error:", error);
+
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Invoice generation failed",
+        error: error.message,
+      });
+    }
+
+    res.end();
   }
 };

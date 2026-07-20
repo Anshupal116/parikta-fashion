@@ -5,6 +5,16 @@ const customerAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
+    const {
+  downloadInvoice,
+} = require("../controllers/orderController");
+
+router.get(
+  "/invoice/:orderId",
+  verifyCustomer,
+  downloadInvoice
+);
+
     if (!token) {
       return res.status(401).json({
         success: false,

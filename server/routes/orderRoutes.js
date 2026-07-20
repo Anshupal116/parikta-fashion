@@ -45,6 +45,12 @@ router.get(
   getCustomerOrders
 );
 
+router.get(
+  "/invoice/:orderId",
+  customerAuth,
+  orderController.downloadInvoice
+);
+
 router.put(
   "/my-orders/:id/cancel",
   customerAuth,

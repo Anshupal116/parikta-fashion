@@ -14,13 +14,15 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Container from "../components/Container";
 import WriteReviewModal from "../components/reviews/WriteReviewModal";
-import { downloadInvoice } from "../../services/orderService";
 
 import { useCustomer } from "../context/CustomerContext";
 import {
   getMyOrders,
   cancelMyOrder,
+  downloadInvoice,
 } from "../services/orderService";
+
+
 import {
   checkReviewEligibility,
 } from "../services/reviewService";
@@ -156,15 +158,14 @@ function MyOrders() {
     };
   }, [orders, isLoggedIn, token]);
 
-  const handleDownloadInvoice = async (orderId) => {
+const handleDownloadInvoice = async (orderId) => {
   try {
     await downloadInvoice(orderId, token);
   } catch (error) {
-    console.error(error);
+    console.error("Invoice download error:", error);
     alert(error.message || "Invoice download failed");
   }
 };
-
 
   const refreshReviewStatus = async (productId) => {
     if (!productId) return;

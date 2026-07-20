@@ -7,8 +7,8 @@ const Coupon = require("../models/Coupon");
 const crypto = require("crypto");
 const razorpay = require("../config/razorpay");
 
-const sendEmail = require("/Users/TRiANS ENTERPRISES/Desktop/anshu/website/parikta-fashion/src/utils/sendEmail");
-const orderConfirmationTemplate = require("/Users/TRiANS ENTERPRISES/Desktop/anshu/website/parikta-fashion/src/utils/orderConfirmationTemplate");
+const sendEmail = require("../src/utils/sendEmail");
+const orderConfirmationTemplate = require("../src/utils/orderConfirmationTemplate");
 
 const normalizeCode = (code = "") => {
   return String(code).trim().toUpperCase();

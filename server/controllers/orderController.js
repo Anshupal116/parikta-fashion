@@ -423,21 +423,26 @@ status:
       await coupon.save();
     }
 
-    try {
-  if (
-    order.paymentMethod === "COD" &&
-    order.customer?.email
-  ) {
-    await sendEmail({
-      to: order.customer.email,
-      subject: `Order Placed | ${order.orderId}`,
-      html: orderConfirmationTemplate(order),
+    // Email background me send hogi.
+// Customer response ka wait nahi karega.
+if (
+  order.paymentMethod === "COD" &&
+  order.customer?.email
+) {
+  sendEmail({
+    to: order.customer.email,
+    subject: `Order Placed | ${order.orderId}`,
+    html: orderConfirmationTemplate(order),
+  })
+    .then(() => {
+      console.log("✅ COD order email sent");
+    })
+    .catch((emailError) => {
+      console.error(
+        "❌ COD email error:",
+        emailError.message
+      );
     });
-
-    console.log("COD order email sent");
-  }
-} catch (emailError) {
-  console.error("COD email error:", emailError.message);
 }
 
     return res.status(201).json({
@@ -632,21 +637,23 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     await order.save();
 
-    try {
-  if (order.customer?.email) {
-    await sendEmail({
-      to: order.customer.email,
-      subject: `Payment Successful | ${order.orderId}`,
-      html: orderConfirmationTemplate(order),
+    if (order.customer?.email) {
+  sendEmail({
+    to: order.customer.email,
+    subject: `Payment Successful | ${order.orderId}`,
+    html: orderConfirmationTemplate(order),
+  })
+    .then(() => {
+      console.log(
+        "✅ Payment success email sent"
+      );
+    })
+    .catch((emailError) => {
+      console.error(
+        "❌ Payment email error:",
+        emailError.message
+      );
     });
-
-    console.log("Payment email sent");
-  }
-} catch (emailError) {
-  console.error(
-    "Payment email error:",
-    emailError.message
-  );
 }
 
     return res.status(200).json({

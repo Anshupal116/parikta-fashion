@@ -10,6 +10,7 @@ const {
   getCustomerOrders,
   updateOrderStatus,
   cancelCustomerOrder,
+  downloadInvoice,
   deleteOrder,
 } = require("../controllers/orderController");
 
@@ -48,7 +49,7 @@ router.get(
 router.get(
   "/invoice/:orderId",
   customerAuth,
-  orderController.downloadInvoice
+  downloadInvoice
 );
 
 router.put(

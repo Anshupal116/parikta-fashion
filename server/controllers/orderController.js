@@ -9,8 +9,10 @@ const razorpay = require("../config/razorpay");
 
 const sendEmail = require("../utils/sendEmail");
 const orderConfirmationTemplate = require("../utils/orderConfirmationTemplate");
+const {sendOrderPlacedWhatsApp,} = require("../utils/orderWhatsApp");
 
 const generateInvoicePdf = require("../utils/generateInvoicePdf");
+
 
 const normalizeCode = (code = "") => {
   return String(code).trim().toUpperCase();
@@ -447,6 +449,21 @@ if (
     });
 }
 
+// WhatsApp yahan lagana hai
+if (order.paymentMethod === "COD") {
+  sendOrderPlacedWhatsApp(order)
+    .then(() => {
+      console.log(
+        `✅ COD WhatsApp sent: ${order.orderId}`
+      );
+    })
+    .catch((whatsappError) => {
+      console.error(
+        `❌ COD WhatsApp error for ${order.orderId}:`,
+        whatsappError.message
+      );
+    });
+}
     return res.status(201).json({
       success: true,
 
@@ -657,6 +674,20 @@ exports.verifyRazorpayPayment = async (req, res) => {
       );
     });
 }
+
+// WhatsApp yahan lagana hai
+sendOrderPlacedWhatsApp(order)
+  .then(() => {
+    console.log(
+      `✅ Razorpay WhatsApp sent: ${order.orderId}`
+    );
+  })
+  .catch((whatsappError) => {
+    console.error(
+      `❌ Razorpay WhatsApp error for ${order.orderId}:`,
+      whatsappError.message
+    );
+  });
 
     return res.status(200).json({
       success: true,

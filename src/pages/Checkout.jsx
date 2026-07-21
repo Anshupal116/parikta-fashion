@@ -313,7 +313,7 @@ function Checkout() {
     <>
       <Navbar />
 
-      <main className="bg-[#f7f2ee] min-h-screen py-14">
+      <main className="bg-[#f7f2ee] min-h-screen py-10 md:py-14 pb-28 lg:pb-14">
         <Container>
           <div className="text-center mb-10">
             <p className="text-[#BFA996] font-semibold tracking-[0.25em]">
@@ -572,6 +572,21 @@ function Checkout() {
                 </div>
               )}
 
+              <div className="grid grid-cols-3 gap-2 mt-6">
+                <div className="bg-[#FDEAE6] rounded-xl p-3 text-center">
+                  <div className="text-lg">🔒</div>
+                  <p className="text-[10px] font-semibold text-[#5B3B32] mt-1">Secure Payment</p>
+                </div>
+                <div className="bg-[#FDEAE6] rounded-xl p-3 text-center">
+                  <div className="text-lg">🚚</div>
+                  <p className="text-[10px] font-semibold text-[#5B3B32] mt-1">Fast Delivery</p>
+                </div>
+                <div className="bg-[#FDEAE6] rounded-xl p-3 text-center">
+                  <div className="text-lg">↩️</div>
+                  <p className="text-[10px] font-semibold text-[#5B3B32] mt-1">Easy Return</p>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={
@@ -597,6 +612,24 @@ function Checkout() {
         </Container>
       </main>
 
+      {cartItems.length>0 && (
+      <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-[#fffaf7]/95 backdrop-blur-md border-t border-[#eadbd4] p-3 z-40">
+        <div className="flex items-center gap-3">
+          <div className="min-w-[90px]">
+            <p className="text-[10px] text-[#8b746b]">TOTAL</p>
+            <p className="font-bold text-[#9A3F4D]">₹{Number(finalTotal||0).toLocaleString("en-IN")}</p>
+          </div>
+          <button
+            type="submit"
+            form={undefined}
+            onClick={(e)=>document.querySelector("form")?.requestSubmit()}
+            disabled={loading||cartItems.length===0}
+            className="flex-1 bg-[#9A3F4D] text-white py-3 rounded-full font-bold">
+            {address.payment==="Razorpay"?"PAY NOW":"PLACE ORDER"}
+          </button>
+        </div>
+      </div>
+      )}
       <Footer />
     </>
   );

@@ -528,16 +528,43 @@ const productSchema = {
             <div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-14 items-start">
               {/* LEFT PRODUCT IMAGES */}
               <div>
-                <div className="grid lg:grid-cols-[92px_1fr] gap-3 items-start">
-                  {uniqueGalleryImages.length > 1 && (
-                    <div className="hidden lg:flex flex-col gap-3 max-h-[760px] overflow-y-auto pr-1 scrollbar-hide">
-                      {uniqueGalleryImages.map((image, index) => (
+                <div className="relative bg-[#f2ece8] overflow-hidden group">
+                  <img
+                    src={mainImage || product.image}
+                    alt={product.name}
+                    className="w-full h-[420px] sm:h-[500px] md:h-[760px] object-cover object-top transition-transform duration-700 group-hover:scale-[1.025]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openLightbox(
+                        mainImage || product.image
+                      )
+                    }
+                    className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white transition"
+                  >
+                    <FiZoomIn size={21} />
+                  </button>
+                </div>
+
+                {uniqueGalleryImages.length > 1 && (
+                  <div
+                    className={`grid gap-2 md:gap-3 mt-3 ${
+                      uniqueGalleryImages.length >= 5
+                        ? "grid-cols-4 md:grid-cols-5"
+                        : "grid-cols-4"
+                    }`}
+                  >
+                    {uniqueGalleryImages.map(
+                      (image, index) => (
                         <button
                           key={`${image}-${index}`}
                           type="button"
-                          onClick={() => setMainImage(image)}
-                          aria-label={`View image ${index + 1}`}
-                          className={`overflow-hidden h-28 border-2 bg-[#f2ece8] transition ${
+                          onClick={() =>
+                            setMainImage(image)
+                          }
+                          className={`overflow-hidden h-24 sm:h-28 md:h-44 border-2 bg-[#f2ece8] transition ${
                             mainImage === image
                               ? "border-[#9A3F4D]"
                               : "border-transparent hover:border-[#d8a59c]"
@@ -545,53 +572,14 @@ const productSchema = {
                         >
                           <img
                             src={image}
-                            alt={`${product.name} ${index + 1}`}
+                            alt={`${product.name} ${
+                              index + 1
+                            }`}
                             className="w-full h-full object-cover object-top"
                           />
                         </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="relative bg-[#f2ece8] overflow-hidden group rounded-2xl">
-                    <img
-                      src={mainImage || product.image}
-                      alt={product.name}
-                      className="w-full h-[380px] sm:h-[460px] md:h-[620px] lg:h-[760px] object-cover object-top transition-transform duration-700 lg:group-hover:scale-[1.035]"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => openLightbox(mainImage || product.image)}
-                      aria-label="Open product image"
-                      className="absolute top-4 right-4 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white transition"
-                    >
-                      <FiZoomIn size={21} />
-                    </button>
-                  </div>
-                </div>
-
-                {uniqueGalleryImages.length > 1 && (
-                  <div className="lg:hidden flex gap-2 mt-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
-                    {uniqueGalleryImages.map((image, index) => (
-                      <button
-                        key={`${image}-${index}`}
-                        type="button"
-                        onClick={() => setMainImage(image)}
-                        aria-label={`View image ${index + 1}`}
-                        className={`shrink-0 w-20 h-24 sm:w-24 sm:h-28 overflow-hidden border-2 bg-[#f2ece8] snap-start transition ${
-                          mainImage === image
-                            ? "border-[#9A3F4D]"
-                            : "border-transparent"
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={`${product.name} ${index + 1}`}
-                          className="w-full h-full object-cover object-top"
-                        />
-                      </button>
-                    ))}
+                      )
+                    )}
                   </div>
                 )}
               </div>

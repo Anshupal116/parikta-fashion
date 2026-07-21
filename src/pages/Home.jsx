@@ -89,7 +89,7 @@ useEffect(() => {
 
       {/* CINEMATIC HERO */}
 <section className="relative bg-[#14100e] overflow-hidden">
-  <div className="relative h-[560px] md:h-[720px]">
+  <div className="relative h-[470px] sm:h-[520px] md:h-[720px]">
     <img
       src={heroDress}
       alt="Parikta Fashion"
@@ -100,17 +100,17 @@ useEffect(() => {
     <div className="absolute inset-0 bg-gradient-to-r from-[#14100e]/70 via-transparent to-[#14100e]/20"></div>
 
     <Container>
-      <div className="relative z-10 h-[560px] md:h-[720px] flex items-end md:items-center pb-12 md:pb-0">
+      <div className="relative z-10 h-[470px] sm:h-[520px] md:h-[720px] flex items-end md:items-center pb-8 sm:pb-10 md:pb-0">
         <div className="max-w-xl text-white">
           <p className="text-[11px] md:text-xs tracking-[0.38em] uppercase text-[#e8d7cc]">
             Premium Women Designer Wear
           </p>
 
-          <h1 className="heading-font text-5xl md:text-7xl lg:text-8xl leading-none mt-4">
+          <h1 className="heading-font text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-none mt-3 sm:mt-4">
             Elegance
           </h1>
 
-          <h2 className="logo-font text-6xl md:text-8xl text-[#E2B7B1] -mt-1">
+          <h2 className="logo-font text-5xl sm:text-6xl md:text-8xl text-[#E2B7B1] -mt-1">
             in Every Thread
           </h2>
 
@@ -119,15 +119,15 @@ useEffect(() => {
             premium fabrics, delicate details and a luxury finish.
           </p>
 
-          <div className="flex flex-wrap gap-3 mt-7">
+          <div className="flex flex-col sm:flex-row gap-3 mt-6 sm:mt-7">
             <Link to="/products">
-              <button className="bg-[#9A3F4D] text-white px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
+              <button className="w-full sm:w-auto bg-[#9A3F4D] text-white px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
                 Shop Collection
               </button>
             </Link>
 
             <Link to="/customize">
-              <button className="bg-white/90 text-[#9A3F4D] px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
+              <button className="w-full sm:w-auto bg-white/90 text-[#9A3F4D] px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
                 Custom Design
               </button>
             </Link>
@@ -137,7 +137,7 @@ useEffect(() => {
             {["Premium Fabric", "Custom Fit", "Designer Finish"].map((item) => (
               <div
                 key={item}
-                className="border border-white/25 bg-white/10 backdrop-blur-sm px-3 py-3 text-center"
+                className="border border-white/25 bg-white/10 backdrop-blur-sm px-2 py-2 sm:px-3 sm:py-3 text-center"
               >
                 <p className="text-[10px] tracking-[0.18em] uppercase">
                   {item}
@@ -203,7 +203,7 @@ useEffect(() => {
         <Link
           to={item.link}
           key={item.title}
-          className="min-w-[82%] sm:min-w-[48%] lg:min-w-[32%] snap-start relative h-[360px] md:h-[460px] rounded-3xl overflow-hidden group"
+          className="min-w-[88%] sm:min-w-[48%] lg:min-w-[32%] snap-start relative h-[340px] sm:h-[360px] md:h-[460px] rounded-3xl overflow-hidden group"
         >
           <img
             src={item.image}
@@ -326,7 +326,7 @@ useEffect(() => {
             <div className="text-[#BFA996] mt-2">⌁</div>
           </div>
 
-          <div className="grid grid-cols-4 gap-3 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-3 md:gap-6">
             {categories.map((item) => (
               <Link to="/products" key={item.name} className="text-center">
                 <div className="aspect-square rounded-full overflow-hidden border border-[#eadbd4] bg-[#f7f2ee]">
@@ -467,16 +467,10 @@ useEffect(() => {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
-  {loadingProducts ? (
-    <p className="text-center text-[#8b746b] col-span-full">
-      Loading products...
-    </p>
-  ) : (
-    products.slice(0, 4).map((item) => (
-      <ProductCard key={item._id} item={item} />
-    ))
-  )}
-</div>
+        {recentlyViewed.slice(0, 4).map((item) => (
+          <ProductCard key={item._id} item={item} />
+        ))}
+      </div>
     </Container>
   </section>
 )}
@@ -494,7 +488,7 @@ useEffect(() => {
       </h2>
     </div>
 
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
       {[
         {
           name: "Ananya Sharma",
@@ -553,13 +547,13 @@ useEffect(() => {
               Get updates on new collections, custom offers and styling tips.
             </p>
 
-            <div className="flex mt-6 bg-white rounded-full overflow-hidden p-1">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-6 bg-white rounded-2xl sm:rounded-full overflow-hidden p-1">
               <input
                 type="email"
                 placeholder="Enter your email"
                 className="flex-1 px-5 py-3 text-[#5B3B32] outline-none text-sm"
               />
-              <button className="bg-[#5B3B32] px-6 py-3 rounded-full text-xs tracking-[0.2em] uppercase">
+              <button className="w-full sm:w-auto bg-[#5B3B32] px-8 py-3 rounded-xl sm:rounded-full text-xs tracking-[0.2em] uppercase">
                 Subscribe
               </button>
             </div>

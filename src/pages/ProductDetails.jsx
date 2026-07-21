@@ -528,43 +528,16 @@ const productSchema = {
             <div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-14 items-start">
               {/* LEFT PRODUCT IMAGES */}
               <div>
-                <div className="relative bg-[#f2ece8] overflow-hidden group">
-                  <img
-                    src={mainImage || product.image}
-                    alt={product.name}
-                    className="w-full h-[500px] md:h-[760px] object-cover object-top transition-transform duration-700 group-hover:scale-[1.025]"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openLightbox(
-                        mainImage || product.image
-                      )
-                    }
-                    className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white transition"
-                  >
-                    <FiZoomIn size={21} />
-                  </button>
-                </div>
-
-                {uniqueGalleryImages.length > 1 && (
-                  <div
-                    className={`grid gap-2 md:gap-3 mt-3 ${
-                      uniqueGalleryImages.length >= 5
-                        ? "grid-cols-4 md:grid-cols-5"
-                        : "grid-cols-4"
-                    }`}
-                  >
-                    {uniqueGalleryImages.map(
-                      (image, index) => (
+                <div className="grid lg:grid-cols-[92px_1fr] gap-3 items-start">
+                  {uniqueGalleryImages.length > 1 && (
+                    <div className="hidden lg:flex flex-col gap-3 max-h-[760px] overflow-y-auto pr-1 scrollbar-hide">
+                      {uniqueGalleryImages.map((image, index) => (
                         <button
                           key={`${image}-${index}`}
                           type="button"
-                          onClick={() =>
-                            setMainImage(image)
-                          }
-                          className={`overflow-hidden h-28 md:h-44 border-2 bg-[#f2ece8] transition ${
+                          onClick={() => setMainImage(image)}
+                          aria-label={`View image ${index + 1}`}
+                          className={`overflow-hidden h-28 border-2 bg-[#f2ece8] transition ${
                             mainImage === image
                               ? "border-[#9A3F4D]"
                               : "border-transparent hover:border-[#d8a59c]"
@@ -572,14 +545,53 @@ const productSchema = {
                         >
                           <img
                             src={image}
-                            alt={`${product.name} ${
-                              index + 1
-                            }`}
+                            alt={`${product.name} ${index + 1}`}
                             className="w-full h-full object-cover object-top"
                           />
                         </button>
-                      )
-                    )}
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative bg-[#f2ece8] overflow-hidden group rounded-2xl">
+                    <img
+                      src={mainImage || product.image}
+                      alt={product.name}
+                      className="w-full h-[380px] sm:h-[460px] md:h-[620px] lg:h-[760px] object-cover object-top transition-transform duration-700 lg:group-hover:scale-[1.035]"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(mainImage || product.image)}
+                      aria-label="Open product image"
+                      className="absolute top-4 right-4 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white transition"
+                    >
+                      <FiZoomIn size={21} />
+                    </button>
+                  </div>
+                </div>
+
+                {uniqueGalleryImages.length > 1 && (
+                  <div className="lg:hidden flex gap-2 mt-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+                    {uniqueGalleryImages.map((image, index) => (
+                      <button
+                        key={`${image}-${index}`}
+                        type="button"
+                        onClick={() => setMainImage(image)}
+                        aria-label={`View image ${index + 1}`}
+                        className={`shrink-0 w-20 h-24 sm:w-24 sm:h-28 overflow-hidden border-2 bg-[#f2ece8] snap-start transition ${
+                          mainImage === image
+                            ? "border-[#9A3F4D]"
+                            : "border-transparent"
+                        }`}
+                      >
+                        <img
+                          src={image}
+                          alt={`${product.name} ${index + 1}`}
+                          className="w-full h-full object-cover object-top"
+                        />
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -774,20 +786,29 @@ const productSchema = {
                   </div>
                 )}
 
-                <p className="text-sm mt-4 text-[#5B3B32]">
-                  Availability:{" "}
+                <div className="flex items-center gap-2 text-sm mt-4 text-[#5B3B32]">
                   <span
-                    className={`font-bold ${
+                    className={`w-2.5 h-2.5 rounded-full ${
                       Number(product.stock) > 0
-                        ? "text-green-700"
-                        : "text-red-600"
+                        ? "bg-green-600"
+                        : "bg-red-600"
                     }`}
-                  >
-                    {Number(product.stock) > 0
-                      ? `${product.stock} in stock`
-                      : "Out of stock"}
+                  />
+                  <span>
+                    Availability:{" "}
+                    <strong
+                      className={
+                        Number(product.stock) > 0
+                          ? "text-green-700"
+                          : "text-red-600"
+                      }
+                    >
+                      {Number(product.stock) > 0
+                        ? `${product.stock} in stock`
+                        : "Out of stock"}
+                    </strong>
                   </span>
-                </p>
+                </div>
 
                 <div className="mt-7 border border-[#eadbd4] bg-white rounded-2xl p-5">
                   <div className="flex items-center gap-2 text-[#5B3B32] font-bold">
@@ -819,15 +840,33 @@ const productSchema = {
                   </div>
 
                   {deliveryMessage && (
-                    <p
-                      className={`text-sm mt-3 ${
-                        deliveryMessage.startsWith("Estimated")
-                          ? "text-green-700"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {deliveryMessage}
-                    </p>
+                    <div className="mt-3">
+                      <p
+                        className={`text-sm ${
+                          deliveryMessage.startsWith("Estimated")
+                            ? "text-green-700"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {deliveryMessage}
+                      </p>
+
+                      {deliveryMessage.startsWith("Estimated") && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 text-xs font-semibold text-[#5B3B32]">
+                          {["Free Delivery", "COD Available", "Easy Returns"].map(
+                            (item) => (
+                              <div
+                                key={item}
+                                className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-lg px-3 py-2"
+                              >
+                                <FiCheck className="text-green-700 shrink-0" />
+                                {item}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -968,7 +1007,7 @@ const productSchema = {
               <button
                 type="button"
                 onClick={handleOpenReviewModal}
-                className="bg-[#9A3F4D] text-white px-6 py-3 rounded-xl font-semibold"
+                className={`px-6 py-3 rounded-xl font-semibold transition ${reviewEligibility?.alreadyReviewed ? "bg-green-700 text-white hover:bg-green-800" : "bg-[#9A3F4D] text-white hover:bg-[#7d3240]"}`}
               >
                 {reviewEligibility?.alreadyReviewed
                   ? "Edit Your Review"
@@ -1030,12 +1069,14 @@ const productSchema = {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
+              <div className="flex lg:grid lg:grid-cols-4 gap-4 md:gap-7 overflow-x-auto lg:overflow-visible pb-3 lg:pb-0 snap-x snap-mandatory scrollbar-hide">
                 {similarProducts.map((item) => (
-                  <ProductCard
+                  <div
                     key={item._id}
-                    item={item}
-                  />
+                    className="min-w-[72%] sm:min-w-[44%] lg:min-w-0 snap-start"
+                  >
+                    <ProductCard item={item} />
+                  </div>
                 ))}
               </div>
             </Container>
@@ -1044,15 +1085,17 @@ const productSchema = {
       </main>
 
       {/* Mobile Sticky Purchase Bar */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-3 py-3 shadow-lg">
-        <div className="flex items-center justify-between gap-3">
-          <div className="shrink-0">
-            <p className="text-[9px] uppercase tracking-[0.14em] text-[#8b746b]">
-              Total
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7]/95 backdrop-blur-md border-t border-[#eadbd4] px-3 py-3 shadow-[0_-8px_24px_rgba(91,59,50,0.12)]">
+        <div className="flex items-center justify-between gap-2">
+          <div className="shrink-0 min-w-[76px]">
+            <p className="font-bold text-base text-[#9A213A] leading-tight">
+              ₹{Number(product.price).toLocaleString("en-IN")}
             </p>
 
-            <p className="font-bold text-base text-[#9A213A]">
-              ₹{Number(product.price).toLocaleString("en-IN")}
+            <p className="text-[10px] text-[#8b746b] mt-1">
+              {totalReviews > 0
+                ? `★ ${averageRating.toFixed(1)} (${totalReviews})`
+                : "No reviews"}
             </p>
           </div>
 
@@ -1060,7 +1103,7 @@ const productSchema = {
             type="button"
             onClick={handleAddToCart}
             disabled={Number(product.stock) <= 0}
-            className="flex-1 border border-[#9A213A] text-[#9A213A] px-3 py-3 rounded-full text-[10px] tracking-[0.1em] uppercase font-bold disabled:opacity-50"
+            className="flex-1 border border-[#9A213A] text-[#9A213A] px-2 sm:px-3 py-3 rounded-full text-[9px] sm:text-[10px] tracking-[0.08em] uppercase font-bold disabled:opacity-50"
           >
             Add To Cart
           </button>
@@ -1069,7 +1112,7 @@ const productSchema = {
             type="button"
             onClick={handleBuyNow}
             disabled={Number(product.stock) <= 0}
-            className="flex-1 bg-[#9A213A] text-white px-3 py-3 rounded-full text-[10px] tracking-[0.1em] uppercase font-bold disabled:opacity-50"
+            className="flex-1 bg-[#9A213A] text-white px-2 sm:px-3 py-3 rounded-full text-[9px] sm:text-[10px] tracking-[0.08em] uppercase font-bold disabled:opacity-50"
           >
             Buy Now
           </button>

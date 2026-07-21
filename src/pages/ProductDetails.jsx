@@ -56,7 +56,6 @@ function ProductDetails() {
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
-  const [imageLoading, setImageLoading] = useState(true);
 
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [pincode, setPincode] = useState("");
@@ -98,7 +97,6 @@ function ProductDetails() {
         const productData = response.product;
 
         setProduct(productData);
-        setImageLoading(true);
         setMainImage(productData.image || "");
 
         addRecentlyViewed({
@@ -414,54 +412,6 @@ const productSchema = {
     setLightboxImage("");
   };
 
-  const showPreviousImage = () => {
-    const currentIndex = uniqueGalleryImages.indexOf(lightboxImage);
-
-    const previousIndex =
-      currentIndex <= 0
-        ? uniqueGalleryImages.length - 1
-        : currentIndex - 1;
-
-    setLightboxImage(uniqueGalleryImages[previousIndex]);
-  };
-
-  const showNextImage = () => {
-    const currentIndex = uniqueGalleryImages.indexOf(lightboxImage);
-
-    const nextIndex =
-      currentIndex >= uniqueGalleryImages.length - 1
-        ? 0
-        : currentIndex + 1;
-
-    setLightboxImage(uniqueGalleryImages[nextIndex]);
-  };
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        closeLightbox();
-      }
-
-      if (event.key === "ArrowLeft" && uniqueGalleryImages.length > 1) {
-        showPreviousImage();
-      }
-
-      if (event.key === "ArrowRight" && uniqueGalleryImages.length > 1) {
-        showNextImage();
-      }
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [lightboxOpen, lightboxImage]);
-
   const handleCheckDelivery = () => {
     const cleanPincode = pincode.trim();
 
@@ -579,19 +529,10 @@ const productSchema = {
               {/* LEFT PRODUCT IMAGES */}
               <div>
                 <div className="relative bg-[#f2ece8] overflow-hidden group">
-                  {imageLoading && (
-                    <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#eee5e0] via-[#f8f1ed] to-[#eee5e0] bg-[length:200%_100%] animate-pulse" />
-                  )}
-
                   <img
-                    key={mainImage || product.image}
                     src={mainImage || product.image}
                     alt={product.name}
-                    onLoad={() => setImageLoading(false)}
-                    onError={() => setImageLoading(false)}
-                    className={`w-full h-[500px] md:h-[760px] object-cover object-top transition-all duration-500 group-hover:scale-[1.025] ${
-                      imageLoading ? "opacity-0" : "opacity-100"
-                    }`}
+                    className="w-full h-[500px] md:h-[760px] object-cover object-top transition-transform duration-700 group-hover:scale-[1.025]"
                   />
 
                   <button
@@ -601,8 +542,7 @@ const productSchema = {
                         mainImage || product.image
                       )
                     }
-                    aria-label="Zoom product image"
-                    className="absolute z-20 top-4 right-4 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white hover:scale-105 transition"
+                    className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white transition"
                   >
                     <FiZoomIn size={21} />
                   </button>
@@ -621,17 +561,13 @@ const productSchema = {
                         <button
                           key={`${image}-${index}`}
                           type="button"
-                          onClick={() => {
-                            if (mainImage !== image) {
-                              setImageLoading(true);
-                              setMainImage(image);
-                            }
-                          }}
-                          aria-label={`View product image ${index + 1}`}
-                          className={`overflow-hidden h-28 md:h-44 border-2 bg-[#f2ece8] transition-all duration-300 ${
+                          onClick={() =>
+                            setMainImage(image)
+                          }
+                          className={`overflow-hidden h-28 md:h-44 border-2 bg-[#f2ece8] transition ${
                             mainImage === image
-                              ? "border-[#9A3F4D] ring-2 ring-[#9A3F4D]/20 shadow-lg scale-[1.02]"
-                              : "border-transparent hover:border-[#d8a59c] hover:-translate-y-0.5"
+                              ? "border-[#9A3F4D]"
+                              : "border-transparent hover:border-[#d8a59c]"
                           }`}
                         >
                           <img
@@ -639,7 +575,6 @@ const productSchema = {
                             alt={`${product.name} ${
                               index + 1
                             }`}
-                            loading="lazy"
                             className="w-full h-full object-cover object-top"
                           />
                         </button>
@@ -814,7 +749,7 @@ const productSchema = {
                     type="button"
                     onClick={handleAddToCart}
                     disabled={Number(product.stock) <= 0}
-                    className="w-full bg-[#9A213A] text-white py-4 rounded-md font-bold tracking-[0.1em] uppercase flex items-center justify-center gap-3 hover:bg-[#7d1930] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                    className="w-full bg-[#9A213A] text-white py-4 rounded-md font-bold tracking-[0.1em] uppercase flex items-center justify-center gap-3 hover:bg-[#7d1930] disabled:opacity-50"
                   >
                     <FiShoppingBag size={20} />
 
@@ -827,7 +762,7 @@ const productSchema = {
                     type="button"
                     onClick={handleBuyNow}
                     disabled={Number(product.stock) <= 0}
-                    className="w-full border border-[#9A213A] text-[#9A213A] py-4 rounded-md font-bold tracking-[0.1em] uppercase hover:bg-[#fff1f3] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                    className="w-full border border-[#9A213A] text-[#9A213A] py-4 rounded-md font-bold tracking-[0.1em] uppercase hover:bg-[#fff1f3] disabled:opacity-50"
                   >
                     Buy Now
                   </button>
@@ -839,30 +774,20 @@ const productSchema = {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 text-sm mt-4 text-[#5B3B32]">
+                <p className="text-sm mt-4 text-[#5B3B32]">
+                  Availability:{" "}
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${
+                    className={`font-bold ${
                       Number(product.stock) > 0
-                        ? "bg-green-600"
-                        : "bg-red-600"
+                        ? "text-green-700"
+                        : "text-red-600"
                     }`}
-                  />
-
-                  <span>
-                    Availability:{" "}
-                    <strong
-                      className={
-                        Number(product.stock) > 0
-                          ? "text-green-700"
-                          : "text-red-600"
-                      }
-                    >
-                      {Number(product.stock) > 0
-                        ? `${product.stock} in stock`
-                        : "Out of stock"}
-                    </strong>
+                  >
+                    {Number(product.stock) > 0
+                      ? `${product.stock} in stock`
+                      : "Out of stock"}
                   </span>
-                </div>
+                </p>
 
                 <div className="mt-7 border border-[#eadbd4] bg-white rounded-2xl p-5">
                   <div className="flex items-center gap-2 text-[#5B3B32] font-bold">
@@ -894,35 +819,15 @@ const productSchema = {
                   </div>
 
                   {deliveryMessage && (
-                    <div className="mt-3">
-                      <p
-                        className={`text-sm ${
-                          deliveryMessage.startsWith("Estimated")
-                            ? "text-green-700"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {deliveryMessage}
-                      </p>
-
-                      {deliveryMessage.startsWith("Estimated") && (
-                        <div className="grid sm:grid-cols-3 gap-2 mt-3">
-                          {[
-                            "Free Delivery",
-                            "COD Available",
-                            "Easy Returns",
-                          ].map((item) => (
-                            <div
-                              key={item}
-                              className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-lg px-3 py-2 text-xs font-semibold text-[#5B3B32]"
-                            >
-                              <FiCheck className="text-green-700 shrink-0" />
-                              {item}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <p
+                      className={`text-sm mt-3 ${
+                        deliveryMessage.startsWith("Estimated")
+                          ? "text-green-700"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {deliveryMessage}
+                    </p>
                   )}
                 </div>
 
@@ -1063,11 +968,7 @@ const productSchema = {
               <button
                 type="button"
                 onClick={handleOpenReviewModal}
-                className={`px-6 py-3 rounded-xl font-semibold transition hover:-translate-y-0.5 hover:shadow-lg ${
-                  reviewEligibility?.alreadyReviewed
-                    ? "bg-green-700 text-white hover:bg-green-800"
-                    : "bg-[#9A3F4D] text-white hover:bg-[#7d3240]"
-                }`}
+                className="bg-[#9A3F4D] text-white px-6 py-3 rounded-xl font-semibold"
               >
                 {reviewEligibility?.alreadyReviewed
                   ? "Edit Your Review"
@@ -1129,14 +1030,12 @@ const productSchema = {
                 </Link>
               </div>
 
-              <div className="flex lg:grid lg:grid-cols-4 gap-4 md:gap-7 overflow-x-auto lg:overflow-visible pb-3 lg:pb-0 snap-x snap-mandatory">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
                 {similarProducts.map((item) => (
-                  <div
+                  <ProductCard
                     key={item._id}
-                    className="min-w-[72%] sm:min-w-[44%] lg:min-w-0 snap-start"
-                  >
-                    <ProductCard item={item} />
-                  </div>
+                    item={item}
+                  />
                 ))}
               </div>
             </Container>
@@ -1145,17 +1044,15 @@ const productSchema = {
       </main>
 
       {/* Mobile Sticky Purchase Bar */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7]/95 backdrop-blur-md border-t border-[#eadbd4] px-3 py-3 shadow-[0_-8px_24px_rgba(91,59,50,0.12)]">
-        <div className="flex items-center justify-between gap-2">
-          <div className="shrink-0 min-w-[76px]">
-            <p className="font-bold text-base text-[#9A213A] leading-tight">
-              ₹{Number(product.price).toLocaleString("en-IN")}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-3 py-3 shadow-lg">
+        <div className="flex items-center justify-between gap-3">
+          <div className="shrink-0">
+            <p className="text-[9px] uppercase tracking-[0.14em] text-[#8b746b]">
+              Total
             </p>
 
-            <p className="text-[10px] text-[#8b746b] mt-1">
-              {totalReviews > 0
-                ? `★ ${averageRating.toFixed(1)} (${totalReviews})`
-                : "No reviews"}
+            <p className="font-bold text-base text-[#9A213A]">
+              ₹{Number(product.price).toLocaleString("en-IN")}
             </p>
           </div>
 
@@ -1246,52 +1143,19 @@ const productSchema = {
 
       {/* Image Lightbox */}
       {lightboxOpen && lightboxImage && (
-        <div
-          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-5"
-          onClick={closeLightbox}
-        >
+        <div className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-5">
           <button
             type="button"
             onClick={closeLightbox}
-            aria-label="Close image"
-            className="absolute top-5 right-5 z-20 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition"
+            className="absolute top-5 right-5 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center"
           >
             <FiX size={25} />
           </button>
 
-          {uniqueGalleryImages.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  showPreviousImage();
-                }}
-                aria-label="Previous image"
-                className="absolute left-3 md:left-6 z-20 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/90 text-black flex items-center justify-center text-2xl hover:scale-105 transition"
-              >
-                ‹
-              </button>
-
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  showNextImage();
-                }}
-                aria-label="Next image"
-                className="absolute right-3 md:right-6 z-20 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/90 text-black flex items-center justify-center text-2xl hover:scale-105 transition"
-              >
-                ›
-              </button>
-            </>
-          )}
-
           <img
             src={lightboxImage}
             alt={product.name}
-            onClick={(event) => event.stopPropagation()}
-            className="max-w-full max-h-[90vh] object-contain select-none"
+            className="max-w-full max-h-[90vh] object-contain"
           />
         </div>
       )}

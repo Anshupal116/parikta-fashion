@@ -32,6 +32,8 @@ import Register from "./pages/auth/Register";
 import MyOrders from "./pages/MyOrders";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
 import CouponsAdmin from "./pages/admin/CouponsAdmin";
+import CheckoutAddress from "./pages/CheckoutAddress";
+import CheckoutPayment from "./pages/CheckoutPayment";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -108,6 +110,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/my-orders" element={<MyOrders />} />
+        <Route path="/checkout" element={<Navigate to="/checkout/address" replace />} />
+        <Route path="/checkout/address" element={<CheckoutAddress />} />
+        <Route path="/checkout/payment" element={<CheckoutPayment />} />
 
         <Route path="/pf-x7-admin-2026" element={<AdminLogin />} />
 

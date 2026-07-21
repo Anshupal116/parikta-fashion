@@ -263,7 +263,7 @@ function Cart() {
                     Inclusive of all taxes.
                   </p>
 
-                  <Link to="/checkout">
+                  <Link to="/checkout/address">
                     <button className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold mt-6 hover:bg-[#7d3140] hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 transition">
                       PROCEED TO CHECKOUT
                     </button>

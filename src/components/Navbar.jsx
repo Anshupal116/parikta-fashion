@@ -40,12 +40,12 @@ function Navbar() {
     <>
       <AnnouncementBar />
 
-      <nav className="sticky top-0 z-50 bg-[#fffaf7]/75 backdrop-blur-xl border-b border-[#eadbd4]/70 shadow-sm">
+      <nav className="sticky top-0 z-50 w-full max-w-full overflow-x-clip bg-[#fffaf7]/75 backdrop-blur-xl border-b border-[#eadbd4]/70 shadow-sm">
         <Container>
-          <div className="h-20 md:h-24 flex items-center justify-between gap-4">
+          <div className="h-20 md:h-24 w-full min-w-0 flex items-center justify-between gap-2 sm:gap-4">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden text-[#5B3B32]"
+              className="lg:hidden shrink-0 text-[#5B3B32]"
             >
               {menuOpen ? <FiX size={25} /> : <FiMenu size={25} />}
             </button>
@@ -57,11 +57,11 @@ function Navbar() {
               <li><Link to="/about">About</Link></li>
             </ul>
 
-            <Link to="/" className="text-center leading-none">
-              <div className="logo-font text-5xl md:text-6xl text-[#9A3F4D]">
+            <Link to="/" className="min-w-0 flex-1 lg:flex-none flex justify-center text-center leading-none">
+              <div className="logo-font text-4xl sm:text-5xl md:text-6xl text-[#9A3F4D] whitespace-nowrap">
                 Parikta
               </div>
-              <div className="tracking-[0.45em] text-[10px] md:text-xs text-[#BFA996] font-semibold">
+              <div className="tracking-[0.34em] sm:tracking-[0.45em] text-[8px] sm:text-[10px] md:text-xs text-[#BFA996] font-semibold whitespace-nowrap">
                 FASHION
               </div>
             </Link>
@@ -72,8 +72,8 @@ function Navbar() {
               <li><Link to="/contact">Contact</Link></li>
             </ul>
 
-            <div className="flex items-center gap-4 text-[#5B3B32]">
-              <button onClick={() => setSearchOpen(true)}>
+            <div className="flex shrink-0 items-center gap-2.5 sm:gap-4 text-[#5B3B32]">
+              <button onClick={() => setSearchOpen(true)} className="hidden sm:inline-flex">
                 <FiSearch size={21} />
               </button>
 
@@ -86,7 +86,7 @@ function Navbar() {
                 )}
               </Link>
 
-              <button onClick={openCart} className="relative" >
+              <button onClick={openCart} className="relative shrink-0">
                 <FiShoppingBag size={21} />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-3 bg-[#9A3F4D] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
@@ -98,7 +98,7 @@ function Navbar() {
               <div className="relative">
                 {!isLoggedIn ? (
                   <Link to="/login">
-                    <button className="w-9 h-9 rounded-full border border-[#eadbd4] flex items-center justify-center hover:text-[#9A3F4D]">
+                    <button className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#eadbd4] flex items-center justify-center hover:text-[#9A3F4D]">
                       <FiUser size={20} />
                     </button>
                   </Link>
@@ -108,7 +108,7 @@ function Navbar() {
                       onClick={() => setShowAccountMenu(!showAccountMenu)}
                       className="flex items-center gap-2"
                     >
-                      <div className="w-9 h-9 rounded-full bg-[#9A3F4D] text-white flex items-center justify-center font-bold">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#9A3F4D] text-white flex items-center justify-center font-bold">
                         {customer?.name?.charAt(0)?.toUpperCase()}
                       </div>
 

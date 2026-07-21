@@ -8,10 +8,10 @@ function AnnouncementBar() {
   ];
 
   return (
-    <div className="bg-[#9A3F4D] text-white overflow-hidden">
-      <div className="whitespace-nowrap flex animate-marquee py-2 text-[11px] md:text-sm tracking-[0.22em] uppercase">
+    <div className="w-full max-w-full overflow-hidden bg-[#9A3F4D] text-white">
+      <div className="flex w-max min-w-full whitespace-nowrap animate-marquee py-2 text-[10px] sm:text-[11px] md:text-sm tracking-[0.16em] sm:tracking-[0.22em] uppercase">
         {[...messages, ...messages].map((msg, index) => (
-          <span key={index} className="mx-8">
+          <span key={`${msg}-${index}`} className="shrink-0 mx-5 sm:mx-8">
             ✦ {msg}
           </span>
         ))}

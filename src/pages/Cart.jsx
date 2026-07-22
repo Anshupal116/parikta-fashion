@@ -12,8 +12,6 @@ import {
   FiX,
   FiHeart,
   FiShield,
-  FiTag,
-  FiChevronRight,
   FiAward,
 } from "react-icons/fi";
 
@@ -365,25 +363,9 @@ function Cart() {
                 </div>
 
                 <div className="mt-5 space-y-4 lg:hidden">
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between rounded-2xl border border-[#eadbd4] bg-[#fffdfb] px-4 py-4 text-left shadow-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FDEAE6] text-[#9A3F4D]">
-                        <FiTag />
-                      </div>
-
-                      <div>
-                        <p className="font-bold text-[#5B3B32]">Apply Coupon</p>
-                        <p className="text-xs text-[#8b746b]">
-                          Get extra discounts
-                        </p>
-                      </div>
-                    </div>
-
-                    <FiChevronRight className="text-[#9A3F4D]" />
-                  </button>
+                  <div className="rounded-2xl border border-[#eadbd4] bg-[#fffdfb] p-4 shadow-sm">
+                    <CouponBox />
+                  </div>
 
                   <div className="rounded-2xl border border-[#eadbd4] bg-[#fffdfb] p-4 shadow-sm">
                     <div className="space-y-3 text-sm text-[#5B3B32]">

@@ -208,18 +208,18 @@ function Cart() {
 
                                 {Number(item.mrp || 0) >
                                   Number(item.price || 0) && (
-                                    <>
-                                      <p className="text-xs text-[#9f918b] line-through sm:text-sm">
-                                        ₹{Number(item.mrp).toLocaleString("en-IN")}
-                                      </p>
+                                  <>
+                                    <p className="text-xs text-[#9f918b] line-through sm:text-sm">
+                                      ₹{Number(item.mrp).toLocaleString("en-IN")}
+                                    </p>
 
-                                      {discountPercent > 0 && (
-                                        <span className="text-xs font-semibold text-[#c38b24]">
-                                          ({discountPercent}% OFF)
-                                        </span>
-                                      )}
-                                    </>
-                                  )}
+                                    {discountPercent > 0 && (
+                                      <span className="text-xs font-semibold text-[#c38b24]">
+                                        ({discountPercent}% OFF)
+                                      </span>
+                                    )}
+                                  </>
+                                )}
                               </div>
 
                               <div className="mt-4 flex items-end justify-between gap-3">
@@ -262,7 +262,7 @@ function Cart() {
                     })}
                   </div>
 
-                  <aside className="space-y-5 lg:sticky lg:top-28">
+                  <aside className="hidden space-y-5 lg:sticky lg:top-28 lg:block">
                     <div className="rounded-3xl border border-[#eadbd4] bg-[#fffdfb] p-5 shadow-[0_10px_30px_rgba(91,59,50,0.06)] md:p-6">
                       <h2 className="heading-font text-3xl text-[#5B3B32]">
                         Price Details

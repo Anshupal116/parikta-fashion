@@ -12,8 +12,6 @@ const API_URL = `${import.meta.env.VITE_API_URL}/customers`;
 export function CustomerProvider({ children }) {
   const [customer, setCustomer] = useState(null);
   const [token, setToken] = useState(null);
-
-  // Local storage check complete hua ya nahi
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
@@ -43,59 +41,86 @@ export function CustomerProvider({ children }) {
     }
   }, []);
 
-  const registerCustomer = async (formData) => {
-    const res = await fetch(`${API_URL}/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+  const saveSession = (data) => {
+    if (!data?.token || !data?.customer) return;
+
+    localStorage.setItem(
+      "parikta_customer",
+      JSON.stringify(data.customer)
+    );
+
+    localStorage.setItem(
+      "parikta_customer_token",
+      data.token
+    );
+
+    setCustomer(data.customer);
+    setToken(data.token);
+  };
+
+  const request = async (endpoint, body) => {
+    try {
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json().catch(() => ({
+        success: false,
+        message: "Invalid server response",
+      }));
+
+      if (!res.ok && !data.message) {
+        data.message = "Request failed";
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`Customer API ${endpoint} error:`, error);
+
+      return {
+        success: false,
+        message:
+          "Server connection failed. Please try again.",
+      };
+    }
+  };
+
+  const sendOtp = async (phone) => {
+    return request("/send-otp", { phone });
+  };
+
+  const verifyOtp = async ({ phone, otp }) => {
+    const data = await request("/verify-otp", {
+      phone,
+      otp,
     });
 
-    const data = await res.json();
-
-    if (data.success) {
-      localStorage.setItem(
-        "parikta_customer",
-        JSON.stringify(data.customer)
-      );
-
-      localStorage.setItem(
-        "parikta_customer_token",
-        data.token
-      );
-
-      setCustomer(data.customer);
-      setToken(data.token);
+    if (data.success && data.token && data.customer) {
+      saveSession(data);
     }
 
     return data;
   };
 
-  const loginCustomer = async (formData) => {
-    const res = await fetch(`${API_URL}/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+  const completeProfile = async ({
+    phone,
+    otp,
+    name,
+    email,
+  }) => {
+    const data = await request("/complete-profile", {
+      phone,
+      otp,
+      name,
+      email,
     });
 
-    const data = await res.json();
-
     if (data.success) {
-      localStorage.setItem(
-        "parikta_customer",
-        JSON.stringify(data.customer)
-      );
-
-      localStorage.setItem(
-        "parikta_customer_token",
-        data.token
-      );
-
-      setCustomer(data.customer);
-      setToken(data.token);
+      saveSession(data);
     }
 
     return data;
@@ -116,8 +141,9 @@ export function CustomerProvider({ children }) {
         token,
         authLoading,
         isLoggedIn: Boolean(customer && token),
-        registerCustomer,
-        loginCustomer,
+        sendOtp,
+        verifyOtp,
+        completeProfile,
         logoutCustomer,
       }}
     >

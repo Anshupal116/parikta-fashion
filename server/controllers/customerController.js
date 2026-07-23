@@ -1,7 +1,8 @@
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Customer = require("../models/Customer");
 const Order = require("../models/Order");
+
+const DEVELOPMENT_OTP = "123456";
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -9,111 +10,213 @@ const generateToken = (id) => {
   });
 };
 
-// ===============================
-// REGISTER CUSTOMER
-// ===============================
+const normalizePhone = (phone = "") =>
+  String(phone).replace(/\D/g, "").slice(-10);
 
-exports.registerCustomer = async (req, res) => {
+const customerResponse = (customer) => ({
+  _id: customer._id,
+  name: customer.name || "",
+  phone: customer.phone,
+  email: customer.email || "",
+  isProfileComplete: Boolean(customer.isProfileComplete),
+  isVerified: Boolean(customer.isVerified),
+});
+
+// ========================================
+// SEND OTP - DEVELOPMENT MODE
+// OTP is always 123456
+// ========================================
+exports.sendOtp = async (req, res) => {
   try {
-    const { name, phone, email, password } = req.body;
+    const phone = normalizePhone(req.body.phone);
 
-    const exists = await Customer.findOne({
-      $or: [{ phone }, { email }],
-    });
-
-    if (exists) {
+    if (!/^[6-9]\d{9}$/.test(phone)) {
       return res.status(400).json({
         success: false,
-        message: "Customer already exists",
+        message: "Please enter a valid 10-digit mobile number",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const customer = await Customer.findOne({ phone });
 
-    const customer = await Customer.create({
-      name,
-      phone,
-      email,
-      password: hashedPassword,
-    });
-
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: "Register successful",
-      token: generateToken(customer._id),
-      customer: {
-        _id: customer._id,
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email,
-      },
+      message: "OTP sent successfully",
+      phone,
+      isExistingCustomer: Boolean(customer),
+      // Remove this field when MSG91 is connected.
+      developmentOtp:
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : DEVELOPMENT_OTP,
     });
   } catch (error) {
+    console.error("Send OTP error:", error);
+
     return res.status(500).json({
       success: false,
-      message: "Register failed",
+      message: "OTP send failed",
       error: error.message,
     });
   }
 };
 
-// ===============================
-// LOGIN CUSTOMER
-// ===============================
-
-exports.loginCustomer = async (req, res) => {
+// ========================================
+// VERIFY OTP
+// Existing customer => login
+// New customer => ask for profile
+// ========================================
+exports.verifyOtp = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const phone = normalizePhone(req.body.phone);
+    const otp = String(req.body.otp || "").trim();
+
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mobile number",
+      });
+    }
+
+    if (otp !== DEVELOPMENT_OTP) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
     const customer = await Customer.findOne({ phone });
 
     if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "Customer not found",
+      return res.status(200).json({
+        success: true,
+        isNewCustomer: true,
+        requiresProfile: true,
+        phone,
+        message: "OTP verified. Please complete your profile.",
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      customer.password
-    );
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid password",
-      });
-    }
+    customer.isVerified = true;
+    await customer.save();
 
     return res.status(200).json({
       success: true,
-      message: "Login successful",
+      isNewCustomer: false,
+      requiresProfile: !customer.isProfileComplete,
       token: generateToken(customer._id),
-      customer: {
-        _id: customer._id,
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email,
-      },
+      customer: customerResponse(customer),
+      message: "Login successful",
     });
   } catch (error) {
+    console.error("Verify OTP error:", error);
+
     return res.status(500).json({
       success: false,
-      message: "Login failed",
+      message: "OTP verification failed",
       error: error.message,
     });
   }
 };
 
-// ===============================
-// GET ALL CUSTOMERS WITH ORDER STATS
-// ===============================
+// ========================================
+// COMPLETE PROFILE / SIGNUP
+// ========================================
+exports.completeProfile = async (req, res) => {
+  try {
+    const phone = normalizePhone(req.body.phone);
+    const name = String(req.body.name || "").trim();
+    const email = String(req.body.email || "")
+      .trim()
+      .toLowerCase();
+    const otp = String(req.body.otp || "").trim();
 
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mobile number",
+      });
+    }
+
+    if (otp !== DEVELOPMENT_OTP) {
+      return res.status(401).json({
+        success: false,
+        message: "OTP verification expired or invalid",
+      });
+    }
+
+    if (name.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter your full name",
+      });
+    }
+
+    if (
+      email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email address",
+      });
+    }
+
+    if (email) {
+      const emailExists = await Customer.findOne({
+        email,
+        phone: { $ne: phone },
+      });
+
+      if (emailExists) {
+        return res.status(400).json({
+          success: false,
+          message: "This email is already linked to another account",
+        });
+      }
+    }
+
+    let customer = await Customer.findOne({ phone });
+
+    if (!customer) {
+      customer = await Customer.create({
+        name,
+        phone,
+        email: email || undefined,
+        isProfileComplete: true,
+        isVerified: true,
+      });
+    } else {
+      customer.name = name;
+      customer.email = email || undefined;
+      customer.isProfileComplete = true;
+      customer.isVerified = true;
+      await customer.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Account created successfully",
+      token: generateToken(customer._id),
+      customer: customerResponse(customer),
+    });
+  } catch (error) {
+    console.error("Complete profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Profile completion failed",
+      error: error.message,
+    });
+  }
+};
+
+// ========================================
+// GET ALL CUSTOMERS WITH ORDER STATS
+// ========================================
 exports.getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.find()
-      .select("-password")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -129,7 +232,6 @@ exports.getAllCustomers = async (req, res) => {
       const customerOrders = orders.filter((order) => {
         let orderCustomerId = null;
 
-        // Agar order.customer direct ObjectId hai
         if (
           order.customer &&
           typeof order.customer !== "object"
@@ -137,7 +239,6 @@ exports.getAllCustomers = async (req, res) => {
           orderCustomerId = order.customer.toString();
         }
 
-        // Agar order.customer object hai
         if (
           order.customer &&
           typeof order.customer === "object"
@@ -148,7 +249,6 @@ exports.getAllCustomers = async (req, res) => {
             null;
         }
 
-        // Agar separate customerId field hai
         if (!orderCustomerId && order.customerId) {
           orderCustomerId = order.customerId.toString();
         }

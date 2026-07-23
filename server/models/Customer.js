@@ -4,25 +4,34 @@ const customerSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
 
     phone: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
 
     email: {
       type: String,
       unique: true,
       sparse: true,
+      trim: true,
+      lowercase: true,
+      default: undefined,
     },
 
-    password: {
-      type: String,
-      required: true,
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: true,
     },
 
     addresses: [

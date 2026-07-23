@@ -1,321 +1,424 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiArrowLeft,
-  FiEye,
-  FiEyeOff,
-  FiLock,
+  FiArrowRight,
+  FiCheckCircle,
+  FiEdit2,
   FiPhone,
   FiShield,
-  FiTruck,
-  FiRefreshCw,
-  FiStar,
-  FiArrowRight,
 } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
-import Container from "../../components/Container";
 import { useCustomer } from "../../context/CustomerContext";
+
+const OTP_LENGTH = 6;
+const RESEND_TIME = 30;
 
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginCustomer } = useCustomer();
+  const {
+    sendOtp,
+    verifyOtp,
+    completeProfile,
+  } = useCustomer();
 
-  const [form, setForm] = useState({
-    phone: "",
-    password: "",
+  const [step, setStep] = useState("phone");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [secondsLeft, setSecondsLeft] =
+    useState(RESEND_TIME);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
-  const redirectPath =
-    location.state?.from ||
-    location.state?.redirectTo ||
-    "/";
+  const redirectPath = useMemo(
+    () =>
+      location.state?.from ||
+      location.state?.redirectTo ||
+      "/",
+    [location.state]
+  );
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    if (step !== "otp" || secondsLeft <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => current - 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [step, secondsLeft]);
+
+  const cleanPhone = (value) =>
+    value.replace(/\D/g, "").slice(0, 10);
+
+  const handleSendOtp = async (event) => {
+    event?.preventDefault();
     setError("");
+    setNotice("");
 
-    setForm((previousForm) => ({
-      ...previousForm,
-      [name]:
-        name === "phone"
-          ? value.replace(/\D/g, "").slice(0, 10)
-          : value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (form.phone.length !== 10) {
-      setError("Please enter a valid 10-digit mobile number.");
-      return;
-    }
-
-    if (!form.password.trim()) {
-      setError("Please enter your password.");
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      setError("Valid 10-digit mobile number enter karo.");
       return;
     }
 
     try {
       setLoading(true);
+      const response = await sendOtp(phone);
 
-      const response = await loginCustomer(form);
-
-      if (response?.success) {
-        navigate(redirectPath, { replace: true });
+      if (!response.success) {
+        setError(response.message || "OTP send failed");
         return;
       }
 
-      setError(response?.message || "Login failed. Please try again.");
-    } catch (loginError) {
-      console.error("Login error:", loginError);
-
-      setError(
-        loginError?.response?.data?.message ||
-          loginError?.message ||
-          "Unable to login right now. Please try again."
+      setOtp("");
+      setSecondsLeft(RESEND_TIME);
+      setStep("otp");
+      setNotice(
+        response.developmentOtp
+          ? `Development OTP: ${response.developmentOtp}`
+          : "OTP sent successfully"
       );
     } finally {
       setLoading(false);
     }
   };
 
+  const handleVerifyOtp = async (event) => {
+    event.preventDefault();
+    setError("");
+    setNotice("");
+
+    if (otp.length !== OTP_LENGTH) {
+      setError("6-digit OTP enter karo.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await verifyOtp({
+        phone,
+        otp,
+      });
+
+      if (!response.success) {
+        setError(response.message || "OTP verification failed");
+        return;
+      }
+
+      if (
+        response.isNewCustomer ||
+        response.requiresProfile
+      ) {
+        setStep("profile");
+        return;
+      }
+
+      navigate(redirectPath, { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteProfile = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (profile.name.trim().length < 2) {
+      setError("Apna full name enter karo.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await completeProfile({
+        phone,
+        otp,
+        name: profile.name,
+        email: profile.email,
+      });
+
+      if (!response.success) {
+        setError(response.message || "Signup failed");
+        return;
+      }
+
+      navigate(redirectPath, { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goBack = () => {
+    if (step === "profile") {
+      setStep("otp");
+      return;
+    }
+
+    if (step === "otp") {
+      setStep("phone");
+      setOtp("");
+      setNotice("");
+      return;
+    }
+
+    navigate(-1);
+  };
+
   return (
-    <>
-      <Navbar />
+    <main className="h-[100dvh] overflow-hidden bg-[#f8f3ef]">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col bg-[#fffdfb] sm:my-6 sm:h-[calc(100dvh-3rem)] sm:overflow-hidden sm:rounded-[2rem] sm:border sm:border-[#eadbd4] sm:shadow-[0_24px_70px_rgba(91,59,50,0.14)]">
+        <header className="relative h-[38%] min-h-[220px] shrink-0 overflow-hidden bg-[#5B3B32]">
+          <img
+            src="/images/login-fashion.jpg"
+            alt="Parikta Fashion"
+            className="absolute inset-0 h-full w-full object-cover object-top"
+          />
 
-      <main className="min-h-screen bg-[#f8f4f1] py-5 md:py-14">
-        <Container>
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-[#eadbd4] bg-[#fffdfb] shadow-[0_24px_70px_rgba(91,59,50,0.12)]">
-            <div className="grid min-h-[720px] grid-cols-1 lg:grid-cols-2">
-              <section className="relative min-h-[330px] overflow-hidden bg-[#f3e7df] lg:min-h-full">
-                <img
-                  src="/images/login-fashion.jpg"
-                  alt="Parikta luxury fashion"
-                  className="absolute inset-0 h-full w-full object-cover object-top"
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2c1713]/90 via-[#5B3B32]/35 to-black/10" />
+
+          <button
+            type="button"
+            onClick={goBack}
+            className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#5B3B32] shadow-lg"
+            aria-label="Go back"
+          >
+            <FiArrowLeft size={19} />
+          </button>
+
+          <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#f0cf9b]">
+              PARIKTA FASHION
+            </p>
+
+            <h1 className="heading-font mt-2 text-3xl leading-tight">
+              Your wardrobe,
+              <br />
+              beautifully yours.
+            </h1>
+
+            <div className="mt-3 flex items-center gap-2 text-xs text-white/85">
+              <FiShield className="text-[#f0cf9b]" />
+              Secure login • Cart preserved
+            </div>
+          </div>
+        </header>
+
+        <section className="flex min-h-0 flex-1 flex-col justify-center px-5 py-4 sm:px-7">
+          {step === "phone" && (
+            <form
+              onSubmit={handleSendOtp}
+              className="space-y-4"
+            >
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#B08A6A]">
+                  Login or Sign Up
+                </p>
+
+                <h2 className="heading-font mt-1 text-3xl text-[#2f2623]">
+                  Continue with mobile
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-[#8b746b]">
+                  Ek hi mobile number se login aur signup dono
+                  ho jayega.
+                </p>
+              </div>
+
+              <div className="flex overflow-hidden rounded-2xl border border-[#dfd1ca] bg-white focus-within:border-[#9A3F4D] focus-within:ring-4 focus-within:ring-[#9A3F4D]/10">
+                <div className="flex items-center gap-2 border-r border-[#eadbd4] px-4 text-[#5B3B32]">
+                  <FiPhone size={17} />
+                  <span className="text-sm font-bold">+91</span>
+                </div>
+
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(event) =>
+                    setPhone(cleanPhone(event.target.value))
+                  }
+                  placeholder="Mobile number"
+                  className="min-w-0 flex-1 bg-transparent px-4 py-4 text-base font-semibold text-[#2f2623] outline-none placeholder:font-normal placeholder:text-[#b1a19a]"
+                  autoFocus
                 />
+              </div>
 
-                <div className="absolute inset-0 bg-gradient-to-r from-[#2c1713]/70 via-[#5b3b32]/30 to-transparent lg:bg-gradient-to-t lg:from-[#2c1713]/85 lg:via-[#5b3b32]/30 lg:to-transparent" />
+              {error && (
+                <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#9A3F4D] py-4 text-sm font-bold text-white shadow-[0_12px_26px_rgba(154,63,77,0.25)] disabled:opacity-60"
+              >
+                {loading ? "SENDING OTP..." : "CONTINUE"}
+                {!loading && <FiArrowRight size={18} />}
+              </button>
+            </form>
+          )}
+
+          {step === "otp" && (
+            <form
+              onSubmit={handleVerifyOtp}
+              className="space-y-4"
+            >
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#B08A6A]">
+                  Verify OTP
+                </p>
+
+                <h2 className="heading-font mt-1 text-3xl text-[#2f2623]">
+                  Enter 6-digit code
+                </h2>
 
                 <button
                   type="button"
-                  onClick={() => navigate(-1)}
-                  aria-label="Go back"
-                  className="absolute left-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/90 text-[#5B3B32] shadow-lg backdrop-blur-md transition hover:scale-105"
+                  onClick={() => setStep("phone")}
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#9A3F4D]"
                 >
-                  <FiArrowLeft size={20} />
+                  +91 {phone}
+                  <FiEdit2 size={12} />
                 </button>
+              </div>
 
-                <div className="absolute inset-x-0 bottom-0 z-10 p-6 text-white md:p-8 lg:p-10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#f0cf9b]">
-                    PARIKTA FASHION
-                  </p>
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={otp}
+                onChange={(event) =>
+                  setOtp(
+                    event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, OTP_LENGTH)
+                  )
+                }
+                placeholder="••••••"
+                className="w-full rounded-2xl border border-[#dfd1ca] bg-white px-4 py-4 text-center text-2xl font-bold tracking-[0.6em] text-[#2f2623] outline-none focus:border-[#9A3F4D] focus:ring-4 focus:ring-[#9A3F4D]/10"
+                autoFocus
+              />
 
-                  <h1 className="heading-font mt-3 max-w-md text-4xl leading-tight sm:text-5xl lg:text-6xl">
-                    Welcome Back to Timeless Elegance
-                  </h1>
+              {notice && (
+                <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center text-xs font-semibold text-emerald-700">
+                  {notice}
+                </p>
+              )}
 
-                  <p className="mt-4 max-w-md text-sm leading-6 text-white/85 sm:text-base">
-                    Sign in to continue shopping your favourite premium styles.
-                  </p>
-                </div>
-              </section>
+              {error && (
+                <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                  {error}
+                </p>
+              )}
 
-              <section className="flex items-center p-5 sm:p-8 lg:p-12">
-                <div className="mx-auto w-full max-w-md">
-                  <div className="text-center lg:text-left">
-                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#B08A6A]">
-                      Member Login
-                    </p>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#9A3F4D] py-4 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {loading ? "VERIFYING..." : "VERIFY & CONTINUE"}
+                {!loading && <FiCheckCircle size={18} />}
+              </button>
 
-                    <h2 className="heading-font mt-3 text-4xl text-[#2f2623] sm:text-5xl">
-                      Sign In
-                    </h2>
+              <button
+                type="button"
+                disabled={secondsLeft > 0 || loading}
+                onClick={handleSendOtp}
+                className="w-full text-center text-xs font-bold text-[#9A3F4D] disabled:text-[#a99891]"
+              >
+                {secondsLeft > 0
+                  ? `Resend OTP in ${secondsLeft}s`
+                  : "RESEND OTP"}
+              </button>
+            </form>
+          )}
 
-                    <p className="mt-3 text-sm leading-6 text-[#8b746b]">
-                      Login to continue with faster checkout, saved addresses
-                      and order tracking.
-                    </p>
-                  </div>
+          {step === "profile" && (
+            <form
+              onSubmit={handleCompleteProfile}
+              className="space-y-3"
+            >
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#B08A6A]">
+                  Almost Done
+                </p>
 
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                    <div>
-                      <label
-                        htmlFor="phone"
-                        className="mb-2 block text-sm font-semibold text-[#5B3B32]"
-                      >
-                        Mobile Number
-                      </label>
+                <h2 className="heading-font mt-1 text-3xl text-[#2f2623]">
+                  Create your account
+                </h2>
 
-                      <div className="flex overflow-hidden rounded-2xl border border-[#dfd1ca] bg-white transition focus-within:border-[#9A3F4D] focus-within:ring-4 focus-within:ring-[#9A3F4D]/10">
-                        <div className="flex items-center gap-2 border-r border-[#eadbd4] px-4 text-[#5B3B32]">
-                          <FiPhone size={17} />
-                          <span className="text-sm font-semibold">+91</span>
-                        </div>
+                <p className="mt-1 text-xs text-[#8b746b]">
+                  Mobile verified: +91 {phone}
+                </p>
+              </div>
 
-                        <input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel"
-                          value={form.phone}
-                          onChange={handleChange}
-                          placeholder="Enter 10-digit mobile number"
-                          className="min-w-0 flex-1 bg-transparent px-4 py-4 text-[#2f2623] outline-none placeholder:text-[#b1a19a]"
-                          required
-                        />
-                      </div>
-                    </div>
+              <input
+                type="text"
+                value={profile.name}
+                onChange={(event) =>
+                  setProfile((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                placeholder="Full name"
+                autoComplete="name"
+                className="w-full rounded-2xl border border-[#dfd1ca] bg-white px-4 py-3.5 text-sm outline-none focus:border-[#9A3F4D] focus:ring-4 focus:ring-[#9A3F4D]/10"
+                autoFocus
+              />
 
-                    <div>
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <label
-                          htmlFor="password"
-                          className="text-sm font-semibold text-[#5B3B32]"
-                        >
-                          Password
-                        </label>
+              <input
+                type="email"
+                value={profile.email}
+                onChange={(event) =>
+                  setProfile((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }))
+                }
+                placeholder="Email (optional)"
+                autoComplete="email"
+                className="w-full rounded-2xl border border-[#dfd1ca] bg-white px-4 py-3.5 text-sm outline-none focus:border-[#9A3F4D] focus:ring-4 focus:ring-[#9A3F4D]/10"
+              />
 
-                        <Link
-                          to="/forgot-password"
-                          className="text-xs font-bold text-[#9A3F4D] transition hover:text-[#7d3140]"
-                        >
-                          Forgot Password?
-                        </Link>
-                      </div>
+              {error && (
+                <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                  {error}
+                </p>
+              )}
 
-                      <div className="flex items-center overflow-hidden rounded-2xl border border-[#dfd1ca] bg-white transition focus-within:border-[#9A3F4D] focus-within:ring-4 focus-within:ring-[#9A3F4D]/10">
-                        <div className="px-4 text-[#5B3B32]">
-                          <FiLock size={17} />
-                        </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#9A3F4D] py-4 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {loading
+                  ? "CREATING ACCOUNT..."
+                  : "CREATE ACCOUNT"}
+                {!loading && <FiArrowRight size={18} />}
+              </button>
+            </form>
+          )}
 
-                        <input
-                          id="password"
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete="current-password"
-                          value={form.password}
-                          onChange={handleChange}
-                          placeholder="Enter your password"
-                          className="min-w-0 flex-1 bg-transparent py-4 pr-2 text-[#2f2623] outline-none placeholder:text-[#b1a19a]"
-                          required
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowPassword((currentValue) => !currentValue)
-                          }
-                          aria-label={
-                            showPassword ? "Hide password" : "Show password"
-                          }
-                          className="flex h-12 w-12 shrink-0 items-center justify-center text-[#8b746b] transition hover:text-[#9A3F4D]"
-                        >
-                          {showPassword ? (
-                            <FiEyeOff size={18} />
-                          ) : (
-                            <FiEye size={18} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {error && (
-                      <div
-                        role="alert"
-                        className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-                      >
-                        {error}
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#9A3F4D] py-4 font-bold text-white shadow-[0_14px_28px_rgba(154,63,77,0.24)] transition hover:-translate-y-0.5 hover:bg-[#7d3140] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {loading ? (
-                        <>
-                          <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                          SIGNING IN...
-                        </>
-                      ) : (
-                        <>
-                          CONTINUE
-                          <FiArrowRight size={18} />
-                        </>
-                      )}
-                    </button>
-                  </form>
-
-                  <div className="my-7 flex items-center gap-3">
-                    <div className="h-px flex-1 bg-[#eadbd4]" />
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a08e87]">
-                      New to Parikta?
-                    </span>
-                    <div className="h-px flex-1 bg-[#eadbd4]" />
-                  </div>
-
-                  <Link
-                    to="/register"
-                    state={{ from: redirectPath }}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#9A3F4D] bg-white py-4 font-bold text-[#9A3F4D] transition hover:bg-[#FDEAE6]"
-                  >
-                    CREATE ACCOUNT
-                    <FiArrowRight size={18} />
-                  </Link>
-
-                  <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
-                    {[
-                      [FiShield, "Secure"],
-                      [FiTruck, "Free Delivery"],
-                      [FiRefreshCw, "Easy Returns"],
-                      [FiStar, "Premium"],
-                    ].map(([Icon, label]) => (
-                      <div
-                        key={label}
-                        className="flex items-center justify-center gap-2 rounded-xl border border-[#eadbd4] bg-[#fffaf7] px-3 py-3 text-center"
-                      >
-                        <Icon size={15} className="text-[#9A3F4D]" />
-                        <span className="text-[11px] font-semibold text-[#5B3B32]">
-                          {label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <p className="mt-7 text-center text-[11px] leading-5 text-[#9a8982]">
-                    By continuing, you agree to Parikta&apos;s{" "}
-                    <Link to="/terms" className="font-semibold text-[#7d3140]">
-                      Terms
-                    </Link>{" "}
-                    and{" "}
-                    <Link
-                      to="/privacy-policy"
-                      className="font-semibold text-[#7d3140]"
-                    >
-                      Privacy Policy
-                    </Link>
-                    .
-                  </p>
-                </div>
-              </section>
-            </div>
-          </div>
-        </Container>
-      </main>
-
-      <Footer />
-    </>
+          <p className="mt-4 text-center text-[10px] leading-4 text-[#9a8982]">
+            By continuing, you agree to Parikta&apos;s Terms
+            and Privacy Policy.
+          </p>
+        </section>
+      </div>
+    </main>
   );
 }
 

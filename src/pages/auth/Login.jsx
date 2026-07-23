@@ -178,7 +178,7 @@ function Login() {
       <div className="mx-auto flex h-full w-full max-w-md flex-col bg-[#fffdfb] sm:my-6 sm:h-[calc(100dvh-3rem)] sm:overflow-hidden sm:rounded-[2rem] sm:border sm:border-[#eadbd4] sm:shadow-[0_24px_70px_rgba(91,59,50,0.14)]">
         <header className="relative h-[38%] min-h-[220px] shrink-0 overflow-hidden bg-[#5B3B32]">
           <img
-            src="/images/login-fashion.jpg"
+            src="../../assets/images/login-fashion.jpg"
             alt="Parikta Fashion"
             className="absolute inset-0 h-full w-full object-cover object-top"
           />

@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  FiChevronDown,
+  FiHeart,
   FiMenu,
   FiSearch,
-  FiHeart,
   FiShoppingBag,
-  FiX,
   FiUser,
-  FiChevronDown,
+  FiX,
 } from "react-icons/fi";
 
 import { useCart } from "../context/CartContext";
@@ -17,31 +17,52 @@ import { useCustomer } from "../context/CustomerContext";
 import Container from "./Container";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
-import CartDrawer from "./CartDrawer";
+import MiniCartDrawer from "./MiniCartDrawer";
 
 function Navbar() {
-  const { cartCount, openCart } = useCart();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const accountMenuRef = useRef(null);
+
+  const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
-  const { customer, isLoggedIn, logoutCustomer } = useCustomer();
+  const {
+    customer,
+    isLoggedIn,
+    logoutCustomer,
+  } = useCustomer();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] =
+    useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+    setMenuOpen(false);
+    setShowAccountMenu(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target)
+      ) {
+        setShowAccountMenu(false);
+      }
     };
 
-    handleScroll();
-
-    window.addEventListener("scroll", handleScroll, {
-      passive: true,
-    });
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
     };
   }, []);
 
@@ -49,60 +70,44 @@ function Navbar() {
     logoutCustomer();
     setShowAccountMenu(false);
     setMenuOpen(false);
+    navigate("/");
   };
 
-  const closeMobileMenu = () => {
-    setMenuOpen(false);
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
     <>
-      {/* Announcement bar normal rahegi aur scroll hokar chali jayegi */}
       <AnnouncementBar />
 
-      {/* Sirf navbar scroll par top par freeze hogi */}
-      <nav
-        className={`
-          sticky left-0 right-0 top-0 z-[999] w-full
-          border-b transition-all duration-300
-          ${
-            isScrolled
-              ? "border-[#eadbd4]/70 bg-[#fffaf7]/75 shadow-[0_8px_30px_rgba(91,59,50,0.10)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[#fffaf7]/60"
-              : "border-[#eadbd4]/40 bg-[#fffaf7]"
-          }
-        `}
-      >
+      <nav className="sticky top-0 z-50 bg-[#fffaf7]/85 backdrop-blur-xl border-b border-[#eadbd4]/80 shadow-sm">
         <Container>
-          <div
-            className={`
-              flex w-full min-w-0 items-center justify-between gap-2
-              transition-all duration-300 sm:gap-4
-              ${
-                isScrolled
-                  ? "h-[68px] md:h-[76px]"
-                  : "h-20 md:h-24"
-              }
-            `}
-          >
-            {/* Mobile menu button */}
+          <div className="h-20 md:h-24 flex items-center justify-between gap-4">
+            {/* MOBILE MENU BUTTON */}
             <button
               type="button"
-              onClick={() => {
-                setMenuOpen((previous) => !previous);
-                setShowAccountMenu(false);
-              }}
-              className="shrink-0 text-[#5B3B32] transition-colors hover:text-[#9A3F4D] lg:hidden"
-              aria-label="Toggle navigation menu"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="lg:hidden text-[#5B3B32]"
+              aria-label="Toggle menu"
             >
-              {menuOpen ? <FiX size={25} /> : <FiMenu size={25} />}
+              {menuOpen ? (
+                <FiX size={25} />
+              ) : (
+                <FiMenu size={25} />
+              )}
             </button>
 
-            {/* Desktop left navigation */}
-            <ul className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.22em] text-[#5B3B32] lg:flex">
+            {/* DESKTOP LEFT MENU */}
+            <ul className="hidden lg:flex items-center gap-8 text-xs tracking-[0.22em] font-semibold text-[#5B3B32] uppercase">
               <li>
                 <Link
                   to="/"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  className={
+                    isActive("/")
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
                   Home
                 </Link>
@@ -111,7 +116,16 @@ function Navbar() {
               <li>
                 <Link
                   to="/products"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  className={
+                    location.pathname.startsWith(
+                      "/products"
+                    ) ||
+                    location.pathname.startsWith(
+                      "/product/"
+                    )
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
                   Collection
                 </Link>
@@ -120,7 +134,11 @@ function Navbar() {
               <li>
                 <Link
                   to="/lookbook"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  className={
+                    isActive("/lookbook")
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
                   Lookbook
                 </Link>
@@ -129,57 +147,41 @@ function Navbar() {
               <li>
                 <Link
                   to="/about"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  className={
+                    isActive("/about")
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
                   About
                 </Link>
               </li>
             </ul>
 
-            {/* Logo */}
+            {/* LOGO */}
             <Link
               to="/"
-              onClick={() => {
-                setMenuOpen(false);
-                setShowAccountMenu(false);
-              }}
-              className="flex min-w-0 flex-1 flex-col items-center justify-center text-center leading-none lg:flex-none"
+              className="text-center leading-none shrink-0"
             >
-              <div
-                className={`
-                  logo-font whitespace-nowrap text-[#9A3F4D]
-                  transition-all duration-300
-                  ${
-                    isScrolled
-                      ? "text-4xl md:text-5xl"
-                      : "text-4xl sm:text-5xl md:text-6xl"
-                  }
-                `}
-              >
+              <div className="logo-font text-5xl md:text-6xl text-[#9A3F4D]">
                 Parikta
               </div>
 
-              <div
-                className={`
-                  whitespace-nowrap font-semibold text-[#BFA996]
-                  transition-all duration-300
-                  ${
-                    isScrolled
-                      ? "text-[8px] tracking-[0.34em] md:text-[10px]"
-                      : "text-[8px] tracking-[0.34em] sm:text-[10px] sm:tracking-[0.45em] md:text-xs"
-                  }
-                `}
-              >
+              <div className="tracking-[0.45em] text-[10px] md:text-xs text-[#BFA996] font-semibold">
                 FASHION
               </div>
             </Link>
 
-            {/* Desktop right navigation */}
-            <ul className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.22em] text-[#5B3B32] lg:flex">
+            {/* DESKTOP RIGHT MENU */}
+            <ul className="hidden lg:flex items-center gap-8 text-xs tracking-[0.22em] font-semibold text-[#5B3B32] uppercase">
               <li>
                 <Link
                   to="/customize"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  className={
+                    isActive("/customize")
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
                   Custom
                 </Link>
@@ -187,176 +189,176 @@ function Navbar() {
 
               <li>
                 <Link
-                  to="/faq"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  to="/track-order"
+                  className={
+                    location.pathname.startsWith(
+                      "/track-order"
+                    )
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
-                  FAQ
+                  Track Order
                 </Link>
               </li>
 
               <li>
                 <Link
                   to="/contact"
-                  className="transition-colors hover:text-[#9A3F4D]"
+                  className={
+                    isActive("/contact")
+                      ? "text-[#9A3F4D]"
+                      : "hover:text-[#9A3F4D]"
+                  }
                 >
                   Contact
                 </Link>
               </li>
             </ul>
 
-            {/* Navbar actions */}
-            <div className="flex shrink-0 items-center gap-2.5 text-[#5B3B32] sm:gap-4">
-              {/* Search */}
+            {/* ICONS */}
+            <div className="flex items-center gap-3 md:gap-4 text-[#5B3B32]">
               <button
                 type="button"
-                onClick={() => {
-                  setSearchOpen(true);
-                  setShowAccountMenu(false);
-                }}
-                className="hidden transition-colors hover:text-[#9A3F4D] sm:inline-flex"
-                aria-label="Open search"
+                onClick={() => setSearchOpen(true)}
+                className="hover:text-[#9A3F4D] transition"
+                aria-label="Search"
               >
                 <FiSearch size={21} />
               </button>
 
-              {/* Wishlist */}
               <Link
                 to="/wishlist"
-                className="relative hidden transition-colors hover:text-[#9A3F4D] sm:block"
+                className="relative hidden sm:block hover:text-[#9A3F4D] transition"
                 aria-label="Wishlist"
               >
                 <FiHeart size={21} />
 
                 {wishlistCount > 0 && (
-                  <span className="absolute -right-3 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#9A3F4D] px-1 text-[10px] text-white">
-                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  <span className="absolute -top-2 -right-3 bg-[#9A3F4D] text-white text-[10px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
+                    {wishlistCount}
                   </span>
                 )}
               </Link>
 
-              {/* Cart */}
               <button
                 type="button"
-                onClick={() => {
-                  openCart();
-                  setShowAccountMenu(false);
-                }}
-                className="relative shrink-0 transition-colors hover:text-[#9A3F4D]"
-                aria-label="Open cart"
+                onClick={() => setCartOpen(true)}
+                className="relative hover:text-[#9A3F4D] transition"
+                aria-label="Shopping bag"
               >
                 <FiShoppingBag size={21} />
 
                 {cartCount > 0 && (
-                  <span className="absolute -right-3 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#9A3F4D] px-1 text-[10px] text-white">
-                    {cartCount > 99 ? "99+" : cartCount}
+                  <span className="absolute -top-2 -right-3 bg-[#9A3F4D] text-white text-[10px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
+                    {cartCount}
                   </span>
                 )}
               </button>
 
-              {/* Customer account */}
-              <div className="relative">
+              {/* ACCOUNT */}
+              <div
+                ref={accountMenuRef}
+                className="relative"
+              >
                 {!isLoggedIn ? (
                   <Link
                     to="/login"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setShowAccountMenu(false);
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-[#eadbd4] bg-white/50 transition-all hover:border-[#9A3F4D] hover:text-[#9A3F4D] sm:h-9 sm:w-9"
-                    aria-label="Login or sign up"
+                    className="w-9 h-9 rounded-full border border-[#eadbd4] bg-white flex items-center justify-center hover:text-[#9A3F4D] hover:border-[#9A3F4D] transition"
+                    aria-label="Login"
                   >
-                    <FiUser size={20} />
+                    <FiUser size={19} />
                   </Link>
                 ) : (
                   <>
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowAccountMenu((previous) => !previous);
-                        setMenuOpen(false);
-                      }}
+                      onClick={() =>
+                        setShowAccountMenu(
+                          (prev) => !prev
+                        )
+                      }
                       className="flex items-center gap-2"
-                      aria-label="Open account menu"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#9A3F4D] font-bold text-white sm:h-9 sm:w-9">
-                        {customer?.name?.charAt(0)?.toUpperCase() || "U"}
+                      <div className="w-9 h-9 rounded-full bg-[#9A3F4D] text-white flex items-center justify-center font-bold">
+                        {customer?.name
+                          ?.charAt(0)
+                          ?.toUpperCase() || "A"}
                       </div>
 
-                      <div className="hidden text-left xl:block">
-                        <p className="text-[10px] text-[#8b746b]">
+                      <div className="hidden xl:block text-left max-w-28">
+                        <p className="text-[10px] text-[#8b746b] normal-case tracking-normal">
                           Welcome
                         </p>
 
-                        <p className="max-w-[120px] truncate text-xs font-bold text-[#5B3B32]">
-                          {customer?.name || "Customer"}
+                        <p className="text-xs font-bold text-[#5B3B32] truncate normal-case tracking-normal">
+                          {customer?.name}
                         </p>
                       </div>
 
                       <FiChevronDown
-                        size={16}
-                        className={`
-                          hidden transition-transform duration-200 xl:block
-                          ${showAccountMenu ? "rotate-180" : ""}
-                        `}
+                        className="hidden xl:block"
+                        size={15}
                       />
                     </button>
 
                     {showAccountMenu && (
-                      <div className="absolute right-0 z-[1100] mt-4 w-64 overflow-hidden rounded-2xl border border-[#eadbd4] bg-[#fffaf7]/95 shadow-2xl backdrop-blur-xl">
-                        <div className="border-b border-[#eadbd4] p-5">
-                          <h3 className="font-bold text-[#5B3B32]">
-                            {customer?.name || "Parikta Customer"}
+                      <div className="absolute right-0 mt-4 w-64 bg-[#fffaf7] rounded-2xl shadow-2xl border border-[#eadbd4] overflow-hidden z-[100]">
+                        <div className="p-5 border-b border-[#eadbd4]">
+                          <p className="text-xs tracking-[0.18em] uppercase text-[#BFA996]">
+                            My Account
+                          </p>
+
+                          <h3 className="font-bold text-[#5B3B32] mt-2">
+                            {customer?.name}
                           </h3>
 
-                          {customer?.email && (
-                            <p className="break-all text-sm text-[#8b746b]">
-                              {customer.email}
-                            </p>
-                          )}
-
-                          {customer?.phone && (
-                            <p className="mt-1 text-xs text-[#9a8982]">
-                              +91 {customer.phone}
-                            </p>
-                          )}
+                          <p className="text-sm text-[#8b746b] break-all mt-1">
+                            {customer?.email}
+                          </p>
                         </div>
 
-                        <Link
-                          to="/profile"
-                          onClick={() => setShowAccountMenu(false)}
-                          className="block px-5 py-4 transition-colors hover:bg-[#f7f2ee]"
-                        >
-                          My Profile
-                        </Link>
+                        <div className="py-2 text-sm text-[#5B3B32]">
+                          <Link
+                            to="/profile"
+                            className="block px-5 py-3 hover:bg-[#f7f2ee]"
+                          >
+                            My Profile
+                          </Link>
 
-                        <Link
-                          to="/my-orders"
-                          onClick={() => setShowAccountMenu(false)}
-                          className="block px-5 py-4 transition-colors hover:bg-[#f7f2ee]"
-                        >
-                          My Orders
-                        </Link>
+                          <Link
+                            to="/my-orders"
+                            className="block px-5 py-3 hover:bg-[#f7f2ee]"
+                          >
+                            My Orders
+                          </Link>
 
-                        <Link
-                          to="/wishlist"
-                          onClick={() => setShowAccountMenu(false)}
-                          className="block px-5 py-4 transition-colors hover:bg-[#f7f2ee]"
-                        >
-                          Wishlist
-                        </Link>
+                          <Link
+                            to="/wishlist"
+                            className="block px-5 py-3 hover:bg-[#f7f2ee]"
+                          >
+                            Wishlist
+                          </Link>
 
-                        <Link
-                          to="/saved-addresses"
-                          onClick={() => setShowAccountMenu(false)}
-                          className="block px-5 py-4 transition-colors hover:bg-[#f7f2ee]"
-                        >
-                          Saved Addresses
-                        </Link>
+                          <Link
+                            to="/saved-addresses"
+                            className="block px-5 py-3 hover:bg-[#f7f2ee]"
+                          >
+                            Saved Addresses
+                          </Link>
+
+                          <Link
+                            to="/track-order"
+                            className="block px-5 py-3 hover:bg-[#f7f2ee]"
+                          >
+                            Track Order
+                          </Link>
+                        </div>
 
                         <button
                           type="button"
                           onClick={handleLogout}
-                          className="w-full px-5 py-4 text-left text-red-600 transition-colors hover:bg-red-50"
+                          className="w-full text-left px-5 py-4 text-red-600 border-t border-[#eadbd4] hover:bg-red-50 font-semibold"
                         >
                           Logout
                         </button>
@@ -368,86 +370,76 @@ function Navbar() {
             </div>
           </div>
 
-          {/* Mobile navigation menu */}
+          {/* MOBILE MENU */}
           {menuOpen && (
-            <div className="border-t border-[#eadbd4]/70 bg-[#fffaf7]/95 pb-5 pt-4 backdrop-blur-2xl lg:hidden">
-              <div className="grid gap-4 text-sm uppercase tracking-[0.18em] text-[#5B3B32]">
-                <Link onClick={closeMobileMenu} to="/">
-                  Home
-                </Link>
-
-                <Link onClick={closeMobileMenu} to="/products">
+            <div className="lg:hidden pb-6 border-t border-[#eadbd4]/70 pt-5">
+              <div className="grid gap-4 text-sm tracking-[0.16em] uppercase text-[#5B3B32]">
+                <Link to="/">Home</Link>
+                <Link to="/products">
                   Collection
                 </Link>
-
-                <Link onClick={closeMobileMenu} to="/lookbook">
+                <Link to="/lookbook">
                   Lookbook
                 </Link>
-
-                <Link onClick={closeMobileMenu} to="/customize">
+                <Link to="/customize">
                   Custom Design
                 </Link>
-
-                <Link onClick={closeMobileMenu} to="/wishlist">
+                <Link to="/wishlist">
                   Wishlist
                 </Link>
-
-                <Link onClick={closeMobileMenu} to="/about">
-                  About
+                <Link to="/track-order">
+                  Track Order
                 </Link>
-
-                <Link onClick={closeMobileMenu} to="/faq">
-                  FAQ
-                </Link>
-
-                <Link onClick={closeMobileMenu} to="/contact">
+                <Link to="/about">About</Link>
+                <Link to="/contact">
                   Contact
                 </Link>
 
-                <Link onClick={closeMobileMenu} to="/track-order">
-                  Track Order
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setSearchOpen(true);
-                  }}
-                  className="text-left uppercase tracking-[0.18em]"
-                >
-                  Search
-                </button>
-
                 {!isLoggedIn ? (
-                  <Link
-                    onClick={closeMobileMenu}
-                    to="/login"
-                    className="font-semibold text-[#9A3F4D]"
-                  >
-                    Login / Sign Up
-                  </Link>
-                ) : (
                   <>
-                    <Link onClick={closeMobileMenu} to="/profile">
-                      My Profile
-                    </Link>
+                    <div className="h-px bg-[#eadbd4]" />
 
-                    <Link onClick={closeMobileMenu} to="/my-orders">
-                      My Orders
+                    <Link
+                      to="/login"
+                      className="text-[#9A3F4D] font-bold"
+                    >
+                      Login
                     </Link>
 
                     <Link
-                      onClick={closeMobileMenu}
-                      to="/saved-addresses"
+                      to="/register"
+                      className="text-[#9A3F4D] font-bold"
                     >
+                      Register
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-px bg-[#eadbd4]" />
+
+                    <p className="normal-case tracking-normal text-[#8b746b]">
+                      Hi,{" "}
+                      <span className="font-bold text-[#5B3B32]">
+                        {customer?.name}
+                      </span>
+                    </p>
+
+                    <Link to="/profile">
+                      My Profile
+                    </Link>
+
+                    <Link to="/my-orders">
+                      My Orders
+                    </Link>
+
+                    <Link to="/saved-addresses">
                       Saved Addresses
                     </Link>
 
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="text-left uppercase tracking-[0.18em] text-red-600"
+                      className="text-left text-red-600 uppercase tracking-[0.16em] font-semibold"
                     >
                       Logout
                     </button>
@@ -464,7 +456,10 @@ function Navbar() {
         onClose={() => setSearchOpen(false)}
       />
 
-      <CartDrawer />
+      <MiniCartDrawer
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+      />
     </>
   );
 }

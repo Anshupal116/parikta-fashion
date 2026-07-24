@@ -99,7 +99,7 @@ function QuickViewModal({
 
   setTimeout(() => {
     closeCart();
-    navigate("/checkout");
+    navigate("/checkout/address");
   }, 0);
 };
   return (

@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
 
@@ -8,12 +14,18 @@ import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Customize from "./pages/Customize";
-import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import Lookbook from "./pages/Lookbook";
+import TrackOrder from "./pages/TrackOrder";
+import MyOrders from "./pages/MyOrders";
+import CheckoutAddress from "./pages/CheckoutAddress";
+import CheckoutPayment from "./pages/CheckoutPayment";
+
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -26,23 +38,21 @@ import OrdersAdmin from "./pages/admin/OrdersAdmin";
 import CustomOrdersAdmin from "./pages/admin/CustomOrdersAdmin";
 import CustomersAdmin from "./pages/admin/CustomersAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
-import TrackOrder from "./pages/TrackOrder";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import MyOrders from "./pages/MyOrders";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
 import CouponsAdmin from "./pages/admin/CouponsAdmin";
-import CheckoutAddress from "./pages/CheckoutAddress";
-import CheckoutPayment from "./pages/CheckoutPayment";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
-// import WhatsAppButton from "./components/WhatsAppButton";
 import MobileBottomNav from "./components/MobileBottomNav";
 import BackToTop from "./components/BackToTop";
 import ScrollToTop from "./components/ScrollToTop";
 import CartDrawer from "./components/CartDrawer";
-// import FloatingCartButton from "./components/FloatingCartButton";
+
+/*
+|--------------------------------------------------------------------------
+| Google Analytics
+|--------------------------------------------------------------------------
+*/
 
 function AnalyticsTracker() {
   const location = useLocation();
@@ -56,11 +66,34 @@ function AnalyticsTracker() {
       hitType: "pageview",
       page: location.pathname + location.search,
     });
-  }, [location]);
+  }, [location.pathname, location.search]);
 
   return null;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Loading / Welcome Screen
+|--------------------------------------------------------------------------
+|
+| Navbar ka z-index high hai, isliye LoadingScreen ko sabse high z-index
+| wrapper ke andar rakha gaya hai.
+|
+*/
+
+function GlobalLoadingScreen() {
+  return (
+    <div className="fixed inset-0 z-[99999]">
+      <LoadingScreen />
+    </div>
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Customer Global UI
+|--------------------------------------------------------------------------
+*/
 
 function GlobalCustomerUI() {
   const location = useLocation();
@@ -69,73 +102,209 @@ function GlobalCustomerUI() {
     location.pathname.startsWith("/admin-dashboard") ||
     location.pathname === "/pf-x7-admin-2026";
 
-  if (isAdminPage) {
+  const hideCustomerUIRoutes = [
+    "/login",
+    "/register",
+    "/checkout/address",
+    "/checkout/payment",
+    "/order-success",
+  ];
+
+  const shouldHideCustomerUI =
+    isAdminPage ||
+    hideCustomerUIRoutes.some(
+      (route) =>
+        location.pathname === route ||
+        location.pathname.startsWith(`${route}/`)
+    );
+
+  if (shouldHideCustomerUI) {
     return null;
   }
 
   return (
     <>
       <CartDrawer />
-      {/* <FloatingCartButton /> */}
       <NewsletterPopup />
       <BackToTop />
-      {/* <WhatsAppButton /> */}
       <MobileBottomNav />
     </>
   );
 }
 
+/*
+|--------------------------------------------------------------------------
+| Application Routes
+|--------------------------------------------------------------------------
+*/
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Customer pages */}
+
+      <Route path="/" element={<Home />} />
+
+      <Route path="/products" element={<Products />} />
+
+      <Route
+        path="/product/:id"
+        element={<ProductDetails />}
+      />
+
+      <Route path="/cart" element={<Cart />} />
+
+      <Route path="/wishlist" element={<Wishlist />} />
+
+      <Route path="/customize" element={<Customize />} />
+
+      <Route path="/about" element={<About />} />
+
+      <Route path="/contact" element={<Contact />} />
+
+      <Route path="/faq" element={<FAQ />} />
+
+      <Route path="/lookbook" element={<Lookbook />} />
+
+      {/* Authentication */}
+
+      <Route path="/login" element={<Login />} />
+
+      <Route path="/register" element={<Register />} />
+
+      {/* Orders */}
+
+      <Route path="/my-orders" element={<MyOrders />} />
+
+      <Route
+        path="/track-order"
+        element={<TrackOrder />}
+      />
+
+      <Route
+        path="/track-order/:orderId"
+        element={<TrackOrder />}
+      />
+
+      <Route
+        path="/order-success/:orderId"
+        element={<OrderSuccess />}
+      />
+
+      {/* Checkout */}
+
+      <Route
+        path="/checkout"
+        element={
+          <Navigate
+            to="/checkout/address"
+            replace
+          />
+        }
+      />
+
+      <Route
+        path="/checkout/address"
+        element={<CheckoutAddress />}
+      />
+
+      <Route
+        path="/checkout/payment"
+        element={<CheckoutPayment />}
+      />
+
+      {/* Admin login */}
+
+      <Route
+        path="/pf-x7-admin-2026"
+        element={<AdminLogin />}
+      />
+
+      {/* Admin protected routes */}
+
+      <Route
+        path="/admin-dashboard"
+        element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+
+        <Route
+          path="products"
+          element={<ProductsAdmin />}
+        />
+
+        <Route
+          path="add-product"
+          element={<AddProduct />}
+        />
+
+        <Route
+          path="edit-product/:id"
+          element={<EditProduct />}
+        />
+
+        <Route
+          path="orders"
+          element={<OrdersAdmin />}
+        />
+
+        <Route
+          path="reviews"
+          element={<ReviewsAdmin />}
+        />
+
+        <Route
+          path="custom-orders"
+          element={<CustomOrdersAdmin />}
+        />
+
+        <Route
+          path="customers"
+          element={<CustomersAdmin />}
+        />
+
+        <Route
+          path="settings"
+          element={<SettingsAdmin />}
+        />
+
+        <Route
+          path="coupons"
+          element={<CouponsAdmin />}
+        />
+      </Route>
+
+      {/* Invalid route */}
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
+    </Routes>
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Main App
+|--------------------------------------------------------------------------
+*/
+
 function App() {
   return (
     <BrowserRouter>
-    <AnalyticsTracker />
+      <AnalyticsTracker />
+
       <ScrollToTop />
-      <LoadingScreen />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/customize" element={<Customize />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/lookbook" element={<Lookbook />} />
-        <Route path="/track-order" element={<TrackOrder />} />
-        <Route path="/track-order/:orderId" element={<TrackOrder />} /> 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/my-orders" element={<MyOrders />} />
-        <Route path="/checkout" element={<Navigate to="/checkout/address" replace />} />
-        <Route path="/checkout/address" element={<CheckoutAddress />} />
-        <Route path="/checkout/payment" element={<CheckoutPayment />} />
+      {/* Welcome screen Navbar ke upar show hogi */}
+      <GlobalLoadingScreen />
 
-        <Route path="/pf-x7-admin-2026" element={<AdminLogin />} />
-
-        <Route
-          path="/admin-dashboard"
-          element={
-            <AdminProtectedRoute>
-              <AdminLayout />
-            </AdminProtectedRoute>
-          }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="products" element={<ProductsAdmin />} />
-          <Route path="add-product" element={<AddProduct />} />
-          <Route path="edit-product/:id" element={<EditProduct />} />
-          <Route path="orders" element={<OrdersAdmin />} />
-          <Route path="reviews" element={<ReviewsAdmin />} />
-          <Route path="custom-orders" element={<CustomOrdersAdmin />} />
-          <Route path="customers" element={<CustomersAdmin />} />
-          <Route path="settings" element={<SettingsAdmin />} />
-          <Route path="coupons" element={<CouponsAdmin />} />
-        </Route>
-      </Routes>
+      <AppRoutes />
 
       <GlobalCustomerUI />
     </BrowserRouter>

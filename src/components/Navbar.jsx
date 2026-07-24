@@ -20,206 +20,440 @@ import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "./CartDrawer";
 
 function Navbar() {
-  const {
-  cartCount,
-  openCart,
-} = useCart();
+  const { cartCount, openCart } = useCart();
   const { wishlistCount } = useWishlist();
-  const { customer, isLoggedIn, logoutCustomer } = useCustomer();
+
+  const {
+    customer,
+    isLoggedIn,
+    logoutCustomer,
+  } = useCustomer();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] =
+    useState(false);
 
   const handleLogout = () => {
     logoutCustomer();
     setShowAccountMenu(false);
+    setMenuOpen(false);
+  };
+
+  const closeMobileMenu = () => {
+    setMenuOpen(false);
   };
 
   return (
     <>
-      <AnnouncementBar />
+      {/* Fixed header wrapper */}
+      <header className="fixed left-0 right-0 top-0 z-[999] w-full">
+        <AnnouncementBar />
 
-      <nav className="sticky top-0 z-50 w-full max-w-full overflow-x-clip bg-[#fffaf7]/75 backdrop-blur-xl border-b border-[#eadbd4]/70 shadow-sm">
-        <Container>
-          <div className="h-20 md:h-24 w-full min-w-0 flex items-center justify-between gap-2 sm:gap-4">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden shrink-0 text-[#5B3B32]"
-            >
-              {menuOpen ? <FiX size={25} /> : <FiMenu size={25} />}
-            </button>
-
-            <ul className="hidden lg:flex items-center gap-8 text-xs tracking-[0.22em] font-semibold text-[#5B3B32] uppercase">
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/products">Collection</Link></li>
-              <li><Link to="/lookbook">Lookbook</Link></li>
-              <li><Link to="/about">About</Link></li>
-            </ul>
-
-            <Link to="/" className="min-w-0 flex-1 lg:flex-none flex justify-center text-center leading-none">
-              <div className="logo-font text-4xl sm:text-5xl md:text-6xl text-[#9A3F4D] whitespace-nowrap">
-                Parikta
-              </div>
-              <div className="tracking-[0.34em] sm:tracking-[0.45em] text-[8px] sm:text-[10px] md:text-xs text-[#BFA996] font-semibold whitespace-nowrap">
-                FASHION
-              </div>
-            </Link>
-
-            <ul className="hidden lg:flex items-center gap-8 text-xs tracking-[0.22em] font-semibold text-[#5B3B32] uppercase">
-              <li><Link to="/customize">Custom</Link></li>
-              <li><Link to="/faq">FAQ</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-            </ul>
-
-            <div className="flex shrink-0 items-center gap-2.5 sm:gap-4 text-[#5B3B32]">
-              <button onClick={() => setSearchOpen(true)} className="hidden sm:inline-flex">
-                <FiSearch size={21} />
+        <nav
+          className="
+            w-full
+            border-b
+            border-white/40
+            bg-[#fffaf7]/70
+            shadow-[0_8px_30px_rgba(91,59,50,0.06)]
+            backdrop-blur-2xl
+            transition-all
+            duration-300
+            supports-[backdrop-filter]:bg-[#fffaf7]/55
+          "
+        >
+          <Container>
+            <div className="flex h-20 w-full min-w-0 items-center justify-between gap-2 sm:gap-4 md:h-24">
+              {/* Mobile menu button */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                className="shrink-0 text-[#5B3B32] transition hover:text-[#9A3F4D] lg:hidden"
+                aria-label="Toggle navigation menu"
+              >
+                {menuOpen ? (
+                  <FiX size={25} />
+                ) : (
+                  <FiMenu size={25} />
+                )}
               </button>
 
-              <Link to="/wishlist" className="relative hidden sm:block">
-                <FiHeart size={21} />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-2 -right-3 bg-[#9A3F4D] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
+              {/* Desktop left menu */}
+              <ul className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.22em] text-[#5B3B32] lg:flex">
+                <li>
+                  <Link
+                    to="/"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    Home
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/products"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    Collection
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/lookbook"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    Lookbook
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/about"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    About
+                  </Link>
+                </li>
+              </ul>
+
+              {/* Logo */}
+              <Link
+                to="/"
+                className="flex min-w-0 flex-1 flex-col items-center justify-center text-center leading-none lg:flex-none"
+              >
+                <div className="logo-font whitespace-nowrap text-4xl text-[#9A3F4D] sm:text-5xl md:text-6xl">
+                  Parikta
+                </div>
+
+                <div className="whitespace-nowrap text-[8px] font-semibold tracking-[0.34em] text-[#BFA996] sm:text-[10px] sm:tracking-[0.45em] md:text-xs">
+                  FASHION
+                </div>
               </Link>
 
-              <button onClick={openCart} className="relative shrink-0">
-                <FiShoppingBag size={21} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-3 bg-[#9A3F4D] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              <div className="relative">
-                {!isLoggedIn ? (
-                  <Link to="/login">
-                    <button className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#eadbd4] flex items-center justify-center hover:text-[#9A3F4D]">
-                      <FiUser size={20} />
-                    </button>
+              {/* Desktop right menu */}
+              <ul className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.22em] text-[#5B3B32] lg:flex">
+                <li>
+                  <Link
+                    to="/customize"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    Custom
                   </Link>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setShowAccountMenu(!showAccountMenu)}
-                      className="flex items-center gap-2"
-                    >
-                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#9A3F4D] text-white flex items-center justify-center font-bold">
-                        {customer?.name?.charAt(0)?.toUpperCase()}
-                      </div>
+                </li>
 
-                      <div className="hidden xl:block text-left">
-                        <p className="text-[10px] text-[#8b746b]">Welcome</p>
-                        <p className="text-xs font-bold text-[#5B3B32]">
-                          {customer?.name}
-                        </p>
-                      </div>
+                <li>
+                  <Link
+                    to="/faq"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    FAQ
+                  </Link>
+                </li>
 
-                      <FiChevronDown className="hidden xl:block" size={16} />
-                    </button>
+                <li>
+                  <Link
+                    to="/contact"
+                    className="transition hover:text-[#9A3F4D]"
+                  >
+                    Contact
+                  </Link>
+                </li>
+              </ul>
 
-                    {showAccountMenu && (
-                      <div className="absolute right-0 mt-4 w-64 bg-[#fffaf7] rounded-2xl shadow-2xl border border-[#eadbd4] overflow-hidden z-[100]">
-                        <div className="p-5 border-b border-[#eadbd4]">
-                          <h3 className="font-bold text-[#5B3B32]">
-                            {customer?.name}
-                          </h3>
-                          <p className="text-sm text-[#8b746b] break-all">
-                            {customer?.email}
+              {/* Actions */}
+              <div className="flex shrink-0 items-center gap-2.5 text-[#5B3B32] sm:gap-4">
+                {/* Search */}
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  className="hidden transition hover:text-[#9A3F4D] sm:inline-flex"
+                  aria-label="Open search"
+                >
+                  <FiSearch size={21} />
+                </button>
+
+                {/* Wishlist */}
+                <Link
+                  to="/wishlist"
+                  className="relative hidden transition hover:text-[#9A3F4D] sm:block"
+                  aria-label="Wishlist"
+                >
+                  <FiHeart size={21} />
+
+                  {wishlistCount > 0 && (
+                    <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#9A3F4D] text-[10px] text-white">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Cart */}
+                <button
+                  type="button"
+                  onClick={openCart}
+                  className="relative shrink-0 transition hover:text-[#9A3F4D]"
+                  aria-label="Open cart"
+                >
+                  <FiShoppingBag size={21} />
+
+                  {cartCount > 0 && (
+                    <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#9A3F4D] text-[10px] text-white">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Account */}
+                <div className="relative">
+                  {!isLoggedIn ? (
+                    <Link to="/login">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#eadbd4] bg-white/40 transition hover:border-[#9A3F4D] hover:text-[#9A3F4D] sm:h-9 sm:w-9">
+                        <FiUser size={20} />
+                      </span>
+                    </Link>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowAccountMenu((prev) => !prev)
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#9A3F4D] font-bold text-white sm:h-9 sm:w-9">
+                          {customer?.name
+                            ?.charAt(0)
+                            ?.toUpperCase() || "U"}
+                        </div>
+
+                        <div className="hidden text-left xl:block">
+                          <p className="text-[10px] text-[#8b746b]">
+                            Welcome
+                          </p>
+
+                          <p className="max-w-[120px] truncate text-xs font-bold text-[#5B3B32]">
+                            {customer?.name || "Customer"}
                           </p>
                         </div>
 
-                        <Link
-                          onClick={() => setShowAccountMenu(false)}
-                          to="/profile"
-                          className="block px-5 py-4 hover:bg-[#f7f2ee]"
-                        >
-                          My Profile
-                        </Link>
+                        <FiChevronDown
+                          className={`hidden transition-transform duration-200 xl:block ${
+                            showAccountMenu
+                              ? "rotate-180"
+                              : ""
+                          }`}
+                          size={16}
+                        />
+                      </button>
 
-                        <Link
-                          onClick={() => setShowAccountMenu(false)}
-                          to="/my-orders"
-                          className="block px-5 py-4 hover:bg-[#f7f2ee]"
-                        >
-                          My Orders
-                        </Link>
+                      {showAccountMenu && (
+                        <div className="absolute right-0 z-[1100] mt-4 w-64 overflow-hidden rounded-2xl border border-[#eadbd4] bg-[#fffaf7]/95 shadow-2xl backdrop-blur-xl">
+                          <div className="border-b border-[#eadbd4] p-5">
+                            <h3 className="font-bold text-[#5B3B32]">
+                              {customer?.name ||
+                                "Parikta Customer"}
+                            </h3>
 
-                        <Link
-                          onClick={() => setShowAccountMenu(false)}
-                          to="/wishlist"
-                          className="block px-5 py-4 hover:bg-[#f7f2ee]"
-                        >
-                          Wishlist
-                        </Link>
+                            {customer?.email && (
+                              <p className="break-all text-sm text-[#8b746b]">
+                                {customer.email}
+                              </p>
+                            )}
 
-                        <Link
-                          onClick={() => setShowAccountMenu(false)}
-                          to="/saved-addresses"
-                          className="block px-5 py-4 hover:bg-[#f7f2ee]"
-                        >
-                          Saved Addresses
-                        </Link>
+                            {customer?.phone && (
+                              <p className="mt-1 text-xs text-[#9a8982]">
+                                +91 {customer.phone}
+                              </p>
+                            )}
+                          </div>
 
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-5 py-4 text-red-600 hover:bg-red-50"
-                        >
-                          Logout
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
+                          <Link
+                            onClick={() =>
+                              setShowAccountMenu(false)
+                            }
+                            to="/profile"
+                            className="block px-5 py-4 transition hover:bg-[#f7f2ee]"
+                          >
+                            My Profile
+                          </Link>
+
+                          <Link
+                            onClick={() =>
+                              setShowAccountMenu(false)
+                            }
+                            to="/my-orders"
+                            className="block px-5 py-4 transition hover:bg-[#f7f2ee]"
+                          >
+                            My Orders
+                          </Link>
+
+                          <Link
+                            onClick={() =>
+                              setShowAccountMenu(false)
+                            }
+                            to="/wishlist"
+                            className="block px-5 py-4 transition hover:bg-[#f7f2ee]"
+                          >
+                            Wishlist
+                          </Link>
+
+                          <Link
+                            onClick={() =>
+                              setShowAccountMenu(false)
+                            }
+                            to="/saved-addresses"
+                            className="block px-5 py-4 transition hover:bg-[#f7f2ee]"
+                          >
+                            Saved Addresses
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={handleLogout}
+                            className="w-full px-5 py-4 text-left text-red-600 transition hover:bg-red-50"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {menuOpen && (
-            <div className="lg:hidden pb-5 bg-[#fffaf7]/90 backdrop-blur-xl">
-              <div className="grid gap-3 text-sm tracking-[0.18em] uppercase text-[#5B3B32]">
-                <Link onClick={() => setMenuOpen(false)} to="/">Home</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/products">Collection</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/lookbook">Lookbook</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/customize">Custom Design</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/wishlist">Wishlist</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/about">About</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/faq">FAQ</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/contact">Contact</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/track-order">Track Order</Link>
-                <Link onClick={() => setMenuOpen(false)} to="/cart">Cart</Link>
+            {/* Mobile menu */}
+            {menuOpen && (
+              <div className="border-t border-[#eadbd4]/70 bg-[#fffaf7]/90 pb-5 pt-4 backdrop-blur-2xl lg:hidden">
+                <div className="grid gap-4 text-sm uppercase tracking-[0.18em] text-[#5B3B32]">
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/"
+                  >
+                    Home
+                  </Link>
 
-                {!isLoggedIn ? (
-                  <>
-                    <Link onClick={() => setMenuOpen(false)} to="/login">Login</Link>
-                    <Link onClick={() => setMenuOpen(false)} to="/register">Register</Link>
-                  </>
-                ) : (
-                  <>
-                    <Link onClick={() => setMenuOpen(false)} to="/profile">My Profile</Link>
-                    <Link onClick={() => setMenuOpen(false)} to="/my-orders">My Orders</Link>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setMenuOpen(false);
-                      }}
-                      className="text-left text-red-600 uppercase tracking-[0.18em]"
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/products"
+                  >
+                    Collection
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/lookbook"
+                  >
+                    Lookbook
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/customize"
+                  >
+                    Custom Design
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/wishlist"
+                  >
+                    Wishlist
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/about"
+                  >
+                    About
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/faq"
+                  >
+                    FAQ
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/contact"
+                  >
+                    Contact
+                  </Link>
+
+                  <Link
+                    onClick={closeMobileMenu}
+                    to="/track-order"
+                  >
+                    Track Order
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setSearchOpen(true);
+                    }}
+                    className="text-left uppercase tracking-[0.18em]"
+                  >
+                    Search
+                  </button>
+
+                  {!isLoggedIn ? (
+                    <Link
+                      onClick={closeMobileMenu}
+                      to="/login"
+                      className="font-semibold text-[#9A3F4D]"
                     >
-                      Logout
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </Container>
-      </nav>
+                      Login / Sign Up
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        onClick={closeMobileMenu}
+                        to="/profile"
+                      >
+                        My Profile
+                      </Link>
 
-      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+                      <Link
+                        onClick={closeMobileMenu}
+                        to="/my-orders"
+                      >
+                        My Orders
+                      </Link>
+
+                      <Link
+                        onClick={closeMobileMenu}
+                        to="/saved-addresses"
+                      >
+                        Saved Addresses
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="text-left uppercase tracking-[0.18em] text-red-600"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </Container>
+        </nav>
+      </header>
+
+      <SearchOverlay
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
+
       <CartDrawer />
     </>
   );

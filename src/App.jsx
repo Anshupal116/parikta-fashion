@@ -37,12 +37,12 @@ import CheckoutPayment from "./pages/CheckoutPayment";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
-import WhatsAppButton from "./components/WhatsAppButton";
+// import WhatsAppButton from "./components/WhatsAppButton";
 import MobileBottomNav from "./components/MobileBottomNav";
 import BackToTop from "./components/BackToTop";
 import ScrollToTop from "./components/ScrollToTop";
 import CartDrawer from "./components/CartDrawer";
-import FloatingCartButton from "./components/FloatingCartButton";
+// import FloatingCartButton from "./components/FloatingCartButton";
 
 function AnalyticsTracker() {
   const location = useLocation();
@@ -76,10 +76,10 @@ function GlobalCustomerUI() {
   return (
     <>
       <CartDrawer />
-      <FloatingCartButton />
+      {/* <FloatingCartButton /> */}
       <NewsletterPopup />
       <BackToTop />
-      <WhatsAppButton />
+      {/* <WhatsAppButton /> */}
       <MobileBottomNav />
     </>
   );

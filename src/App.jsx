@@ -73,25 +73,7 @@ function AnalyticsTracker() {
 
 /*
 |--------------------------------------------------------------------------
-| Loading / Welcome Screen
-|--------------------------------------------------------------------------
-|
-| Navbar ka z-index high hai, isliye LoadingScreen ko sabse high z-index
-| wrapper ke andar rakha gaya hai.
-|
-*/
-
-function GlobalLoadingScreen() {
-  return (
-    <div className="fixed inset-0 z-[99999]">
-      <LoadingScreen />
-    </div>
-  );
-}
-
-/*
-|--------------------------------------------------------------------------
-| Customer Global UI
+| Global Customer UI
 |--------------------------------------------------------------------------
 */
 
@@ -105,8 +87,7 @@ function GlobalCustomerUI() {
   const hideCustomerUIRoutes = [
     "/login",
     "/register",
-    "/checkout/address",
-    "/checkout/payment",
+    "/checkout",
     "/order-success",
   ];
 
@@ -141,7 +122,7 @@ function GlobalCustomerUI() {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Customer pages */}
+      {/* Customer routes */}
 
       <Route path="/" element={<Home />} />
 
@@ -166,13 +147,13 @@ function AppRoutes() {
 
       <Route path="/lookbook" element={<Lookbook />} />
 
-      {/* Authentication */}
+      {/* Customer authentication */}
 
       <Route path="/login" element={<Login />} />
 
       <Route path="/register" element={<Register />} />
 
-      {/* Orders */}
+      {/* Customer orders */}
 
       <Route path="/my-orders" element={<MyOrders />} />
 
@@ -220,7 +201,7 @@ function AppRoutes() {
         element={<AdminLogin />}
       />
 
-      {/* Admin protected routes */}
+      {/* Protected admin routes */}
 
       <Route
         path="/admin-dashboard"
@@ -278,7 +259,7 @@ function AppRoutes() {
         />
       </Route>
 
-      {/* Invalid route */}
+      {/* Invalid URL */}
 
       <Route
         path="*"
@@ -301,8 +282,12 @@ function App() {
 
       <ScrollToTop />
 
-      {/* Welcome screen Navbar ke upar show hogi */}
-      <GlobalLoadingScreen />
+      {/*
+        LoadingScreen ko direct render rakho.
+        Iske bahar fixed full-screen wrapper mat lagana,
+        warna invisible layer buttons ko block karegi.
+      */}
+      <LoadingScreen />
 
       <AppRoutes />
 

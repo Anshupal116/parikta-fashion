@@ -14,7 +14,7 @@ function LoadingScreen() {
   if (!loading) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-[#fffaf7] flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-[99999] bg-[#fffaf7] flex items-center justify-center overflow-hidden">
       <div className="absolute w-72 h-72 rounded-full bg-[#FDEAE6] blur-3xl opacity-80 animate-pulse"></div>
 
       <div className="relative text-center px-6">

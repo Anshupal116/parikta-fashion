@@ -31,6 +31,7 @@ const megaMenuCategories = [
       { label: "Suits", to: "/products?category=Suit" },
       { label: "Kurtis", to: "/products?category=Kurti" },
       { label: "Lehengas", to: "/products?category=Lehenga" },
+      { label: "Gowns", to: "/products?category=Gown" },
     ],
   },
   {
@@ -926,6 +927,11 @@ function Navbar() {
                         />
 
                         <MobileCategoryLink
+                          to="/products?category=Gown"
+                          label="Gowns"
+                        />
+
+                        <MobileCategoryLink
                           to="/products?occasion=Wedding"
                           label="Wedding"
                         />
@@ -944,6 +950,7 @@ function Navbar() {
                           to="/products?discount=true"
                           label="Sale"
                         />
+
                       </div>
 
                       <Link

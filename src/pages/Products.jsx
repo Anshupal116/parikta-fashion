@@ -9,22 +9,58 @@ import { getProducts } from "../services/productService";
 import { useCart } from "../context/CartContext";
 
 function Products() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
+  const categoryFromUrl = searchParams.get("category") || "All";
   const { addToCart } = useCart();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const validCategories = ["All", "Saree", "Suit", "Kurti", "Lehenga", "Gown", "Other"];
+
+  const [selectedCategory, setSelectedCategory] = useState(
+    validCategories.includes(categoryFromUrl) ? categoryFromUrl : "All"
+  );
+  const [selectedType, setSelectedType] = useState("All");
   const [sortBy, setSortBy] = useState("default");
   const [priceRange, setPriceRange] = useState("All");
   const [color, setColor] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const categories = ["All", "Ready-made", "Customize"];
+  const categories = [
+    { label: "All", value: "All" },
+    { label: "Sarees", value: "Saree" },
+    { label: "Suits", value: "Suit" },
+    { label: "Kurtis", value: "Kurti" },
+    { label: "Lehengas", value: "Lehenga" },
+    { label: "Gowns", value: "Gown" },
+    { label: "Other", value: "Other" },
+  ];
+
+  const productTypes = ["All", "Ready-made", "Customize"];
   const colors = ["All", "Pink", "Red", "Yellow", "Green"];
+
+  useEffect(() => {
+    setSelectedCategory(
+      validCategories.includes(categoryFromUrl) ? categoryFromUrl : "All"
+    );
+  }, [categoryFromUrl]);
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (category === "All") {
+      nextParams.delete("category");
+    } else {
+      nextParams.set("category", category);
+    }
+
+    setSearchParams(nextParams);
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -44,9 +80,14 @@ function Products() {
 
   const clearFilters = () => {
     setSelectedCategory("All");
+    setSelectedType("All");
     setPriceRange("All");
     setColor("All");
     setSortBy("default");
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("category");
+    setSearchParams(nextParams);
   };
 
   const searchedProducts = products.filter((item) => {
@@ -62,7 +103,13 @@ function Products() {
   });
 
   const finalProducts = searchedProducts
-    .filter((item) => selectedCategory === "All" || item.type === selectedCategory)
+    .filter(
+      (item) =>
+        selectedCategory === "All" || item.category === selectedCategory
+    )
+    .filter(
+      (item) => selectedType === "All" || item.type === selectedType
+    )
     .filter((item) => {
       if (priceRange === "All") return true;
       if (priceRange === "under1000") return item.price < 1000;
@@ -90,15 +137,38 @@ function Products() {
         <div className="grid gap-3">
           {categories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              key={cat.value}
+              onClick={() => handleCategoryChange(cat.value)}
               className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold ${
-                selectedCategory === cat
+                selectedCategory === cat.value
                   ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
                   : "bg-white border-[#eadbd4] text-[#5B3B32]"
               }`}
             >
-              {cat}
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+
+      <div>
+        <h3 className="text-xs tracking-[0.25em] uppercase text-[#BFA996] font-bold mb-4">
+          Product Type
+        </h3>
+
+        <div className="grid gap-3">
+          {productTypes.map((type) => (
+            <button
+              key={type}
+              onClick={() => setSelectedType(type)}
+              className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold ${
+                selectedType === type
+                  ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
+                  : "bg-white border-[#eadbd4] text-[#5B3B32]"
+              }`}
+            >
+              {type === "All" ? "All Types" : type}
             </button>
           ))}
         </div>
@@ -157,7 +227,7 @@ function Products() {
     <>
       <Navbar />
 
-      <main className="bg-[#f7f2ee] min-h-screen">
+      <main className="bg-[#f7f2ee] min-h-screen pt-[72px] md:pt-[84px]">
         <section className="bg-[#fffaf7] border-b border-[#eadbd4]">
           <Container>
             <div className="py-10 md:py-16 text-center max-w-3xl mx-auto">
@@ -166,7 +236,13 @@ function Products() {
               </p>
 
               <h1 className="heading-font text-4xl md:text-6xl text-[#5B3B32] mt-3">
-                {search ? `Search: ${search}` : "Shop Designer Collection"}
+                {search
+                  ? `Search: ${search}`
+                  : selectedCategory === "All"
+                  ? "Shop Designer Collection"
+                  : `Designer ${
+                      categories.find((cat) => cat.value === selectedCategory)?.label
+                    }`}
               </h1>
 
               <p className="text-[#8b746b] text-sm md:text-base leading-7 mt-4">
@@ -190,15 +266,15 @@ function Products() {
                   <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
                     {categories.map((cat) => (
                       <button
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
+                        key={cat.value}
+                        onClick={() => handleCategoryChange(cat.value)}
                         className={`shrink-0 px-5 py-2 rounded-full text-xs tracking-[0.12em] uppercase border ${
-                          selectedCategory === cat
+                          selectedCategory === cat.value
                             ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
                             : "bg-[#fffaf7] text-[#5B3B32] border-[#eadbd4]"
                         }`}
                       >
-                        {cat}
+                        {cat.label}
                       </button>
                     ))}
                   </div>
@@ -337,7 +413,7 @@ function Products() {
 
               <div>
                 <span className="inline-block bg-[#FDEAE6] text-[#9A3F4D] px-4 py-2 rounded-full text-sm font-semibold">
-                  {quickViewProduct.type}
+                  {quickViewProduct.category} · {quickViewProduct.type}
                 </span>
 
                 <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-5">

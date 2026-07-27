@@ -14,5 +14,6 @@ router.post("/complete-profile", completeProfile);
 
 // Keep your existing admin middleware here if this route was protected.
 router.get("/", getAllCustomers);
+router.get("/admin/all", getAllCustomers);
 
 module.exports = router;

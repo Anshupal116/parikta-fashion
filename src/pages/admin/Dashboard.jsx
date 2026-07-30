@@ -913,6 +913,11 @@ function Dashboard() {
               sublabel="Customer feedback"
               onClick={() => navigate("/admin-dashboard/reviews")}
             />
+            <QuickAction
+              label="Banner Managers"
+              sublabel="Manage banners"
+              onClick={() => navigate("/admin-dashboard/banner-managers")}
+            />
           </div>
         </section>
       </div>

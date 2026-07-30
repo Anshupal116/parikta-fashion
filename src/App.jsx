@@ -254,7 +254,7 @@ function AppRoutes() {
       </Route>
 
        <Route
-          path="banner-managers"
+          path="bannermanagers"
           element={<BannerManagers />}
         />
 

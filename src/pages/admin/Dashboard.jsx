@@ -916,7 +916,7 @@ function Dashboard() {
             <QuickAction
               label="Banner Managers"
               sublabel="Manage banners"
-              onClick={() => navigate("/admin-dashboard/banner-managers")}
+              onClick={() => navigate("/admin-dashboard/bannermanagers")}
             />
           </div>
         </section>

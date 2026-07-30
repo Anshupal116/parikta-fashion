@@ -40,7 +40,7 @@ import CustomersAdmin from "./pages/admin/CustomersAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
 import CouponsAdmin from "./pages/admin/CouponsAdmin";
-import bannermanagers from "./pages/admin/BannerManagers";
+import BannerManager from "../pages/admin/BannerManager";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -253,10 +253,10 @@ function AppRoutes() {
         />
       </Route>
 
-       <Route
-          path="bannermanagers"
-          element={<BannerManagers />}
-        />
+       <Route 
+       path="banners" 
+       element={<BannerManager />} 
+       />
 
       {/* Invalid URL */}
 

@@ -40,6 +40,7 @@ import CustomersAdmin from "./pages/admin/CustomersAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
 import CouponsAdmin from "./pages/admin/CouponsAdmin";
+import bannermanagers from "./pages/admin/BannerManagers";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -134,19 +135,12 @@ function AppRoutes() {
       />
 
       <Route path="/cart" element={<Cart />} />
-
       <Route path="/wishlist" element={<Wishlist />} />
-
       <Route path="/customize" element={<Customize />} />
-
       <Route path="/about" element={<About />} />
-
       <Route path="/contact" element={<Contact />} />
-
       <Route path="/faq" element={<FAQ />} />
-
       <Route path="/lookbook" element={<Lookbook />} />
-
       {/* Customer authentication */}
 
       <Route path="/login" element={<Login />} />
@@ -258,6 +252,11 @@ function AppRoutes() {
           element={<CouponsAdmin />}
         />
       </Route>
+
+       <Route
+          path="banner-managers"
+          element={<BannerManagers />}
+        />
 
       {/* Invalid URL */}
 

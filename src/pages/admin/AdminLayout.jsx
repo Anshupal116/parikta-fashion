@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useAdmin } from "../../context/AdminContext";
-import NotificationBell from "../components/admin/NotificationBell";
+import NotificationBell from "./NotificationCenter";
 
 function AdminLayout() {
   const [isMobile, setIsMobile] = useState(false);

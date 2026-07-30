@@ -42,6 +42,7 @@ import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin";
 import CouponsAdmin from "./pages/admin/CouponsAdmin";
 import BannerManager from "./pages/admin/BannerManager";
+import NotificationCenter from "./pages/admin/NotificationCenter";
 
 import LoadingScreen from "./components/LoadingScreen";
 import NewsletterPopup from "./components/NewsletterPopup";
@@ -261,6 +262,11 @@ function AppRoutes() {
        <Route
   path="homepage-cms"
   element={<HomepageCMS />}
+/>
+
+<Route
+  path="notifications"
+  element={<NotificationCenter />}
 />
 
       </Route>

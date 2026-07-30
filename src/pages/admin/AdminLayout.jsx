@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useAdmin } from "../../context/AdminContext";
+import NotificationBell from "../components/admin/NotificationBell";
 
 function AdminLayout() {
   const [isMobile, setIsMobile] = useState(false);
@@ -47,6 +48,7 @@ function AdminLayout() {
   }
 
   return (
+    <NotificationBell />
     <div className="min-h-screen bg-[#f7f2ee] flex">
       <aside className="w-72 bg-[#2f241f] text-white min-h-screen p-7">
         <Link to="/admin-dashboard">

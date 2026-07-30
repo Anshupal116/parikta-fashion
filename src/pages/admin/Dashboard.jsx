@@ -918,6 +918,11 @@ function Dashboard() {
               sublabel="Manage banners"
               onClick={() => navigate("/admin-dashboard/banners")}
             />
+            <QuickAction
+              label="Homepage CMS"
+              sublabel="Manage homepage content"
+              onClick={() => navigate("/admin-dashboard/homepage-cms")}
+            />
           </div>
         </section>
       </div>

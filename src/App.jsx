@@ -23,6 +23,7 @@ import TrackOrder from "./pages/TrackOrder";
 import MyOrders from "./pages/MyOrders";
 import CheckoutAddress from "./pages/CheckoutAddress";
 import CheckoutPayment from "./pages/CheckoutPayment";
+import HomepageCMS from "./pages/admin/HomepageCMS";
 
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -256,7 +257,12 @@ function AppRoutes() {
        path="banners" 
        element={<BannerManager />} 
        />
-       
+
+       <Route
+  path="homepage-cms"
+  element={<HomepageCMS />}
+/>
+
       </Route>
       {/* Invalid URL */}
 

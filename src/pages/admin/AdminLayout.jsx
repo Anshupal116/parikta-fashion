@@ -51,7 +51,6 @@ function AdminLayout() {
     
     <div className="min-h-screen bg-[#f7f2ee] flex">
       <aside className="w-72 bg-[#2f241f] text-white min-h-screen p-7">
-        <NotificationBell />
         <Link to="/admin-dashboard">
           <h1 className="logo-font text-6xl text-[#E8D7CC] leading-none">
             Parikta
@@ -141,6 +140,9 @@ function AdminLayout() {
               Manage products, orders and custom requests
             </p>
           </div>
+          <div className="flex items-center gap-3">
+  <NotificationBell />
+</div>
 
           <div className="flex items-center gap-4">
             <div className="text-right">

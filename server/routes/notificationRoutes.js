@@ -1,22 +1,22 @@
-import express from "express";
-import {
-    getNotifications,
-    createNotification,
-    markRead,
-    markAllRead,
-    deleteNotification,
-} from "../controllers/notificationController.js";
+const express = require("express");
+
+const {
+  getNotifications,
+  createNotification,
+  markRead,
+  markAllRead,
+  deleteNotification,
+} = require("../controllers/notificationController");
 
 const router = express.Router();
 
 router.get("/", getNotifications);
-
 router.post("/", createNotification);
 
-router.patch("/:id/read", markRead);
-
+// IMPORTANT: read-all route ko :id se pehle rakho
 router.patch("/read-all", markAllRead);
+router.patch("/:id/read", markRead);
 
 router.delete("/:id", deleteNotification);
 
-export default router;
+module.exports = router;

@@ -139,36 +139,37 @@ function AdminLayout() {
 
       <main className="flex-1">
         <header className="bg-[#fffaf7] border-b border-[#eadbd4] px-8 py-5 flex items-center justify-between">
-          <div>
-            <h2 className="heading-font text-3xl text-[#5B3B32]">
-              Parikta Admin
-            </h2>
-            <p className="text-sm text-[#8b746b]">
-              Manage products, orders and custom requests
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-  <NotificationBell />
-</div>
+  <div>
+    <h2 className="heading-font text-3xl text-[#5B3B32]">
+      Parikta Admin
+    </h2>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="font-semibold text-[#5B3B32]">
-                {admin?.name || "Admin"}
-              </p>
-              <p className="text-xs text-[#8b746b]">
-                {admin?.email || "Parikta Fashion"}
-              </p>
-            </div>
+    <p className="text-sm text-[#8b746b]">
+      Manage products, orders and custom requests
+    </p>
+  </div>
 
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition"
-            >
-              Logout
-            </button>
-          </div>
-        </header>
+  <div className="flex items-center gap-4">
+    <NotificationBell />
+
+    <div className="text-right">
+      <p className="font-semibold text-[#5B3B32]">
+        {admin?.name || "Admin"}
+      </p>
+
+      <p className="text-xs text-[#8b746b]">
+        {admin?.email || "Parikta Fashion"}
+      </p>
+    </div>
+
+    <button
+      onClick={handleLogout}
+      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+    >
+      Logout
+    </button>
+  </div>
+</header>
 
         <div className="p-8">
           <Outlet />

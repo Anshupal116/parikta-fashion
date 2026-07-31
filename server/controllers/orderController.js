@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
+const Notification = require("../models/Notification");
 
 const crypto = require("crypto");
 const razorpay = require("../config/razorpay");
@@ -12,6 +13,7 @@ const orderConfirmationTemplate = require("../utils/orderConfirmationTemplate");
 const {sendOrderPlacedWhatsApp,} = require("../utils/orderWhatsApp");
 
 const generateInvoicePdf = require("../utils/generateInvoicePdf");
+
 
 
 const normalizeCode = (code = "") => {
@@ -406,6 +408,27 @@ status:
     ? "Pending"
     : "Pending",
     });
+
+    // 🔔 Create Admin Notification
+await Notification.create({
+  type: "order",
+
+  title: "New Order Received",
+
+  message: `Order ${order.orderId} placed by ${order.customer.name}`,
+
+  referenceId: order._id,
+
+  actionUrl: "/admin-dashboard/orders",
+
+  priority: "high",
+
+  read: false,
+});
+
+if (coupon) {
+   ...
+}
 
     if (coupon) {
       coupon.usedCount =

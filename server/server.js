@@ -29,6 +29,7 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/sitemap.xml", async (req, res) => {
   try {

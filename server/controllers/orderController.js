@@ -409,26 +409,18 @@ status:
     : "Pending",
     });
 
-    // 🔔 Create Admin Notification
-await Notification.create({
+    // 🔔 Admin notification
+const notification = await Notification.create({
   type: "order",
-
   title: "New Order Received",
-
   message: `Order ${order.orderId} placed by ${order.customer.name}`,
-
   referenceId: order._id,
-
   actionUrl: "/admin-dashboard/orders",
-
   priority: "high",
-
   read: false,
 });
 
-if (coupon) {
-   ...
-}
+console.log("✅ Notification created:", notification._id);
 
     if (coupon) {
       coupon.usedCount =

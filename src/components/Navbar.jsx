@@ -185,12 +185,44 @@ function Navbar() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
+    const shouldLockBody = menuOpen || searchOpen || cartOpen;
+
+    document.body.style.overflow = shouldLockBody ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
     };
-  }, [menuOpen]);
+  }, [menuOpen, searchOpen, cartOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+
+      setMenuOpen(false);
+      setMobileCollectionOpen(false);
+      setSearchOpen(false);
+      setCartOpen(false);
+      setShowAccountMenu(false);
+      setShowWishlistMenu(false);
+      setShowMegaMenu(false);
+      setDesktopSearchOpen(false);
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMenuOpen(false);
+        setMobileCollectionOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const handleLogout = () => {
     logoutCustomer();
@@ -249,7 +281,7 @@ function Navbar() {
     <>
       {/* FIXED NAVBAR */}
 
-      <div className="fixed inset-x-0 top-0 z-[9999]">
+      <div className="fixed inset-x-0 top-0 z-[9999] pt-[env(safe-area-inset-top)]">
         <AnnouncementBar />
 
         <header
@@ -263,8 +295,8 @@ function Navbar() {
             <div
               className={`flex items-center justify-between gap-3 transition-all duration-500 ${
                 scrolled
-                  ? "h-[64px] md:h-[70px]"
-                  : "h-[76px] md:h-[86px]"
+                  ? "h-[58px] sm:h-[62px] lg:h-[68px]"
+                  : "h-[64px] sm:h-[68px] lg:h-[74px]"
               }`}
             >
               {/* MOBILE MENU */}
@@ -274,7 +306,7 @@ function Navbar() {
                 onClick={() =>
                   setMenuOpen((previous) => !previous)
                 }
-                className="flex h-10 w-10 items-center justify-center rounded-full text-[#5B3B32] transition-all duration-300 hover:bg-[#f4e7e1] hover:text-[#9A3F4D] lg:hidden"
+                className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#5B3B32] transition-all duration-300 active:scale-95 active:bg-[#f4e7e1] hover:bg-[#f4e7e1] hover:text-[#9A3F4D] lg:hidden"
                 aria-label="Open navigation menu"
               >
                 {menuOpen ? (
@@ -303,7 +335,7 @@ function Navbar() {
 
                   <li
                     ref={megaMenuRef}
-                    className="relative"
+                    className="relative hidden sm:block"
                     onMouseEnter={() =>
                       setShowMegaMenu(true)
                     }
@@ -426,14 +458,14 @@ function Navbar() {
 
               <Link
                 to="/"
-                className="group shrink-0 text-center leading-none"
+                className="group absolute left-1/2 shrink-0 -translate-x-1/2 text-center leading-none lg:static lg:translate-x-0"
                 aria-label="Parikta Fashion Home"
               >
                 <div
                   className={`logo-font text-[#9A3F4D] transition-all duration-500 ${
                     scrolled
-                      ? "text-[39px] md:text-[47px]"
-                      : "text-[47px] md:text-[58px]"
+                      ? "text-[34px] sm:text-[38px] lg:text-[46px]"
+                      : "text-[38px] sm:text-[42px] lg:text-[52px]"
                   }`}
                 >
                   Parikta
@@ -442,8 +474,8 @@ function Navbar() {
                 <div
                   className={`font-semibold text-[#BFA996] transition-all duration-500 ${
                     scrolled
-                      ? "text-[7px] tracking-[0.34em] md:text-[8px]"
-                      : "text-[8px] tracking-[0.42em] md:text-[10px]"
+                      ? "text-[6px] tracking-[0.30em] sm:text-[7px] lg:text-[8px]"
+                      : "text-[7px] tracking-[0.34em] sm:text-[8px] lg:text-[9px]"
                   }`}
                 >
                   FASHION
@@ -499,7 +531,7 @@ function Navbar() {
 
               {/* RIGHT ICONS */}
 
-              <div className="flex items-center justify-end gap-1 text-[#5B3B32] sm:gap-2">
+              <div className="flex min-w-[92px] items-center justify-end gap-0.5 text-[#5B3B32] sm:min-w-[132px] sm:gap-1.5 lg:min-w-0">
                 {/* DESKTOP SEARCH */}
 
                 <form
@@ -548,7 +580,7 @@ function Navbar() {
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#f5e9e4] hover:text-[#9A3F4D] md:hidden"
+                  className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition-all duration-300 active:scale-95 active:bg-[#f5e9e4] hover:bg-[#f5e9e4] hover:text-[#9A3F4D] md:hidden"
                   aria-label="Search products"
                 >
                   <FiSearch size={19} />
@@ -563,7 +595,7 @@ function Navbar() {
                   <button
                     type="button"
                     onClick={toggleWishlistMenu}
-                    className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#f5e9e4] hover:text-[#9A3F4D]"
+                    className="relative flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-[#eadbd4]/70 bg-white/65 transition-all duration-300 active:scale-95 hover:border-[#d9bdb3] hover:bg-[#f5e9e4] hover:text-[#9A3F4D]"
                     aria-label="Wishlist"
                   >
                     <FiHeart size={19} />
@@ -622,7 +654,7 @@ function Navbar() {
                 <button
                   type="button"
                   onClick={() => setCartOpen(true)}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#f5e9e4] hover:text-[#9A3F4D]"
+                  className="relative flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-[#eadbd4]/70 bg-white/65 transition-all duration-300 active:scale-95 hover:border-[#d9bdb3] hover:bg-[#f5e9e4] hover:text-[#9A3F4D]"
                   aria-label="Shopping bag"
                 >
                   <FiShoppingBag size={19} />
@@ -807,37 +839,68 @@ function Navbar() {
       <div
         className={`transition-all duration-500 ${
           scrolled
-            ? "h-[92px] md:h-[98px]"
-            : "h-[104px] md:h-[114px]"
+            ? "h-[86px] sm:h-[90px] lg:h-[96px]"
+            : "h-[92px] sm:h-[96px] lg:h-[102px]"
         }`}
       />
 
       {/* MOBILE MENU */}
 
       <div
-        className={`fixed inset-x-0 bottom-0 z-[9998] transition-all duration-500 lg:hidden ${
-          scrolled
-            ? "top-[92px] md:top-[98px]"
-            : "top-[104px] md:top-[114px]"
-        } ${
+        className={`fixed inset-0 z-[9998] lg:hidden ${
           menuOpen
-            ? "visible translate-y-0 opacity-100"
-            : "invisible -translate-y-4 opacity-0 pointer-events-none"
+            ? "visible pointer-events-auto"
+            : "invisible pointer-events-none"
         }`}
+        aria-hidden={!menuOpen}
       >
         <button
           type="button"
           onClick={() => setMenuOpen(false)}
-          className="absolute inset-0 bg-[#3b2721]/30 backdrop-blur-sm"
-          aria-label="Close menu"
+          className={`absolute inset-0 bg-[#2f241f]/45 backdrop-blur-sm transition-opacity duration-300 ${
+            menuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          aria-label="Close navigation menu"
         />
 
-        <div className="relative max-h-full overflow-y-auto border-t border-[#eadbd4] bg-[#fffaf7]/98 shadow-2xl backdrop-blur-2xl">
-          <Container>
-            <div className="py-6">
+        <aside
+          className={`absolute bottom-0 left-0 top-0 flex w-[min(88vw,380px)] flex-col border-r border-[#eadbd4] bg-[#fffaf7] shadow-[24px_0_70px_rgba(47,36,31,0.22)] transition-transform duration-300 ease-out ${
+            menuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
+        >
+          <div className="flex min-h-[72px] items-center justify-between border-b border-[#eadbd4] px-5 pt-[env(safe-area-inset-top)]">
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              className="leading-none"
+              aria-label="Parikta Fashion Home"
+            >
+              <div className="logo-font text-[42px] text-[#9A3F4D]">
+                Parikta
+              </div>
+              <div className="mt-0.5 text-[7px] font-semibold tracking-[0.38em] text-[#BFA996]">
+                FASHION
+              </div>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-[#eadbd4] bg-white text-[#5B3B32] active:scale-95"
+              aria-label="Close navigation menu"
+            >
+              <FiX size={22} />
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(24px+env(safe-area-inset-bottom))]">
+            <div className="py-5">
               <form
                 onSubmit={handleSearch}
-                className="flex items-center rounded-full border border-[#e3cec6] bg-white/85 px-4"
+                className="flex items-center rounded-2xl border border-[#e3cec6] bg-white px-4 shadow-[0_8px_24px_rgba(91,59,50,0.06)]"
               >
                 <FiSearch
                   size={18}
@@ -851,7 +914,7 @@ function Navbar() {
                     setSearchQuery(event.target.value)
                   }
                   placeholder="Search products..."
-                  className="h-12 w-full bg-transparent px-3 text-sm text-[#5B3B32] outline-none"
+                  className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base text-[#5B3B32] outline-none placeholder:text-[#a58e85]"
                 />
 
                 {searchQuery && (
@@ -1005,9 +1068,17 @@ function Navbar() {
               ) : (
                 <div>
                   <div className="flex items-center gap-3 rounded-3xl bg-[#f5e6e0] p-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#9A3F4D] font-bold text-white">
-                      {customerInitial}
-                    </div>
+                    {customerImage ? (
+                      <img
+                        src={customerImage}
+                        alt={customer?.name || "Customer"}
+                        className="h-11 w-11 rounded-full border-2 border-white object-cover shadow-sm"
+                      />
+                    ) : (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#9A3F4D] font-bold text-white">
+                        {customerInitial}
+                      </div>
+                    )}
 
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-[#5B3B32]">
@@ -1052,8 +1123,8 @@ function Navbar() {
                 </div>
               )}
             </div>
-          </Container>
-        </div>
+          </div>
+        </aside>
       </div>
 
       <SearchOverlay
@@ -1130,10 +1201,21 @@ function AccountMenuLink({
 }
 
 function MobileNavLink({ to, children }) {
+  const location = useLocation();
+
+  const active =
+    to === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(to);
+
   return (
     <Link
       to={to}
-      className="flex items-center rounded-2xl px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#5B3B32] transition hover:bg-[#f5e6e0] hover:text-[#9A3F4D]"
+      className={`flex min-h-12 touch-manipulation items-center rounded-2xl px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] transition active:scale-[0.99] ${
+        active
+          ? "bg-[#f5e6e0] text-[#9A3F4D]"
+          : "text-[#5B3B32] hover:bg-[#f5e6e0] hover:text-[#9A3F4D]"
+      }`}
     >
       {children}
     </Link>
@@ -1144,7 +1226,7 @@ function MobileCategoryLink({ to, label }) {
   return (
     <Link
       to={to}
-      className="rounded-2xl border border-[#eadbd4] bg-white/75 px-3 py-3 text-center text-xs font-semibold text-[#5B3B32] transition hover:border-[#9A3F4D] hover:text-[#9A3F4D]"
+      className="flex min-h-12 touch-manipulation items-center justify-center rounded-2xl border border-[#eadbd4] bg-white px-3 py-3 text-center text-xs font-semibold text-[#5B3B32] transition active:scale-[0.98] hover:border-[#9A3F4D] hover:text-[#9A3F4D]"
     >
       {label}
     </Link>

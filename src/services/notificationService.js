@@ -33,13 +33,13 @@ async function request(path, options = {}) {
 const emitUpdate = () => window.dispatchEvent(new Event(EVENT_NAME));
 
 export async function getNotifications() {
-  const data = await request("/api/notifications");
+  const data = await request("/notifications");
   const list = data.notifications || data || [];
   return Array.isArray(list) ? list.map(normalize) : [];
 }
 
 export async function createNotification(payload) {
-  const data = await request("/api/notifications", {
+  const data = await request("/notifications", {
     method: "POST",
     body: JSON.stringify({
       type: payload.type || "system",
@@ -57,17 +57,17 @@ export async function createNotification(payload) {
 }
 
 export async function markNotificationRead(id) {
-  await request(`/api/notifications/${id}/read`, { method: "PATCH" });
+  await request(`/notifications/${id}/read`, { method: "PATCH" });
   emitUpdate();
 }
 
 export async function markAllNotificationsRead() {
-  await request("/api/notifications/read-all", { method: "PATCH" });
+  await request("/notifications/read-all", { method: "PATCH" });
   emitUpdate();
 }
 
 export async function deleteNotification(id) {
-  await request(`/api/notifications/${id}`, { method: "DELETE" });
+  await request(`/notifications/${id}`, { method: "DELETE" });
   emitUpdate();
 }
 
@@ -75,7 +75,7 @@ export async function deleteAllNotifications() {
   const notifications = await getNotifications();
   await Promise.all(
     notifications.map((item) =>
-      request(`/api/notifications/${item.id}`, { method: "DELETE" })
+      request(`/notifications/${item.id}`, { method: "DELETE" })
     )
   );
   emitUpdate();

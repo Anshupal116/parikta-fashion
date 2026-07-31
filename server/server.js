@@ -11,6 +11,7 @@ const customerRoutes = require("./routes/customerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const couponRoutes = require("./routes/couponRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 

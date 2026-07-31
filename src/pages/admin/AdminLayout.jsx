@@ -122,6 +122,13 @@ function AdminLayout() {
           </Link>
 
           <Link
+  className="block px-4 py-3 rounded-xl hover:bg-white/10"
+  to="/admin-dashboard/notifications"
+>
+  Notifications
+</Link>
+
+          <Link
             className="block px-4 py-3 rounded-xl text-[#BFA996] hover:bg-white/10 mt-8"
             to="/"
           >

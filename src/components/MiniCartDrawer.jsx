@@ -19,7 +19,7 @@ function MiniCartDrawer({ isOpen, onClose }) {
       />
 
       <div
-        className={`fixed top-0 right-0 h-full w-[340px] max-w-[90vw] bg-[#fffaf7] z-[150] shadow-2xl transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-[340px] max-w-[90vw] bg-[#fffaf7] z-[99999] shadow-2xl transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

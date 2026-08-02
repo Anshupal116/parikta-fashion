@@ -844,7 +844,7 @@ function Navbar() {
       {/* MOBILE MENU */}
 
       <div
-        className={`fixed inset-0 z-[9998] lg:hidden ${
+        className={`fixed inset-0 z-[99999] lg:hidden ${
           menuOpen
             ? "visible pointer-events-auto"
             : "invisible pointer-events-none"

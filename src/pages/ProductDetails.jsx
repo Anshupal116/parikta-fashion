@@ -12,6 +12,7 @@ import {
   FiShield,
   FiRefreshCw,
   FiCreditCard,
+  FiTruck,
 } from "react-icons/fi";
 
 import Navbar from "../components/Navbar";
@@ -240,7 +241,7 @@ function ProductDetails() {
         <Navbar />
 
         <main className="min-h-screen bg-[#fffaf7] flex items-center justify-center">
-          <div className="text-center">
+          <div className="rounded-2xl border border-[#eadbd4] bg-white/70 px-2 py-3 text-center sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
 
             <h1 className="heading-font text-4xl text-[#5B3B32] mt-5">
@@ -420,15 +421,22 @@ const productSchema = {
       return;
     }
 
+    const deliveryText = shipping.deliveryDays || "5-7";
+    const deliveryNumbers = String(deliveryText).match(/\d+/g) || ["5"];
+    const maximumDays = Number(deliveryNumbers[deliveryNumbers.length - 1] || 5);
+
     const estimatedDate = new Date();
-    estimatedDate.setDate(estimatedDate.getDate() + 5);
+    estimatedDate.setDate(estimatedDate.getDate() + maximumDays);
 
     setDeliveryMessage(
-      `Estimated delivery by ${estimatedDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })}`
+      `Estimated delivery in ${deliveryText} days, by ${estimatedDate.toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      )}`
     );
   };
 
@@ -458,36 +466,54 @@ const productSchema = {
     ["Perfect For", "Occasions"],
   ];
 
+  const specifications = product.specifications || {};
+  const shipping = product.shipping || {};
+  const sizeStock = product.sizeStock || {};
+
   const productDetails = [
-    ["Fabric", product.fabric || "Premium Fabric"],
-    [
-      "Color",
-      product.color || "As shown in product image",
-    ],
-    [
-      "Work",
-      product.work || "Designer embroidery work",
-    ],
-    [
-      "Category",
-      product.category || "Designer Wear",
-    ],
-    ["Type", product.type || "Ready-made"],
-    [
-      "Occasion",
-      product.occasion ||
-        "Wedding, Party, Festive and Reception",
-    ],
-  ];
+    ["Fabric", specifications.fabric || product.fabric],
+    ["Color", product.color],
+    ["Work", specifications.work || product.work],
+    ["Occasion", specifications.occasion || product.occasion],
+    ["Sleeve", specifications.sleeve],
+    ["Neck", specifications.neck],
+    ["Fit", specifications.fit],
+    ["Length", specifications.length],
+    ["Pattern", specifications.pattern],
+    ["Package Contains", specifications.packageContains],
+    ["Country of Origin", specifications.countryOfOrigin],
+    ["Category", product.category],
+    ["Type", product.type],
+    ["SKU", product.sku],
+  ].filter(([, value]) => value !== undefined && value !== null && String(value).trim());
+
+  const availableSizes = Object.keys(sizeStock).length
+    ? Object.entries(sizeStock)
+        .filter(([, quantity]) => Number(quantity) > 0)
+        .map(([size]) => size)
+    : sizes;
+
+  const careInstructions =
+    specifications.care || product.care || "Care instructions not provided.";
+
+  const trustFeatures = [
+    shipping.freeShipping !== false && [FiTruck, "Free Shipping"],
+    shipping.returnAvailable !== false && [FiRefreshCw, "Easy Returns"],
+    shipping.codAvailable !== false && [FiCreditCard, "COD Available"],
+  ].filter(Boolean);
 
   return (
     <>
       <SEO
-        title={`${product.name} | Parikta Fashion`}
+        title={
+          product.seo?.metaTitle ||
+          `${product.name} | Parikta Fashion`
+        }
         description={
-          product.description
+          product.seo?.metaDescription ||
+          (product.description
             ? product.description.slice(0, 160)
-            : `Shop ${product.name} online at Parikta Fashion. Premium women's designer wear with elegant styling.`
+            : `Shop ${product.name} online at Parikta Fashion. Premium women's designer wear with elegant styling.`)
         }
         canonical={productUrl}
         image={product.image}
@@ -497,11 +523,11 @@ const productSchema = {
 
       <Navbar />
 
-      <main className="bg-[#fffaf7] min-h-screen pb-24 md:pb-0">
-        <section className="py-5 md:py-10">
+      <main className="min-h-screen bg-[#fffaf7] pb-28 md:pb-0">
+        <section className="py-4 sm:py-6 md:py-10">
           <Container>
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-xs md:text-sm text-[#5B3B32] mb-6 overflow-x-auto whitespace-nowrap">
+            <div className="-mx-4 mb-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap px-4 pb-1 text-[11px] text-[#5B3B32] sm:mx-0 sm:mb-6 sm:px-0 md:text-sm scrollbar-hide">
               <Link
                 to="/"
                 className="hover:text-[#9A3F4D]"
@@ -525,14 +551,14 @@ const productSchema = {
               </span>
             </div>
 
-            <div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-14 items-start">
+            <div className="grid items-start gap-6 lg:grid-cols-[55%_45%] lg:gap-14">
               {/* LEFT PRODUCT IMAGES */}
               <div>
-                <div className="relative bg-[#f2ece8] overflow-hidden group">
+                <div className="group relative -mx-4 overflow-hidden bg-[#f2ece8] sm:mx-0 sm:rounded-[28px]">
                   <img
                     src={mainImage || product.image}
                     alt={product.name}
-                    className="w-full h-[500px] md:h-[760px] object-cover object-top transition-transform duration-700 group-hover:scale-[1.025]"
+                    className="h-[480px] w-full object-cover object-top transition-transform duration-700 sm:h-[620px] md:h-[760px] group-hover:scale-[1.025]"
                   />
 
                   <button
@@ -542,7 +568,7 @@ const productSchema = {
                         mainImage || product.image
                       )
                     }
-                    className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-[#5B3B32] hover:bg-[#9A3F4D] hover:text-white transition"
+                    className="absolute right-3 top-3 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full bg-white/95 text-[#5B3B32] shadow-lg transition active:scale-95 hover:bg-[#9A3F4D] hover:text-white sm:right-4 sm:top-4 sm:h-12 sm:w-12"
                   >
                     <FiZoomIn size={21} />
                   </button>
@@ -550,10 +576,10 @@ const productSchema = {
 
                 {uniqueGalleryImages.length > 1 && (
                   <div
-                    className={`grid gap-2 md:gap-3 mt-3 ${
+                    className={`-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:px-0 md:gap-3 ${
                       uniqueGalleryImages.length >= 5
-                        ? "grid-cols-4 md:grid-cols-5"
-                        : "grid-cols-4"
+                        ? "sm:grid-cols-4 md:grid-cols-5"
+                        : "sm:grid-cols-4"
                     }`}
                   >
                     {uniqueGalleryImages.map(
@@ -564,7 +590,7 @@ const productSchema = {
                           onClick={() =>
                             setMainImage(image)
                           }
-                          className={`overflow-hidden h-28 md:h-44 border-2 bg-[#f2ece8] transition ${
+                          className={`h-24 min-w-20 overflow-hidden rounded-xl border-2 bg-[#f2ece8] transition sm:h-28 sm:min-w-0 md:h-44 ${
                             mainImage === image
                               ? "border-[#9A3F4D]"
                               : "border-transparent hover:border-[#d8a59c]"
@@ -587,16 +613,16 @@ const productSchema = {
               {/* RIGHT PRODUCT DETAILS */}
               <div className="lg:sticky lg:top-28">
                 {product.badge && (
-                  <span className="inline-block bg-[#efd8d4] text-[#4f2923] px-4 py-2 text-[10px] tracking-[0.14em] uppercase font-bold rounded-md">
+                  <span className="inline-block rounded-full bg-[#efd8d4] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#4f2923]">
                     {product.badge}
                   </span>
                 )}
 
-                <h1 className="heading-font text-5xl md:text-6xl lg:text-7xl text-[#59291f] leading-[0.94] mt-4">
+                <h1 className="heading-font mt-4 text-[2.7rem] leading-[0.98] text-[#59291f] sm:text-5xl md:text-6xl lg:text-7xl">
                   {product.name}
                 </h1>
 
-                <p className="text-lg md:text-xl text-[#2f2927] mt-4">
+                <p className="mt-3 text-base text-[#2f2927] sm:mt-4 sm:text-lg md:text-xl">
                   {product.color
                     ? `${product.color} ${
                         product.category || ""
@@ -624,11 +650,11 @@ const productSchema = {
                   </a>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 mt-5">
+                <div className="mt-5 flex flex-wrap items-center gap-2.5">
                   <button
                     type="button"
                     onClick={handleWhatsAppShare}
-                    className="inline-flex items-center gap-2 border border-[#eadbd4] bg-white px-4 py-2 rounded-full text-sm font-semibold text-[#5B3B32] hover:border-[#9A3F4D]"
+                    className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-full border border-[#eadbd4] bg-white px-4 py-2 text-sm font-semibold text-[#5B3B32] transition active:scale-[0.98] hover:border-[#9A3F4D]"
                   >
                     <FiShare2 />
                     WhatsApp
@@ -637,7 +663,7 @@ const productSchema = {
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="inline-flex items-center gap-2 border border-[#eadbd4] bg-white px-4 py-2 rounded-full text-sm font-semibold text-[#5B3B32] hover:border-[#9A3F4D]"
+                    className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-full border border-[#eadbd4] bg-white px-4 py-2 text-sm font-semibold text-[#5B3B32] transition active:scale-[0.98] hover:border-[#9A3F4D]"
                   >
                     <FiCopy />
                     {copied ? "Copied" : "Copy Link"}
@@ -645,7 +671,7 @@ const productSchema = {
                 </div>
 
                 <div className="flex flex-wrap items-end gap-3 mt-5">
-                  <span className="text-3xl md:text-4xl font-semibold text-[#9A213A]">
+                  <span className="text-3xl font-semibold text-[#9A213A] sm:text-4xl">
                     ₹
                     {Number(
                       product.price
@@ -681,12 +707,12 @@ const productSchema = {
                   <span className="h-px bg-[#d8b079] flex-1" />
                 </div>
 
-                <p className="text-[#292321] leading-7 text-base">
+                <p className="text-[15px] leading-7 text-[#292321] sm:text-base">
                   {product.description}
                 </p>
 
                 {/* Premium Features */}
-                <div className="grid grid-cols-4 gap-2 mt-7">
+                <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-2">
                   {featureItems.map(
                     ([title, subtitle]) => (
                       <div
@@ -723,33 +749,42 @@ const productSchema = {
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap gap-3 mt-4">
-                    {sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() =>
-                          setSelectedSize(size)
-                        }
-                        className={`w-14 h-14 md:w-16 border rounded-md font-medium transition ${
-                          selectedSize === size
-                            ? "bg-[#9A213A] text-white border-[#9A213A]"
-                            : "bg-white text-[#292321] border-[#d8cbc4] hover:border-[#9A213A]"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                  <div className="mt-4 grid grid-cols-5 gap-2.5 sm:flex sm:flex-wrap sm:gap-3">
+                    {availableSizes.length > 0 ? (
+                      availableSizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setSelectedSize(size)}
+                          className={`relative aspect-square min-h-12 w-full touch-manipulation rounded-xl border font-semibold transition active:scale-95 sm:h-14 sm:w-14 md:h-16 md:w-16 ${
+                            selectedSize === size
+                              ? "border-[#9A213A] bg-[#9A213A] text-white"
+                              : "border-[#d8cbc4] bg-white text-[#292321] hover:border-[#9A213A]"
+                          }`}
+                        >
+                          {size}
+                          {Object.keys(sizeStock).length > 0 && (
+                            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium text-[#8b746b]">
+                              {Number(sizeStock[size] || 0)} left
+                            </span>
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="col-span-5 text-sm font-semibold text-red-600">
+                        No size currently available.
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* Buttons */}
-                <div className="space-y-3 mt-7">
+                <div className="mt-7 hidden space-y-3 md:block">
                   <button
                     type="button"
                     onClick={handleAddToCart}
                     disabled={Number(product.stock) <= 0}
-                    className="w-full bg-[#9A213A] text-white py-4 rounded-md font-bold tracking-[0.1em] uppercase flex items-center justify-center gap-3 hover:bg-[#7d1930] disabled:opacity-50"
+                    className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-[#9A213A] py-4 font-bold uppercase tracking-[0.1em] text-white transition hover:bg-[#7d1930] disabled:opacity-50"
                   >
                     <FiShoppingBag size={20} />
 
@@ -762,7 +797,7 @@ const productSchema = {
                     type="button"
                     onClick={handleBuyNow}
                     disabled={Number(product.stock) <= 0}
-                    className="w-full border border-[#9A213A] text-[#9A213A] py-4 rounded-md font-bold tracking-[0.1em] uppercase hover:bg-[#fff1f3] disabled:opacity-50"
+                    className="min-h-14 w-full rounded-xl border border-[#9A213A] py-4 font-bold uppercase tracking-[0.1em] text-[#9A213A] transition hover:bg-[#fff1f3] disabled:opacity-50"
                   >
                     Buy Now
                   </button>
@@ -789,13 +824,13 @@ const productSchema = {
                   </span>
                 </p>
 
-                <div className="mt-7 border border-[#eadbd4] bg-white rounded-2xl p-5">
+                <div className="mt-7 rounded-2xl border border-[#eadbd4] bg-white p-4 sm:p-5">
                   <div className="flex items-center gap-2 text-[#5B3B32] font-bold">
                     <FiMapPin />
                     Check Delivery
                   </div>
 
-                  <div className="flex gap-2 mt-4">
+                  <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
                     <input
                       type="text"
                       inputMode="numeric"
@@ -812,7 +847,7 @@ const productSchema = {
                     <button
                       type="button"
                       onClick={handleCheckDelivery}
-                      className="bg-[#5B3B32] text-white px-5 py-3 rounded-xl font-semibold"
+                      className="min-h-12 rounded-xl bg-[#5B3B32] px-4 py-3 text-sm font-semibold text-white sm:px-5"
                     >
                       Check
                     </button>
@@ -831,15 +866,14 @@ const productSchema = {
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mt-5">
+                <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     [FiShield, "Secure Payment"],
-                    [FiRefreshCw, "Easy Returns"],
-                    [FiCreditCard, "COD Available"],
+                    ...trustFeatures,
                   ].map(([Icon, label]) => (
                     <div
                       key={label}
-                      className="bg-[#FDEAE6] border border-[#eadbd4] rounded-2xl p-4 text-center"
+                      className="rounded-2xl border border-[#eadbd4] bg-[#FDEAE6] px-2 py-3 text-center sm:p-4"
                     >
                       <Icon className="mx-auto text-[#9A3F4D]" size={20} />
                       <p className="text-[10px] md:text-xs text-[#5B3B32] font-semibold mt-2">
@@ -888,31 +922,10 @@ const productSchema = {
                     <span className="h-px bg-[#d8b079] flex-1" />
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3 text-center">
-                    {[
-                      ["◫", "Dry Clean", "Only"],
-                      ["△", "Do Not", "Bleach"],
-                      [
-                        "▱",
-                        "Iron At Low",
-                        "Temperature",
-                      ],
-                      ["⌂", "Store In Dry", "Place"],
-                    ].map(
-                      ([icon, title, subtitle]) => (
-                        <div key={title}>
-                          <div className="text-3xl text-[#7f372b]">
-                            {icon}
-                          </div>
-
-                          <p className="text-[10px] md:text-xs text-[#302a27] leading-4 mt-2">
-                            {title}
-                            <br />
-                            {subtitle}
-                          </p>
-                        </div>
-                      )
-                    )}
+                  <div className="rounded-2xl border border-[#eadbd4] bg-[#f7f2ee] p-4 sm:p-5">
+                    <p className="text-sm leading-7 text-[#302a27]">
+                      {careInstructions}
+                    </p>
                   </div>
                 </div>
 
@@ -923,12 +936,36 @@ const productSchema = {
                       <span>+</span>
                     </summary>
 
-                    <p className="text-sm text-[#6d554d] leading-7 mt-3">
-                      Shipping time depends on delivery
-                      location and product availability.
-                      Returns are available on eligible
-                      products.
-                    </p>
+                    <div className="mt-3 space-y-2 text-sm leading-7 text-[#6d554d]">
+                      <p>
+                        Estimated delivery:{" "}
+                        <strong>{shipping.deliveryDays || "5-7"} days</strong>
+                      </p>
+                      <p>
+                        Shipping:{" "}
+                        <strong>
+                          {shipping.freeShipping === false
+                            ? "Shipping charges may apply"
+                            : "Free shipping available"}
+                        </strong>
+                      </p>
+                      <p>
+                        Cash on delivery:{" "}
+                        <strong>
+                          {shipping.codAvailable === false
+                            ? "Not available"
+                            : "Available"}
+                        </strong>
+                      </p>
+                      <p>
+                        Returns:{" "}
+                        <strong>
+                          {shipping.returnAvailable === false
+                            ? "Not available"
+                            : "Available on eligible orders"}
+                        </strong>
+                      </p>
+                    </div>
                   </details>
 
                   <details className="border-b border-[#eadbd4] py-5">
@@ -951,16 +988,16 @@ const productSchema = {
 
         <section
           id="customer-reviews"
-          className="py-12 md:py-16 bg-[#fffaf7] border-t border-[#eadbd4]"
+          className="border-t border-[#eadbd4] bg-[#fffaf7] py-10 sm:py-12 md:py-16"
         >
           <Container>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8">
+            <div className="mb-7 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-end md:justify-between md:gap-5">
               <div>
                 <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
                   Real Customer Experience
                 </p>
 
-                <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-2">
+                <h2 className="heading-font mt-2 text-[2.15rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
                   Ratings & Reviews
                 </h2>
               </div>
@@ -968,7 +1005,7 @@ const productSchema = {
               <button
                 type="button"
                 onClick={handleOpenReviewModal}
-                className="bg-[#9A3F4D] text-white px-6 py-3 rounded-xl font-semibold"
+                className="min-h-12 w-full rounded-xl bg-[#9A3F4D] px-6 py-3 font-semibold text-white sm:w-auto"
               >
                 {reviewEligibility?.alreadyReviewed
                   ? "Edit Your Review"
@@ -988,7 +1025,7 @@ const productSchema = {
                   Loading reviews...
                 </div>
               ) : reviews.length > 0 ? (
-                <div className="grid lg:grid-cols-2 gap-5">
+                <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
                   {reviews.map((review) => (
                     <ReviewCard key={review._id} review={review} />
                   ))}
@@ -1009,15 +1046,15 @@ const productSchema = {
         </section>
 
         {similarProducts.length > 0 && (
-          <section className="py-12 md:py-16 bg-[#f7f2ee] border-t border-[#eadbd4]">
+          <section className="border-t border-[#eadbd4] bg-[#f7f2ee] py-10 sm:py-12 md:py-16">
             <Container>
-              <div className="flex items-end justify-between mb-8">
+              <div className="mb-6 flex items-end justify-between gap-3 sm:mb-8">
                 <div>
                   <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
                     You May Also Like
                   </p>
 
-                  <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-1">
+                  <h2 className="heading-font mt-1 text-[2rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
                     Similar Styles
                   </h2>
                 </div>
@@ -1030,7 +1067,7 @@ const productSchema = {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 md:gap-7">
                 {similarProducts.map((item) => (
                   <ProductCard
                     key={item._id}
@@ -1044,14 +1081,13 @@ const productSchema = {
       </main>
 
       {/* Mobile Sticky Purchase Bar */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-[#fffaf7] border-t border-[#eadbd4] px-3 py-3 shadow-lg">
-        <div className="flex items-center justify-between gap-3">
-          <div className="shrink-0">
-            <p className="text-[9px] uppercase tracking-[0.14em] text-[#8b746b]">
+      <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-[#eadbd4] bg-[#fffaf7]/96 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_30px_rgba(91,59,50,0.12)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-xl grid-cols-[auto_1fr_1fr] items-center gap-2.5">
+          <div className="min-w-[72px] shrink-0">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8b746b]">
               Total
             </p>
-
-            <p className="font-bold text-base text-[#9A213A]">
+            <p className="text-base font-bold text-[#9A213A]">
               ₹{Number(product.price).toLocaleString("en-IN")}
             </p>
           </div>
@@ -1060,7 +1096,7 @@ const productSchema = {
             type="button"
             onClick={handleAddToCart}
             disabled={Number(product.stock) <= 0}
-            className="flex-1 border border-[#9A213A] text-[#9A213A] px-3 py-3 rounded-full text-[10px] tracking-[0.1em] uppercase font-bold disabled:opacity-50"
+            className="min-h-12 rounded-xl border border-[#9A213A] px-2 py-3 text-[9px] font-bold uppercase tracking-[0.08em] text-[#9A213A] active:scale-[0.98] disabled:opacity-50"
           >
             Add To Cart
           </button>
@@ -1069,7 +1105,7 @@ const productSchema = {
             type="button"
             onClick={handleBuyNow}
             disabled={Number(product.stock) <= 0}
-            className="flex-1 bg-[#9A213A] text-white px-3 py-3 rounded-full text-[10px] tracking-[0.1em] uppercase font-bold disabled:opacity-50"
+            className="min-h-12 rounded-xl bg-[#9A213A] px-2 py-3 text-[9px] font-bold uppercase tracking-[0.08em] text-white active:scale-[0.98] disabled:opacity-50"
           >
             Buy Now
           </button>
@@ -1078,11 +1114,11 @@ const productSchema = {
 
       {sizeGuideOpen && (
         <div
-          className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10050] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={() => setSizeGuideOpen(false)}
         >
           <div
-            className="w-full max-w-2xl bg-[#fffaf7] rounded-3xl shadow-2xl overflow-hidden"
+            className="max-h-[88dvh] w-full max-w-2xl overflow-hidden rounded-t-[28px] bg-[#fffaf7] shadow-2xl sm:rounded-3xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#eadbd4]">
@@ -1104,7 +1140,7 @@ const productSchema = {
               </button>
             </div>
 
-            <div className="p-6 overflow-x-auto">
+            <div className="max-h-[calc(88dvh-92px)] overflow-auto p-5 sm:p-6">
               <table className="w-full min-w-[560px] text-left border-collapse">
                 <thead>
                   <tr className="bg-[#FDEAE6] text-[#5B3B32]">
@@ -1143,11 +1179,11 @@ const productSchema = {
 
       {/* Image Lightbox */}
       {lightboxOpen && lightboxImage && (
-        <div className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-5">
+        <div className="fixed inset-0 z-[10060] flex items-center justify-center bg-black/90 p-3 sm:p-5">
           <button
             type="button"
             onClick={closeLightbox}
-            className="absolute top-5 right-5 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center"
+            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white text-black shadow-lg sm:right-5 sm:top-5 sm:h-12 sm:w-12"
           >
             <FiX size={25} />
           </button>
@@ -1155,7 +1191,7 @@ const productSchema = {
           <img
             src={lightboxImage}
             alt={product.name}
-            className="max-w-full max-h-[90vh] object-contain"
+            className="max-h-[92dvh] max-w-full object-contain"
           />
         </div>
       )}

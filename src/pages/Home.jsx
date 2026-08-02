@@ -59,22 +59,37 @@ function Home() {
   const { recentlyViewed } = useRecentlyViewed();
 
   const [products, setProducts] = useState([]);
-const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-useEffect(() => {
-  const loadProducts = async () => {
-    try {
-      const data = await getProducts();
-      setProducts(data || []);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
+  useEffect(() => {
+    let active = true;
 
-  loadProducts();
-}, []);
+    const loadProducts = async () => {
+      try {
+        const data = await getProducts();
+
+        if (active) {
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("Home products load error:", error);
+
+        if (active) {
+          setProducts([]);
+        }
+      } finally {
+        if (active) {
+          setLoadingProducts(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <>
@@ -87,80 +102,85 @@ useEffect(() => {
 
       <Navbar />
 
-      {/* CINEMATIC HERO */}
-<section className="relative bg-[#14100e] overflow-hidden">
-  <div className="relative h-[470px] sm:h-[520px] md:h-[720px]">
-    <img
-      src={heroDress}
-      alt="Parikta Fashion"
-      className="absolute inset-0 w-full h-full object-cover object-top scale-105"
-    />
+      {/* MOBILE-FIRST CINEMATIC HERO */}
+      <section className="relative isolate overflow-hidden bg-[#14100e]">
+        <div className="relative min-h-[620px] sm:min-h-[660px] lg:min-h-[720px]">
+          <img
+            src={heroDress}
+            alt="Parikta Fashion premium designer wear"
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover object-[62%_top] sm:object-top"
+          />
 
-    <div className="absolute inset-0 bg-gradient-to-t from-[#14100e] via-[#14100e]/35 to-transparent"></div>
-    <div className="absolute inset-0 bg-gradient-to-r from-[#14100e]/70 via-transparent to-[#14100e]/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#14100e] via-[#14100e]/45 to-[#14100e]/5" />
+          <div className="absolute inset-0 hidden bg-gradient-to-r from-[#14100e]/85 via-[#14100e]/25 to-transparent md:block" />
 
-    <Container>
-      <div className="relative z-10 h-[470px] sm:h-[520px] md:h-[720px] flex items-end md:items-center pb-8 sm:pb-10 md:pb-0">
-        <div className="max-w-xl text-white">
-          <p className="text-[11px] md:text-xs tracking-[0.38em] uppercase text-[#e8d7cc]">
-            Premium Women Designer Wear
-          </p>
-
-          <h1 className="heading-font text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-none mt-3 sm:mt-4">
-            Elegance
-          </h1>
-
-          <h2 className="logo-font text-5xl sm:text-6xl md:text-8xl text-[#E2B7B1] -mt-1">
-            in Every Thread
-          </h2>
-
-          <p className="text-sm md:text-base leading-7 text-[#fffaf7] mt-5 max-w-md">
-            Discover timeless ethnic, western and custom outfits crafted with
-            premium fabrics, delicate details and a luxury finish.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 mt-6 sm:mt-7">
-            <Link to="/products">
-              <button className="w-full sm:w-auto bg-[#9A3F4D] text-white px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
-                Shop Collection
-              </button>
-            </Link>
-
-            <Link to="/customize">
-              <button className="w-full sm:w-auto bg-white/90 text-[#9A3F4D] px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
-                Custom Design
-              </button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 mt-8 max-w-md">
-            {["Premium Fabric", "Custom Fit", "Designer Finish"].map((item) => (
-              <div
-                key={item}
-                className="border border-white/25 bg-white/10 backdrop-blur-sm px-2 py-2 sm:px-3 sm:py-3 text-center"
-              >
-                <p className="text-[10px] tracking-[0.18em] uppercase">
-                  {item}
+          <Container>
+            <div className="relative z-10 flex min-h-[620px] items-end pb-7 pt-14 sm:min-h-[660px] sm:pb-10 lg:min-h-[720px] lg:items-center lg:py-16">
+              <div className="w-full max-w-xl text-white">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#e8d7cc] sm:text-xs sm:tracking-[0.36em]">
+                  Premium Women Designer Wear
                 </p>
+
+                <h1 className="heading-font mt-3 text-[clamp(3rem,13vw,5.2rem)] leading-[0.88] sm:mt-4 lg:text-8xl">
+                  Elegance
+                </h1>
+
+                <p className="logo-font -mt-1 text-[clamp(3.2rem,14vw,5.7rem)] leading-none text-[#E2B7B1] lg:text-8xl">
+                  in Every Thread
+                </p>
+
+                <p className="mt-4 max-w-md text-sm leading-6 text-[#fffaf7]/95 sm:mt-5 sm:text-base sm:leading-7">
+                  Discover timeless ethnic, western and custom outfits crafted
+                  with premium fabrics, delicate details and a luxury finish.
+                </p>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
+                  <Link
+                    to="/products"
+                    className="flex min-h-12 items-center justify-center rounded-full bg-[#9A3F4D] px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.17em] text-white shadow-[0_12px_30px_rgba(154,63,77,0.35)] transition active:scale-[0.98] hover:bg-[#7d3140]"
+                  >
+                    Shop Collection
+                  </Link>
+
+                  <Link
+                    to="/customize"
+                    className="flex min-h-12 items-center justify-center rounded-full border border-white/70 bg-white/90 px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.17em] text-[#9A3F4D] backdrop-blur transition active:scale-[0.98] hover:bg-white"
+                  >
+                    Custom Design
+                  </Link>
+                </div>
+
+                <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:max-w-md sm:gap-3">
+                  {["Premium Fabric", "Custom Fit", "Designer Finish"].map(
+                    (item) => (
+                      <div
+                        key={item}
+                        className="flex min-h-[58px] items-center justify-center rounded-2xl border border-white/20 bg-black/15 px-2 py-2 text-center backdrop-blur-md"
+                      >
+                        <p className="text-[8px] font-semibold uppercase leading-4 tracking-[0.13em] text-white sm:text-[10px]">
+                          {item}
+                        </p>
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          </Container>
         </div>
-      </div>
-    </Container>
-  </div>
-</section>
+      </section>
 
 {/* FEATURED COLLECTION SLIDER */}
-<section className="bg-[#fffaf7] py-12 md:py-16 border-b border-[#eadbd4]">
+<section className="border-b border-[#eadbd4] bg-[#fffaf7] py-10 sm:py-12 md:py-16">
   <Container>
-    <div className="flex items-end justify-between mb-8">
+    <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
       <div>
         <p className="text-xs tracking-[0.3em] uppercase text-[#BFA996]">
           New Season Edit
         </p>
 
-        <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-2">
+        <h2 className="heading-font mt-2 text-[2.15rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
           Featured Collections
         </h2>
       </div>
@@ -173,7 +193,7 @@ useEffect(() => {
       </Link>
     </div>
 
-    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0 md:gap-5 scrollbar-hide">
       {[
         {
           title: "Royal Wedding",
@@ -203,22 +223,23 @@ useEffect(() => {
         <Link
           to={item.link}
           key={item.title}
-          className="min-w-[88%] sm:min-w-[48%] lg:min-w-[32%] snap-start relative h-[340px] sm:h-[360px] md:h-[460px] rounded-3xl overflow-hidden group"
+          className="group relative h-[330px] min-w-[84%] snap-start overflow-hidden rounded-[26px] sm:h-[380px] sm:min-w-[48%] md:h-[460px] lg:min-w-[32%]"
         >
           <img
             src={item.image}
             alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 duration-700"
+            loading="lazy"
+            className="h-full w-full object-cover object-top duration-700 group-hover:scale-105"
           />
 
           <div className="absolute inset-0 bg-gradient-to-t from-[#2f241f]/80 via-[#2f241f]/20 to-transparent"></div>
 
-          <div className="absolute left-6 right-6 bottom-6 text-white">
+          <div className="absolute bottom-5 left-5 right-5 text-white sm:bottom-6 sm:left-6 sm:right-6">
             <p className="text-xs tracking-[0.24em] uppercase text-[#eadbd4]">
               Parikta Edit
             </p>
 
-            <h3 className="heading-font text-4xl mt-2">
+            <h3 className="heading-font mt-2 text-3xl leading-tight sm:text-4xl">
               {item.title}
             </h3>
 
@@ -237,9 +258,9 @@ useEffect(() => {
 </section>
 
 {/* PARIKTA STATS */}
-<section className="bg-[#f7f2ee] py-12 md:py-16">
+<section className="bg-[#f7f2ee] py-9 sm:py-12 md:py-16">
   <Container>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-8">
       {[
         ["500+", "Happy Clients"],
         ["100+", "Custom Designs"],
@@ -248,9 +269,9 @@ useEffect(() => {
       ].map(([number, label]) => (
         <div
           key={label}
-          className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 text-center"
+          className="rounded-2xl border border-[#eadbd4] bg-[#fffaf7] px-3 py-5 text-center shadow-[0_8px_24px_rgba(91,59,50,0.04)] sm:rounded-3xl sm:p-6"
         >
-          <h3 className="heading-font text-4xl md:text-5xl text-[#9A3F4D]">
+          <h3 className="heading-font text-3xl text-[#9A3F4D] sm:text-4xl md:text-5xl">
             {number}
           </h3>
 
@@ -266,10 +287,10 @@ useEffect(() => {
       {/* SERVICE STRIP */}
       <section className="bg-[#fffaf7] border-b border-[#eadbd4] py-4">
         <Container>
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-3 gap-1.5 text-center sm:gap-3">
             {["Free Shipping", "Custom Stitching", "Premium Fabric"].map(
               (item) => (
-                <div key={item}>
+                <div key={item} className="rounded-xl px-1 py-1 sm:px-2">
                   <div className="text-[#9A3F4D] text-lg">♡</div>
                   <p className="text-[10px] md:text-xs tracking-[0.18em] uppercase text-[#5B3B32]">
                     {item}
@@ -289,7 +310,7 @@ useEffect(() => {
               <Link
                 to={banner.link}
                 key={banner.title}
-                className="relative h-56 md:h-80 rounded-2xl overflow-hidden group"
+                className="group relative h-64 overflow-hidden rounded-[24px] sm:h-72 md:h-80"
               >
                 <img
                   src={banner.image}
@@ -328,12 +349,24 @@ useEffect(() => {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-3 md:gap-6">
             {categories.map((item) => (
-              <Link to="/products" key={item.name} className="text-center">
-                <div className="aspect-square rounded-full overflow-hidden border border-[#eadbd4] bg-[#f7f2ee]">
+              <Link
+                to={`/products?category=${encodeURIComponent(
+                  {
+                    Suits: "Suit",
+                    Sarees: "Saree",
+                    Kurtis: "Kurti",
+                    Lehengas: "Lehenga",
+                  }[item.name] || item.name
+                )}`}
+                key={item.name}
+                className="group block touch-manipulation text-center"
+              >
+                <div className="aspect-square overflow-hidden rounded-full border border-[#eadbd4] bg-[#f7f2ee] shadow-[0_8px_24px_rgba(91,59,50,0.06)]">
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
                   />
                 </div>
                 <p className="text-[11px] md:text-sm mt-3 text-[#5B3B32] font-semibold">
@@ -348,12 +381,12 @@ useEffect(() => {
       {/* PIECES WE LOVE */}
       <section className="bg-[#f7f2ee] py-10 md:py-14">
         <Container>
-          <div className="flex items-center justify-between mb-7">
+          <div className="mb-6 flex items-end justify-between gap-3 sm:mb-7">
             <div>
               <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
                 Curated
               </p>
-              <h2 className="heading-font text-3xl md:text-5xl text-[#5B3B32]">
+              <h2 className="heading-font text-[2rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
                 Pieces We Love
               </h2>
             </div>
@@ -366,7 +399,7 @@ useEffect(() => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 md:gap-7">
   {loadingProducts ? (
     <p className="text-center text-[#8b746b] col-span-full">
       Loading products...
@@ -383,22 +416,23 @@ useEffect(() => {
       {/* DESIGNER STORY */}
       <section className="bg-[#fffaf7] py-10 md:py-16">
         <Container>
-          <div className="grid lg:grid-cols-2 gap-0 rounded-3xl overflow-hidden border border-[#eadbd4] bg-[#f7f2ee]">
-            <div className="h-72 md:h-[440px]">
+          <div className="grid overflow-hidden rounded-[26px] border border-[#eadbd4] bg-[#f7f2ee] lg:grid-cols-2 lg:rounded-3xl">
+            <div className="h-64 sm:h-80 md:h-[440px]">
               <img
                 src={sareeImg}
                 alt="Designer Story"
-                className="w-full h-full object-cover"
+                loading="lazy"
+                className="h-full w-full object-cover object-top"
               />
             </div>
 
-            <div className="p-7 md:p-12 flex items-center">
+            <div className="flex items-center p-6 sm:p-8 md:p-12">
               <div>
                 <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996] font-semibold">
                   Behind The Design
                 </p>
 
-                <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-3">
+                <h2 className="heading-font mt-3 text-[2.15rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
                   Crafted With Detail
                 </h2>
 
@@ -409,7 +443,7 @@ useEffect(() => {
                 </p>
 
                 <Link to="/customize">
-                  <button className="mt-7 bg-[#9A3F4D] text-white px-7 py-3 text-xs tracking-[0.2em] uppercase font-semibold">
+                  <button className="mt-7 min-h-12 w-full rounded-full bg-[#9A3F4D] px-7 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition active:scale-[0.98] hover:bg-[#7d3140] sm:w-auto">
                     Start Custom Design
                   </button>
                 </Link>
@@ -447,13 +481,13 @@ useEffect(() => {
 {recentlyViewed.length > 0 && (
   <section className="bg-[#fffaf7] py-10 md:py-14 border-t border-[#eadbd4]">
     <Container>
-      <div className="flex items-center justify-between mb-7">
+      <div className="mb-6 flex items-end justify-between gap-3 sm:mb-7">
         <div>
           <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
             Recently Viewed
           </p>
 
-          <h2 className="heading-font text-3xl md:text-5xl text-[#5B3B32]">
+          <h2 className="heading-font text-[1.9rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
             Continue Your Style Journey
           </h2>
         </div>
@@ -488,7 +522,7 @@ useEffect(() => {
       </h2>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 md:grid-cols-3 md:gap-6 scrollbar-hide">
       {[
         {
           name: "Ananya Sharma",
@@ -511,12 +545,13 @@ useEffect(() => {
       ].map((item) => (
         <div
           key={item.name}
-          className="bg-[#fffaf7] rounded-3xl overflow-hidden border border-[#eadbd4]"
+          className="min-w-[84%] snap-start overflow-hidden rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] sm:min-w-0 sm:rounded-3xl"
         >
           <img
             src={item.image}
             alt={item.name}
-            className="w-full h-72 object-cover"
+            loading="lazy"
+            className="h-64 w-full object-cover object-top sm:h-72"
           />
 
           <div className="p-6">

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
@@ -29,6 +28,13 @@ function Products() {
   const [color, setColor] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
+
+  const activeFilterCount = [
+    selectedCategory !== "All",
+    selectedType !== "All",
+    priceRange !== "All",
+    color !== "All",
+  ].filter(Boolean).length;
 
   const categories = [
     { label: "All", value: "All" },
@@ -64,20 +70,52 @@ function Products() {
   };
 
   useEffect(() => {
+    let active = true;
+
     const loadProducts = async () => {
       try {
         const data = await getProducts();
-        setProducts(data || []);
+
+        if (active) {
+          setProducts(Array.isArray(data) ? data : []);
+        }
       } catch (error) {
-        console.log(error);
-        alert("Products load failed");
+        console.error("Products load failed:", error);
+
+        if (active) {
+          setProducts([]);
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     loadProducts();
+
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    const modalOpen = filterOpen || Boolean(quickViewProduct);
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+
+    const handleEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setFilterOpen(false);
+      setQuickViewProduct(null);
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [filterOpen, quickViewProduct]);
 
   const clearFilters = () => {
     setSelectedCategory("All");
@@ -228,15 +266,15 @@ function Products() {
     <>
       <Navbar />
 
-      <main className="bg-[#f7f2ee] min-h-screen pt-[72px] md:pt-[84px]">
-        <section className="bg-[#fffaf7] border-b border-[#eadbd4]">
+      <main className="min-h-screen bg-[#f7f2ee]">
+        <section className="border-b border-[#eadbd4] bg-[#fffaf7]">
           <Container>
-            <div className="py-10 md:py-16 text-center max-w-3xl mx-auto">
-              <p className="text-xs tracking-[0.32em] uppercase text-[#BFA996] font-semibold">
+            <div className="mx-auto max-w-3xl py-8 text-center sm:py-10 md:py-16">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#BFA996] sm:text-xs sm:tracking-[0.32em]">
                 Parikta Collection
               </p>
 
-              <h1 className="heading-font text-4xl md:text-6xl text-[#5B3B32] mt-3">
+              <h1 className="heading-font mt-3 text-[2.35rem] leading-[1.05] text-[#5B3B32] sm:text-5xl md:text-6xl">
                 {search
                   ? `Search: ${search}`
                   : selectedCategory === "All"
@@ -246,30 +284,40 @@ function Products() {
                     }`}
               </h1>
 
-              <p className="text-[#8b746b] text-sm md:text-base leading-7 mt-4">
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#8b746b] sm:mt-4 md:text-base md:leading-7">
                 Explore premium ready-made and custom outfits from MongoDB.
               </p>
             </div>
           </Container>
         </section>
 
-        <section className="py-6 md:py-10">
+        <section className="py-5 sm:py-7 md:py-10">
           <Container>
             {loading ? (
-              <div className="text-center py-20">
-                <h2 className="heading-font text-4xl text-[#5B3B32]">
-                  Loading Collection...
-                </h2>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:ml-[312px] xl:grid-cols-4 md:gap-7">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="overflow-hidden rounded-2xl border border-[#eadbd4] bg-[#fffaf7]"
+                  >
+                    <div className="aspect-[3/4] animate-pulse bg-[#eadbd4]/70" />
+                    <div className="space-y-3 p-3">
+                      <div className="h-3 w-1/3 animate-pulse rounded bg-[#eadbd4]" />
+                      <div className="h-4 w-full animate-pulse rounded bg-[#eadbd4]" />
+                      <div className="h-4 w-2/3 animate-pulse rounded bg-[#eadbd4]" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <>
-                <div className="lg:hidden mb-5">
-                  <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+                <div className="mb-5 lg:hidden">
+                  <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 scrollbar-hide">
                     {categories.map((cat) => (
                       <button
                         key={cat.value}
                         onClick={() => handleCategoryChange(cat.value)}
-                        className={`shrink-0 px-5 py-2 rounded-full text-xs tracking-[0.12em] uppercase border ${
+                        className={`min-h-11 shrink-0 snap-start touch-manipulation rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition active:scale-[0.98] ${
                           selectedCategory === cat.value
                             ? "bg-[#9A3F4D] text-white border-[#9A3F4D]"
                             : "bg-[#fffaf7] text-[#5B3B32] border-[#eadbd4]"
@@ -280,18 +328,24 @@ function Products() {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="sticky top-[92px] z-30 -mx-4 grid grid-cols-2 gap-2.5 border-y border-[#eadbd4] bg-[#f7f2ee]/95 px-4 py-3 backdrop-blur sm:top-[96px]">
                     <button
+                      type="button"
                       onClick={() => setFilterOpen(true)}
-                      className="bg-[#5B3B32] text-white py-3 rounded-xl text-xs tracking-[0.18em] uppercase font-semibold"
+                      className="relative flex min-h-12 touch-manipulation items-center justify-center rounded-xl bg-[#5B3B32] px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-white active:scale-[0.98]"
                     >
                       Filters
+                      {activeFilterCount > 0 && (
+                        <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#5B3B32]">
+                          {activeFilterCount}
+                        </span>
+                      )}
                     </button>
 
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="bg-[#fffaf7] border border-[#eadbd4] rounded-xl px-4 py-3 outline-none text-[#5B3B32] text-sm"
+                      className="min-h-12 rounded-xl border border-[#eadbd4] bg-[#fffaf7] px-3 py-3 text-sm text-[#5B3B32] outline-none"
                     >
                       <option value="default">Sort</option>
                       <option value="newest">Newest</option>
@@ -301,13 +355,28 @@ function Products() {
                     </select>
                   </div>
 
-                  <p className="text-[#8b746b] text-sm mt-4">
-                    {finalProducts.length} product(s) found
-                  </p>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <p className="text-sm text-[#8b746b]">
+                      <span className="font-bold text-[#5B3B32]">
+                        {finalProducts.length}
+                      </span>{" "}
+                      product{finalProducts.length === 1 ? "" : "s"}
+                    </p>
+
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="text-xs font-bold uppercase tracking-[0.12em] text-[#9A3F4D]"
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-                  <aside className="hidden lg:block bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-6 h-fit sticky top-32">
+                <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-8">
+                  <aside className="sticky top-28 hidden h-fit rounded-3xl border border-[#eadbd4] bg-[#fffaf7] p-6 shadow-[0_12px_35px_rgba(91,59,50,0.05)] lg:block">
                     <div className="mb-7">
                       <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
                         Filters
@@ -322,7 +391,7 @@ function Products() {
                   </aside>
 
                   <div>
-                    <div className="hidden lg:flex items-center justify-between mb-7">
+                    <div className="mb-7 hidden items-center justify-between lg:flex">
                       <div>
                         <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
                           Showing Collection
@@ -347,13 +416,26 @@ function Products() {
                     </div>
 
                     {finalProducts.length === 0 ? (
-                      <div className="bg-[#fffaf7] rounded-3xl p-12 text-center border border-[#eadbd4]">
-                        <h2 className="heading-font text-3xl text-[#5B3B32]">
+                      <div className="rounded-3xl border border-[#eadbd4] bg-[#fffaf7] px-5 py-12 text-center sm:p-12">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FDEAE6] text-2xl">
+                          ✦
+                        </div>
+                        <h2 className="heading-font mt-5 text-3xl text-[#5B3B32]">
                           No products found
                         </h2>
+                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8b746b]">
+                          Try changing your filters or explore the complete collection.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={clearFilters}
+                          className="mt-6 min-h-12 rounded-full bg-[#9A3F4D] px-7 py-3 text-xs font-bold uppercase tracking-[0.15em] text-white"
+                        >
+                          Clear Filters
+                        </button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-7">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 md:gap-6 xl:grid-cols-4 xl:gap-7">
                         {finalProducts.map((item) => (
                           <ProductCard
                             key={item._id}
@@ -372,53 +454,88 @@ function Products() {
       </main>
 
       {filterOpen && (
-        <div className="fixed inset-0 z-[150] lg:hidden">
-          <div onClick={() => setFilterOpen(false)} className="absolute inset-0 bg-black/55" />
+        <div
+          className="fixed inset-0 z-[10050] lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product filters"
+        >
+          <button
+            type="button"
+            onClick={() => setFilterOpen(false)}
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            aria-label="Close filters"
+          />
 
-          <div className="absolute bottom-0 left-0 right-0 bg-[#fffaf7] rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="heading-font text-3xl text-[#5B3B32]">Filters</h2>
-              <button onClick={() => setFilterOpen(false)} className="text-3xl text-[#5B3B32]">
+          <div className="absolute bottom-0 left-0 right-0 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-[28px] bg-[#fffaf7] shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-[#eadbd4] px-5 py-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#BFA996]">
+                  Refine Collection
+                </p>
+                <h2 className="heading-font text-3xl text-[#5B3B32]">
+                  Filters
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setFilterOpen(false)}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white text-2xl text-[#5B3B32]"
+                aria-label="Close filters"
+              >
                 ×
               </button>
             </div>
 
-            <FilterContent />
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+              <FilterContent />
+            </div>
 
-            <button
-              onClick={() => setFilterOpen(false)}
-              className="w-full bg-[#9A3F4D] text-white py-4 rounded-xl font-bold mt-6"
-            >
-              Apply Filters
-            </button>
+            <div className="grid shrink-0 grid-cols-2 gap-3 border-t border-[#eadbd4] bg-[#fffaf7] px-5 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="min-h-12 rounded-xl border border-[#9A3F4D] px-4 py-3 text-xs font-bold uppercase tracking-[0.13em] text-[#9A3F4D]"
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFilterOpen(false)}
+                className="min-h-12 rounded-xl bg-[#9A3F4D] px-4 py-3 text-xs font-bold uppercase tracking-[0.13em] text-white"
+              >
+                Show {finalProducts.length}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {quickViewProduct &&
-        createPortal(
+      {quickViewProduct && (
+        <div
+          className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-5"
+          style={{ zIndex: 2147483647 }}
+          onClick={() => setQuickViewProduct(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product quick view"
+        >
           <div
-            className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-5"
-            style={{ zIndex: 2147483647 }}
-            onClick={() => setQuickViewProduct(null)}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Product quick view"
+            className="relative my-auto max-h-[calc(100dvh-24px)] w-full max-w-4xl overflow-y-auto overscroll-contain rounded-[24px] bg-[#fffaf7] p-4 shadow-2xl sm:max-h-[calc(100dvh-40px)] sm:rounded-3xl sm:p-5 md:p-6"
+            onClick={(event) => event.stopPropagation()}
           >
-            <div
-              className="relative my-auto max-h-[calc(100dvh-24px)] w-full max-w-4xl overflow-y-auto overscroll-contain rounded-2xl bg-[#fffaf7] p-4 shadow-2xl sm:max-h-[calc(100dvh-40px)] sm:rounded-3xl sm:p-5 md:p-6"
-              onClick={(event) => event.stopPropagation()}
+            <button
+              type="button"
+              onClick={() => setQuickViewProduct(null)}
+              aria-label="Close quick view"
+              className="sticky top-0 z-20 ml-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white/95 text-2xl text-[#5B3B32] shadow-sm backdrop-blur sm:absolute sm:right-4 sm:top-4"
             >
-              <button
-                type="button"
-                onClick={() => setQuickViewProduct(null)}
-                aria-label="Close quick view"
-                className="sticky top-0 z-10 ml-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white/95 text-2xl text-[#5B3B32] shadow-sm backdrop-blur sm:absolute sm:right-4 sm:top-4"
-              >
-                ×
-              </button>
+              ×
+            </button>
 
-              <div className="grid gap-5 md:grid-cols-2 md:gap-7">
+            <div className="grid gap-5 md:grid-cols-2 md:gap-7">
               <img
                 src={quickViewProduct.image}
                 alt={quickViewProduct.name}
@@ -472,10 +589,9 @@ function Products() {
                 </div>
               </div>
             </div>
-            </div>
-          </div>,
-          document.body
-        )}
+          </div>
+        </div>
+      )}
 
       <Footer />
     </>

@@ -527,7 +527,7 @@ const productSchema = {
         <section className="py-4 sm:py-6 md:py-10">
           <Container>
             {/* Breadcrumb */}
-            <div className="-mx-4 mb-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap px-4 pb-1 text-[11px] text-[#5B3B32] sm:mx-0 sm:mb-6 sm:px-0 md:text-sm scrollbar-hide">
+            <div className="mb-4 flex w-full max-w-full touch-pan-x items-center gap-2 overflow-x-auto overscroll-x-contain whitespace-nowrap pb-1 text-[11px] text-[#5B3B32] sm:mb-6 md:text-sm scrollbar-hide">
               <Link
                 to="/"
                 className="hover:text-[#9A3F4D]"
@@ -551,14 +551,14 @@ const productSchema = {
               </span>
             </div>
 
-            <div className="grid items-start gap-6 lg:grid-cols-[55%_45%] lg:gap-14">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,55%)_minmax(0,45%)] lg:gap-14">
               {/* LEFT PRODUCT IMAGES */}
-              <div>
-                <div className="group relative -mx-4 overflow-hidden bg-[#f2ece8] sm:mx-0 sm:rounded-[28px]">
+              <div className="min-w-0 max-w-full overflow-hidden">
+                <div className="group relative w-full max-w-full overflow-hidden rounded-[22px] bg-[#f2ece8] sm:rounded-[28px]">
                   <img
                     src={mainImage || product.image}
                     alt={product.name}
-                    className="h-[480px] w-full object-cover object-top transition-transform duration-700 sm:h-[620px] md:h-[760px] group-hover:scale-[1.025]"
+                    className="block h-[480px] w-full max-w-full object-cover object-top transition-transform duration-700 sm:h-[620px] md:h-[760px] group-hover:scale-[1.025]"
                   />
 
                   <button
@@ -576,7 +576,7 @@ const productSchema = {
 
                 {uniqueGalleryImages.length > 1 && (
                   <div
-                    className={`-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:px-0 md:gap-3 ${
+                    className={`mt-3 flex w-full max-w-full touch-pan-x snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-2 [-webkit-overflow-scrolling:touch] sm:grid sm:overflow-visible sm:overscroll-auto sm:pb-0 md:gap-3 ${
                       uniqueGalleryImages.length >= 5
                         ? "sm:grid-cols-4 md:grid-cols-5"
                         : "sm:grid-cols-4"
@@ -590,7 +590,7 @@ const productSchema = {
                           onClick={() =>
                             setMainImage(image)
                           }
-                          className={`h-24 min-w-20 overflow-hidden rounded-xl border-2 bg-[#f2ece8] transition sm:h-28 sm:min-w-0 md:h-44 ${
+                          className={`h-24 w-20 min-w-20 shrink-0 snap-start touch-manipulation overflow-hidden rounded-xl border-2 bg-[#f2ece8] transition active:scale-[0.98] sm:h-28 sm:w-auto sm:min-w-0 sm:shrink md:h-44 ${
                             mainImage === image
                               ? "border-[#9A3F4D]"
                               : "border-transparent hover:border-[#d8a59c]"
@@ -611,14 +611,14 @@ const productSchema = {
               </div>
 
               {/* RIGHT PRODUCT DETAILS */}
-              <div className="lg:sticky lg:top-28">
+              <div className="min-w-0 max-w-full lg:sticky lg:top-28">
                 {product.badge && (
                   <span className="inline-block rounded-full bg-[#efd8d4] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#4f2923]">
                     {product.badge}
                   </span>
                 )}
 
-                <h1 className="heading-font mt-4 text-[2.7rem] leading-[0.98] text-[#59291f] sm:text-5xl md:text-6xl lg:text-7xl">
+                <h1 className="heading-font mt-4 break-words text-[2.7rem] leading-[0.98] text-[#59291f] sm:text-5xl md:text-6xl lg:text-7xl">
                   {product.name}
                 </h1>
 
@@ -650,7 +650,7 @@ const productSchema = {
                   </a>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                <div className="mt-5 flex min-w-0 flex-wrap items-center gap-2.5">
                   <button
                     type="button"
                     onClick={handleWhatsAppShare}

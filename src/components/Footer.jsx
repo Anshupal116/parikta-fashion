@@ -73,9 +73,9 @@ function Footer() {
 
   return (
     <footer className="bg-[#2f241f] pb-20 text-white lg:pb-0">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-10">
-          <div className="sm:col-span-2 lg:col-span-1">
+      <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 md:py-12">
+        <div className="grid grid-cols-4 gap-x-3 gap-y-7 lg:grid-cols-5 lg:gap-10">
+          <div className="col-span-4 lg:col-span-1">
             <Link
               to="/"
               className="inline-flex max-w-full flex-col"
@@ -84,15 +84,15 @@ function Footer() {
                 <img
                   src={store.logoUrl}
                   alt={store?.storeName || "Store logo"}
-                  className="max-h-16 w-auto max-w-[220px] object-contain object-left"
+                  className="max-h-12 w-auto max-w-[180px] object-contain object-left sm:max-h-14"
                 />
               ) : (
                 <>
-                  <h2 className="logo-font break-words text-5xl leading-none text-[#E8D7CC] sm:text-6xl">
+                  <h2 className="logo-font break-words text-4xl leading-none text-[#E8D7CC] sm:text-5xl">
                     {store?.storeName || "Parikta Fashion"}
                   </h2>
 
-                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.34em] text-[#BFA996]">
+                  <p className="mt-1 text-[8px] font-semibold uppercase tracking-[0.28em] text-[#BFA996] sm:text-[9px]">
                     {store?.tagline || "Timeless Indian Elegance"}
                   </p>
                 </>
@@ -105,13 +105,13 @@ function Footer() {
               </p>
             )}
 
-            <p className="mt-5 text-sm leading-7 text-[#cdbbb1]">
+            <p className="mt-3 max-w-xl text-xs leading-5 text-[#cdbbb1] sm:text-sm sm:leading-6">
               Premium women designer wear and custom outfits crafted with
               timeless elegance, comfort and luxury finish.
             </p>
 
             {socialLinks.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-wrap gap-2.5">
                 {socialLinks.map(
                   ({ label, href, icon: Icon }) => (
                     <a
@@ -129,7 +129,7 @@ function Footer() {
                       }
                       aria-label={label}
                       title={label}
-                      className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full bg-white/10 text-white transition hover:-translate-y-0.5 hover:bg-[#9A3F4D] active:scale-95"
+                      className="flex h-9 w-9 touch-manipulation items-center justify-center rounded-full bg-white/10 text-white transition hover:-translate-y-0.5 hover:bg-[#9A3F4D] active:scale-95 sm:h-10 sm:w-10"
                     >
                       <Icon size={18} />
                     </a>
@@ -171,12 +171,12 @@ function Footer() {
               ],
             ],
           ].map(([title, links]) => (
-            <div key={title}>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-[#E8D7CC]">
+            <div key={title} className="min-w-0">
+              <h3 className="mb-3 break-words text-[10px] font-bold uppercase leading-4 tracking-[0.1em] text-[#E8D7CC] sm:text-xs sm:tracking-[0.16em]">
                 {title}
               </h3>
 
-              <ul className="space-y-3 text-sm text-[#cdbbb1]">
+              <ul className="space-y-2 text-[10px] leading-4 text-[#cdbbb1] sm:text-xs">
                 {links.map(([to, label]) => (
                   <li key={label}>
                     <Link
@@ -192,11 +192,11 @@ function Footer() {
           ))}
 
           <div className="min-w-0">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-[#E8D7CC]">
+            <h3 className="mb-3 break-words text-[10px] font-bold uppercase leading-4 tracking-[0.1em] text-[#E8D7CC] sm:text-xs sm:tracking-[0.16em]">
               Contact
             </h3>
 
-            <div className="space-y-4 text-sm text-[#cdbbb1]">
+            <div className="space-y-2.5 text-[10px] leading-4 text-[#cdbbb1] sm:text-xs">
               {contact?.displayPhone && (
                 <a
                   href={`tel:${String(
@@ -204,7 +204,7 @@ function Footer() {
                   ).replace(/[^\d+]/g, "")}`}
                   className="flex min-w-0 gap-3 transition hover:text-white"
                 >
-                  <FiPhone className="mt-1 shrink-0" />
+                  <FiPhone className="mt-0.5 shrink-0" />
                   <span className="break-words">
                     {contact.displayPhone}
                   </span>
@@ -216,7 +216,7 @@ function Footer() {
                   href={`mailto:${contact.supportEmail}`}
                   className="flex min-w-0 gap-3 transition hover:text-white"
                 >
-                  <FiMail className="mt-1 shrink-0" />
+                  <FiMail className="mt-0.5 shrink-0" />
                   <span className="break-all">
                     {contact.supportEmail}
                   </span>
@@ -242,7 +242,7 @@ function Footer() {
                       : ""
                   }`}
                 >
-                  <FiMapPin className="mt-1 shrink-0" />
+                  <FiMapPin className="mt-0.5 shrink-0" />
                   <span className="break-words leading-6">
                     {footerAddress}
                   </span>
@@ -250,7 +250,7 @@ function Footer() {
               )}
 
               {contact?.supportHours && (
-                <p className="border-t border-white/10 pt-4 text-xs leading-6 text-[#BFA996]">
+                <p className="border-t border-white/10 pt-3 text-[9px] leading-4 text-[#BFA996] sm:text-[10px]">
                   {contact.supportHours}
                 </p>
               )}
@@ -260,7 +260,7 @@ function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-center text-xs text-[#BFA996] md:flex-row md:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-3 py-4 text-center text-[10px] text-[#BFA996] md:flex-row md:px-6 md:text-xs">
           <p>
             {website?.footerCopyright ||
               `© ${new Date().getFullYear()} ${
@@ -268,7 +268,7 @@ function Footer() {
               }. All rights reserved.`}
           </p>
 
-          <div className="flex flex-wrap justify-center gap-5">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-5">
             <Link
               className="transition hover:text-white"
               to="/faq"

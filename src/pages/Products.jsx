@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
@@ -394,28 +395,30 @@ function Products() {
         </div>
       )}
 
-      {quickViewProduct && (
-        <div
-          className="fixed inset-0 z-[10050] flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-5"
-          onClick={() => setQuickViewProduct(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Product quick view"
-        >
+      {quickViewProduct &&
+        createPortal(
           <div
-            className="relative my-auto max-h-[calc(100dvh-24px)] w-full max-w-4xl overflow-y-auto overscroll-contain rounded-2xl bg-[#fffaf7] p-4 shadow-2xl sm:max-h-[calc(100dvh-40px)] sm:rounded-3xl sm:p-5 md:p-6"
-            onClick={(event) => event.stopPropagation()}
+            className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-5"
+            style={{ zIndex: 2147483647 }}
+            onClick={() => setQuickViewProduct(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Product quick view"
           >
-            <button
-              onClick={() => setQuickViewProduct(null)}
-              type="button"
-              aria-label="Close quick view"
-              className="sticky top-0 z-10 ml-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white/95 text-2xl text-[#5B3B32] shadow-sm backdrop-blur sm:absolute sm:right-4 sm:top-4"
+            <div
+              className="relative my-auto max-h-[calc(100dvh-24px)] w-full max-w-4xl overflow-y-auto overscroll-contain rounded-2xl bg-[#fffaf7] p-4 shadow-2xl sm:max-h-[calc(100dvh-40px)] sm:rounded-3xl sm:p-5 md:p-6"
+              onClick={(event) => event.stopPropagation()}
             >
-              ×
-            </button>
+              <button
+                type="button"
+                onClick={() => setQuickViewProduct(null)}
+                aria-label="Close quick view"
+                className="sticky top-0 z-10 ml-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white/95 text-2xl text-[#5B3B32] shadow-sm backdrop-blur sm:absolute sm:right-4 sm:top-4"
+              >
+                ×
+              </button>
 
-            <div className="grid gap-5 md:grid-cols-2 md:gap-7">
+              <div className="grid gap-5 md:grid-cols-2 md:gap-7">
               <img
                 src={quickViewProduct.image}
                 alt={quickViewProduct.name}
@@ -469,9 +472,10 @@ function Products() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+            </div>
+          </div>,
+          document.body
+        )}
 
       <Footer />
     </>

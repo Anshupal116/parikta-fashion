@@ -227,7 +227,7 @@ function Products() {
     <>
       <Navbar />
 
-      <main className="bg-[#f7f2ee] min-h-screen pt-[72px] md:pt-[84px]">
+      <main className="min-h-screen bg-[#f7f2ee]">
         <section className="bg-[#fffaf7] border-b border-[#eadbd4]">
           <Container>
             <div className="py-10 md:py-16 text-center max-w-3xl mx-auto">

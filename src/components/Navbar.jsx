@@ -837,11 +837,8 @@ function Navbar() {
       {/* FIXED HEADER SPACE — GAP FIXED */}
 
       <div
-        className={`transition-all duration-500 ${
-          scrolled
-            ? "h-[86px] sm:h-[90px] lg:h-[96px]"
-            : "h-[92px] sm:h-[96px] lg:h-[102px]"
-        }`}
+        aria-hidden="true"
+        className="h-[96px] shrink-0 sm:h-[100px] lg:h-[106px]"
       />
 
       {/* MOBILE MENU */}

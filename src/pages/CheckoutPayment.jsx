@@ -177,7 +177,13 @@ function CheckoutPayment() {
           }
 
           clearCart();
-          navigate(`/order-success/${appOrder.orderId}`);
+          navigate(`/order-success/${appOrder.orderId}`, {
+            replace: true,
+            state: {
+              order: response.order,
+              paymentMethod: "COD",
+            },
+          });
         } catch (verificationError) {
           setError(
             verificationError.response?.data?.message ||
@@ -232,7 +238,7 @@ function CheckoutPayment() {
     }
 
     if (cartItems.length === 0) {
-      navigate("/cart");
+      navigate("/order-success");
       return;
     }
 

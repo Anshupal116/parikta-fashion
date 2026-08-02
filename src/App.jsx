@@ -90,7 +90,6 @@ function GlobalCustomerUI() {
   const hideCustomerUIRoutes = [
     "/login",
     "/register",
-    "/checkout",
     "/order-success",
   ];
 

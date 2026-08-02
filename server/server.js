@@ -12,6 +12,10 @@ const adminRoutes = require("./routes/adminRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const {
+  publicSettingsRouter,
+  adminSettingsRouter,
+} = require("./routes/settingsRoutes");
 
 const app = express();
 
@@ -31,6 +35,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+// Website Settings
+app.use("/api/settings", publicSettingsRouter);
+app.use("/api/admin", adminSettingsRouter);
 
 app.get("/sitemap.xml", async (req, res) => {
   try {

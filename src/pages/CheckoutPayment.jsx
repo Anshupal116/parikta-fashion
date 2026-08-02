@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiArrowLeft, FiCheckCircle, FiCreditCard, FiLock, FiTruck } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
@@ -57,6 +57,28 @@ function CheckoutPayment() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Cart clear hote hi checkout effect /cart par redirect karta tha.
+  // Success navigation ke dauran us redirect ko block karne ke liye.
+  const orderSuccessRedirecting = useRef(false);
+
+  const openOrderSuccess = (order, method) => {
+    if (!order?.orderId) {
+      throw new Error("Order ID missing in server response");
+    }
+
+    orderSuccessRedirecting.current = true;
+
+    clearCart();
+
+    navigate(`/order-success/${order.orderId}`, {
+      replace: true,
+      state: {
+        order,
+        paymentMethod: method,
+      },
+    });
+  };
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -68,7 +90,10 @@ function CheckoutPayment() {
       return;
     }
 
-    if (cartItems.length === 0) {
+    if (
+      cartItems.length === 0 &&
+      !orderSuccessRedirecting.current
+    ) {
       navigate("/cart", { replace: true });
       return;
     }
@@ -176,14 +201,10 @@ function CheckoutPayment() {
             );
           }
 
-          clearCart();
-          navigate(`/order-success/${appOrder.orderId}`, {
-            replace: true,
-            state: {
-              order: response.order,
-              paymentMethod: "COD",
-            },
-          });
+          openOrderSuccess(
+            verificationResponse.order || appOrder,
+            "ONLINE"
+          );
         } catch (verificationError) {
           setError(
             verificationError.response?.data?.message ||
@@ -238,7 +259,7 @@ function CheckoutPayment() {
     }
 
     if (cartItems.length === 0) {
-      navigate("/order-success");
+      navigate("/cart", { replace: true });
       return;
     }
 
@@ -294,8 +315,7 @@ function CheckoutPayment() {
       const appOrder = response.order;
 
       if (paymentMethod === "COD") {
-        clearCart();
-        navigate(`/order-success/${appOrder.orderId}`);
+        openOrderSuccess(appOrder, "COD");
         return;
       }
 

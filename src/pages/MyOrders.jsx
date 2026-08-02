@@ -349,13 +349,17 @@ const handleDownloadInvoice = async (orderId) => {
       <>
         <Navbar />
 
-        <main className="min-h-screen bg-[#f7f2ee] flex items-center justify-center">
+        <main className="flex min-h-[65vh] items-center justify-center bg-[#f7f2ee] px-4">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#eadbd4] border-t-[#9A3F4D] rounded-full animate-spin mx-auto" />
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#eadbd4] border-t-[#9A3F4D]" />
 
-            <h1 className="heading-font text-4xl text-[#5B3B32] mt-5">
+            <h1 className="heading-font mt-5 text-3xl text-[#5B3B32] sm:text-4xl">
               Loading Orders...
             </h1>
+
+            <p className="mt-2 text-sm text-[#8b746b]">
+              Your order history is being prepared.
+            </p>
           </div>
         </main>
 
@@ -368,23 +372,23 @@ const handleDownloadInvoice = async (orderId) => {
     <>
       <Navbar />
 
-      <main className="bg-[#f7f2ee] min-h-screen py-10 md:py-14">
+      <main className="min-h-screen bg-[#f7f2ee] pb-24 pt-4 sm:pt-6 md:pb-14 md:pt-10">
         <Container>
-          <div className="mb-9">
-            <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996]">
+          <div className="mb-6 sm:mb-9">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#BFA996] sm:text-xs sm:tracking-[0.28em]">
               Customer Account
             </p>
 
-            <h1 className="heading-font text-5xl md:text-6xl text-[#5B3B32] mt-2">
+            <h1 className="heading-font mt-2 text-[2.35rem] leading-tight text-[#5B3B32] sm:text-5xl md:text-6xl">
               My Orders
             </h1>
 
-            <p className="text-[#8b746b] mt-3">
+            <p className="mt-2 text-sm leading-6 text-[#8b746b] sm:mt-3 sm:text-base">
               View, track and manage all your Parikta orders.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-9">
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:mb-9 sm:gap-4 lg:grid-cols-4">
             {[
               {
                 label: "Total Orders",
@@ -412,20 +416,20 @@ const handleDownloadInvoice = async (orderId) => {
               return (
                 <div
                   key={stat.label}
-                  className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-5"
+                  className="rounded-2xl border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-[0_10px_28px_rgba(91,59,50,0.05)] sm:rounded-3xl sm:p-5"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="heading-font text-4xl text-[#9A3F4D]">
+                      <h2 className="heading-font text-3xl text-[#9A3F4D] sm:text-4xl">
                         {stat.value}
                       </h2>
 
-                      <p className="text-xs tracking-[0.16em] uppercase text-[#5B3B32] mt-2">
+                      <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#5B3B32] sm:mt-2 sm:text-xs sm:tracking-[0.16em]">
                         {stat.label}
                       </p>
                     </div>
 
-                    <div className="w-12 h-12 rounded-full bg-[#FDEAE6] text-[#9A3F4D] flex items-center justify-center">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FDEAE6] text-[#9A3F4D] sm:h-12 sm:w-12">
                       <Icon size={22} />
                     </div>
                   </div>
@@ -435,38 +439,52 @@ const handleDownloadInvoice = async (orderId) => {
           </div>
 
           {orders.length === 0 ? (
-            <div className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl p-12 text-center">
-              <div className="w-20 h-20 rounded-full bg-[#FDEAE6] text-[#9A3F4D] flex items-center justify-center mx-auto">
+            <div className="rounded-[28px] border border-[#eadbd4] bg-[#fffaf7] px-5 py-12 text-center shadow-[0_18px_45px_rgba(91,59,50,0.06)] sm:p-12">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#FDEAE6] text-[#9A3F4D]">
                 <FiBox size={34} />
               </div>
 
-              <h2 className="heading-font text-4xl text-[#5B3B32] mt-6">
+              <h2 className="heading-font mt-6 text-3xl text-[#5B3B32] sm:text-4xl">
                 No Orders Yet
               </h2>
 
-              <p className="text-[#8b746b] mt-3">
+              <p className="mt-2 text-sm leading-6 text-[#8b746b] sm:mt-3 sm:text-base">
                 Your placed orders will appear here.
               </p>
 
               <Link to="/products">
-                <button className="mt-7 bg-[#9A3F4D] text-white px-8 py-4 rounded-xl font-bold">
+                <button className="mt-7 min-h-12 w-full rounded-xl bg-[#9A3F4D] px-8 py-4 font-bold text-white transition active:scale-[0.98] sm:w-auto">
                   Start Shopping
                 </button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               {orders.map((order) => {
                 const currentStepIndex = statusSteps.indexOf(
                   order.status
                 );
 
+                const groupedItems = Object.values(
+                  (order.items || []).reduce((acc, item) => {
+                    const key = `${item.productId || item.name}-${item.size || ""}-${item.color || ""}`;
+                    if (!acc[key]) {
+                      acc[key] = { ...item };
+                    } else {
+                      acc[key].qty =
+                        Number(acc[key].qty || 1) +
+                        Number(item.qty || 1);
+                    }
+                    return acc;
+                  }, {})
+                );
+
                 return (
                   <article
                     key={order._id}
-                    className="bg-[#fffaf7] border border-[#eadbd4] rounded-3xl overflow-hidden"
+                    className="overflow-hidden rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] shadow-[0_16px_45px_rgba(91,59,50,0.06)] sm:rounded-3xl"
                   >
-                    <div className="bg-[#FDEAE6] px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+                    <div className="grid grid-cols-2 gap-4 bg-[#FDEAE6] px-4 py-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:px-6 sm:py-5">
                       <div>
                         <p className="text-xs text-[#8b746b] uppercase tracking-[0.15em]">
                           Order ID
@@ -504,7 +522,7 @@ const handleDownloadInvoice = async (orderId) => {
                       </div>
 
                       <span
-                        className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-[0.12em] ${getStatusClass(
+                        className={`col-span-2 w-fit rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] sm:col-span-1 ${getStatusClass(
                           order.status
                         )}`}
                       >
@@ -512,47 +530,54 @@ const handleDownloadInvoice = async (orderId) => {
                       </span>
                     </div>
 
-                    <div className="p-6">
-                      <div className="space-y-4">
-                        {order.items?.map((item, index) => (
+                    <div className="p-4 sm:p-6">
+                      <div className="space-y-3 sm:space-y-4">
+                        {groupedItems.map((item, index) => (
                           <div
                             key={`${item.productId}-${index}`}
-                            className="flex flex-col sm:flex-row gap-4 border-b border-[#eadbd4] pb-5 last:border-b-0"
+                            className="flex min-w-0 gap-3 border-b border-[#eadbd4] pb-4 last:border-b-0 sm:gap-4 sm:pb-5"
                           >
                             {item.productId ? (
                               <Link to={`/product/${item.productId}`}>
                                 <img
                                   src={item.image}
                                   alt={item.name}
-                                  className="w-24 h-32 object-cover object-top rounded-2xl bg-[#f7f2ee]"
+                                  className="h-28 w-20 shrink-0 rounded-2xl bg-[#f7f2ee] object-cover object-top sm:h-32 sm:w-24"
                                 />
                               </Link>
                             ) : (
                               <img
                                 src={item.image}
                                 alt={item.name}
-                                className="w-24 h-32 object-cover object-top rounded-2xl bg-[#f7f2ee]"
+                                className="h-28 w-20 shrink-0 rounded-2xl bg-[#f7f2ee] object-cover object-top sm:h-32 sm:w-24"
                               />
                             )}
 
-                            <div className="flex-1">
+                            <div className="min-w-0 flex-1">
                               {item.productId ? (
                                 <Link to={`/product/${item.productId}`}>
-                                  <h3 className="heading-font text-2xl text-[#5B3B32] hover:text-[#9A3F4D]">
+                                  <h3 className="heading-font line-clamp-2 break-words text-xl text-[#5B3B32] hover:text-[#9A3F4D] sm:text-2xl">
                                     {item.name}
                                   </h3>
                                 </Link>
                               ) : (
-                                <h3 className="heading-font text-2xl text-[#5B3B32]">
+                                <h3 className="heading-font line-clamp-2 break-words text-xl text-[#5B3B32] sm:text-2xl">
                                   {item.name}
                                 </h3>
                               )}
 
-                              <p className="text-[#8b746b] text-sm mt-2">
-                                Quantity: {item.qty || 1}
-                              </p>
+                              <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#8b746b]">
+                                <span className="rounded-full bg-[#f7f2ee] px-3 py-1.5">
+                                  Qty: {item.qty || 1}
+                                </span>
+                                {(item.selectedSize || item.size) && (
+                                  <span className="rounded-full bg-[#f7f2ee] px-3 py-1.5">
+                                    Size: {item.selectedSize || item.size}
+                                  </span>
+                                )}
+                              </div>
 
-                              <p className="text-[#9A3F4D] font-bold mt-2">
+                              <p className="mt-2 font-bold text-[#9A3F4D]">
                                 ₹
                                 {Number(
                                   item.price
@@ -568,14 +593,15 @@ const handleDownloadInvoice = async (orderId) => {
 
                       {order.status !== "Cancelled" && (
                         <div className="mt-7">
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="relative grid grid-cols-4 gap-1.5 sm:gap-2">
+                            <div className="absolute left-[12.5%] right-[12.5%] top-5 h-0.5 bg-[#eadbd4]" />
                             {statusSteps.map((step, index) => (
                               <div
                                 key={step}
-                                className="text-center"
+                                className="relative z-10 text-center"
                               >
                                 <div
-                                  className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-bold ${
+                                  className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full border-4 border-[#fffaf7] font-bold shadow-sm ${
                                     index <= currentStepIndex
                                       ? "bg-[#9A3F4D] text-white"
                                       : "bg-[#FDEAE6] text-[#9A3F4D]"
@@ -586,7 +612,7 @@ const handleDownloadInvoice = async (orderId) => {
                                     : index + 1}
                                 </div>
 
-                                <p className="text-[10px] md:text-xs text-[#5B3B32] font-semibold mt-2">
+                                <p className="mt-2 text-[9px] font-semibold leading-4 text-[#5B3B32] sm:text-[10px] md:text-xs">
                                   {step}
                                 </p>
                               </div>
@@ -595,7 +621,7 @@ const handleDownloadInvoice = async (orderId) => {
                         </div>
                       )}
 
-                      <div className="border-t border-[#eadbd4] mt-7 pt-6 flex flex-wrap items-center justify-between gap-5">
+                      <div className="mt-6 flex flex-col gap-5 border-t border-[#eadbd4] pt-5 sm:mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-6">
                         <div>
                           <p className="text-sm text-[#8b746b]">
                             Order Total
@@ -609,20 +635,20 @@ const handleDownloadInvoice = async (orderId) => {
                           </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="grid w-full grid-cols-2 gap-2.5 sm:flex sm:w-auto sm:flex-wrap sm:gap-3">
                           <Link
                             to={`/track-order/${order.orderId}`}
                           >
-                            <button className="bg-[#5B3B32] text-white px-5 py-3 rounded-xl font-semibold flex items-center gap-2">
+                            <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#5B3B32] px-4 py-3 text-sm font-semibold text-white sm:w-auto sm:px-5">
                               <FiTruck />
                               Track Order
                             </button>
                           </Link>
 
-                            {order.status !== "Cancelled" && (
+                            {order.status === "Delivered" && (
   <button
     onClick={() => handleDownloadInvoice(order.orderId)}
-    className="bg-[#8C3F31] text-white px-5 py-3 rounded-xl font-semibold hover:bg-[#713126]"
+    className="min-h-12 w-full rounded-xl bg-[#8C3F31] px-4 py-3 text-sm font-semibold text-white hover:bg-[#713126] sm:w-auto sm:px-5"
   >
     📄 Download Invoice
   </button>
@@ -631,7 +657,7 @@ const handleDownloadInvoice = async (orderId) => {
 
 
                           <Link to="/products">
-                            <button className="border border-[#9A3F4D] text-[#9A3F4D] px-5 py-3 rounded-xl font-semibold">
+                            <button className="min-h-12 w-full rounded-xl border border-[#9A3F4D] px-4 py-3 text-sm font-semibold text-[#9A3F4D] sm:w-auto sm:px-5">
                               Buy Again
                             </button>
                           </Link>
@@ -646,7 +672,7 @@ const handleDownloadInvoice = async (orderId) => {
                               disabled={
                                 cancellingId === order._id
                               }
-                              className="border border-red-500 text-red-600 px-5 py-3 rounded-xl font-semibold disabled:opacity-50"
+                              className="min-h-12 w-full rounded-xl border border-red-500 px-4 py-3 text-sm font-semibold text-red-600 disabled:opacity-50 sm:w-auto sm:px-5"
                             >
                               {cancellingId === order._id
                                 ? "Cancelling..."

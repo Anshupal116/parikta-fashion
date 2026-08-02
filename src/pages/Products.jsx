@@ -227,7 +227,7 @@ function Products() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#f7f2ee]">
+      <main className="bg-[#f7f2ee] min-h-screen pt-[72px] md:pt-[84px]">
         <section className="bg-[#fffaf7] border-b border-[#eadbd4]">
           <Container>
             <div className="py-10 md:py-16 text-center max-w-3xl mx-auto">
@@ -395,20 +395,31 @@ function Products() {
       )}
 
       {quickViewProduct && (
-        <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center px-4">
-          <div className="bg-[#fffaf7] rounded-3xl max-w-4xl w-full p-5 md:p-6 relative">
+        <div
+          className="fixed inset-0 z-[10050] flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-5"
+          onClick={() => setQuickViewProduct(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product quick view"
+        >
+          <div
+            className="relative my-auto max-h-[calc(100dvh-24px)] w-full max-w-4xl overflow-y-auto overscroll-contain rounded-2xl bg-[#fffaf7] p-4 shadow-2xl sm:max-h-[calc(100dvh-40px)] sm:rounded-3xl sm:p-5 md:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button
               onClick={() => setQuickViewProduct(null)}
-              className="absolute top-4 right-5 text-3xl text-[#5B3B32]"
+              type="button"
+              aria-label="Close quick view"
+              className="sticky top-0 z-10 ml-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white/95 text-2xl text-[#5B3B32] shadow-sm backdrop-blur sm:absolute sm:right-4 sm:top-4"
             >
               ×
             </button>
 
-            <div className="grid md:grid-cols-2 gap-7">
+            <div className="grid gap-5 md:grid-cols-2 md:gap-7">
               <img
                 src={quickViewProduct.image}
                 alt={quickViewProduct.name}
-                className="w-full h-[340px] md:h-[420px] object-cover rounded-2xl"
+                className="h-[300px] w-full rounded-2xl object-cover object-top sm:h-[360px] md:h-[420px]"
               />
 
               <div>
@@ -416,7 +427,7 @@ function Products() {
                   {quickViewProduct.category} · {quickViewProduct.type}
                 </span>
 
-                <h2 className="heading-font text-4xl md:text-5xl text-[#5B3B32] mt-5">
+                <h2 className="heading-font mt-4 text-3xl leading-tight text-[#5B3B32] sm:text-4xl md:mt-5 md:text-5xl">
                   {quickViewProduct.name}
                 </h2>
 
@@ -438,7 +449,7 @@ function Products() {
                   </span>
                 </div>
 
-                <div className="flex gap-3 mt-8">
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-8">
                   <button
                     onClick={() => {
                       addToCart({ ...quickViewProduct, id: quickViewProduct._id });

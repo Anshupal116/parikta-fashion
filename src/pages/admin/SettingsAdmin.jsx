@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const STORAGE_KEY = "parikta_store_settings";
+import {
+  getAdminSettings,
+  resetAdminSettings,
+  updateAdminSettings,
+} from "../../services/settingsService";
+import { useSettings } from "../../context/SettingsContext";
 
 const defaultSettings = {
   store: {
@@ -95,31 +100,12 @@ const cardClass =
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-const readSavedSettings = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return clone(defaultSettings);
-
-    const parsed = JSON.parse(raw);
-
-    return {
-      store: { ...defaultSettings.store, ...(parsed.store || {}) },
-      contact: { ...defaultSettings.contact, ...(parsed.contact || {}) },
-      address: { ...defaultSettings.address, ...(parsed.address || {}) },
-      shipping: { ...defaultSettings.shipping, ...(parsed.shipping || {}) },
-      social: { ...defaultSettings.social, ...(parsed.social || {}) },
-      website: { ...defaultSettings.website, ...(parsed.website || {}) },
-      seo: { ...defaultSettings.seo, ...(parsed.seo || {}) },
-      notifications: {
-        ...defaultSettings.notifications,
-        ...(parsed.notifications || {}),
-      },
-    };
-  } catch (error) {
-    console.error("Settings read error:", error);
-    return clone(defaultSettings);
-  }
-};
+const getAdminToken = () =>
+  localStorage.getItem("adminToken") ||
+  localStorage.getItem("parikta_admin_token") ||
+  localStorage.getItem("admin_token") ||
+  localStorage.getItem("token") ||
+  "";
 
 const isValidEmail = (value) =>
   !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -209,8 +195,11 @@ function SectionHeader({ title, description }) {
 }
 
 function SettingsAdmin() {
+  const { loadSettings: refreshPublicSettings } = useSettings();
+
   const [settings, setSettings] = useState(defaultSettings);
   const [savedSnapshot, setSavedSnapshot] = useState(defaultSettings);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("store");
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -218,9 +207,84 @@ function SettingsAdmin() {
   const importInputRef = useRef(null);
 
   useEffect(() => {
-    const saved = readSavedSettings();
-    setSettings(saved);
-    setSavedSnapshot(saved);
+    let active = true;
+
+    const loadAdminSettings = async () => {
+      try {
+        setInitialLoading(true);
+
+        const token = getAdminToken();
+        const response = await getAdminSettings(token);
+
+        if (!active) return;
+
+        if (!response?.success || !response?.settings) {
+          throw new Error(
+            response?.message || "Settings load failed"
+          );
+        }
+
+        const incoming = response.settings;
+
+        const merged = {
+          store: {
+            ...defaultSettings.store,
+            ...(incoming.store || {}),
+          },
+          contact: {
+            ...defaultSettings.contact,
+            ...(incoming.contact || {}),
+          },
+          address: {
+            ...defaultSettings.address,
+            ...(incoming.address || {}),
+          },
+          shipping: {
+            ...defaultSettings.shipping,
+            ...(incoming.shipping || {}),
+          },
+          social: {
+            ...defaultSettings.social,
+            ...(incoming.social || {}),
+          },
+          website: {
+            ...defaultSettings.website,
+            ...(incoming.website || {}),
+          },
+          seo: {
+            ...defaultSettings.seo,
+            ...(incoming.seo || {}),
+          },
+          notifications: {
+            ...defaultSettings.notifications,
+            ...(incoming.notifications || {}),
+          },
+        };
+
+        setSettings(merged);
+        setSavedSnapshot(clone(merged));
+      } catch (error) {
+        console.error("Admin settings load error:", error);
+
+        if (active) {
+          window.alert(
+            error.response?.data?.message ||
+              error.message ||
+              "Settings load nahi hui"
+          );
+        }
+      } finally {
+        if (active) {
+          setInitialLoading(false);
+        }
+      }
+    };
+
+    loadAdminSettings();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const isDirty = useMemo(
@@ -348,33 +412,163 @@ function SettingsAdmin() {
     try {
       setSaving(true);
 
-      await new Promise((resolve) => window.setTimeout(resolve, 450));
+      const token = getAdminToken();
+      const response = await updateAdminSettings(
+        settings,
+        token
+      );
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      setSavedSnapshot(clone(settings));
+      if (!response?.success || !response?.settings) {
+        throw new Error(
+          response?.message || "Settings save failed"
+        );
+      }
+
+      const incoming = response.settings;
+
+      const saved = {
+        store: {
+          ...defaultSettings.store,
+          ...(incoming.store || {}),
+        },
+        contact: {
+          ...defaultSettings.contact,
+          ...(incoming.contact || {}),
+        },
+        address: {
+          ...defaultSettings.address,
+          ...(incoming.address || {}),
+        },
+        shipping: {
+          ...defaultSettings.shipping,
+          ...(incoming.shipping || {}),
+        },
+        social: {
+          ...defaultSettings.social,
+          ...(incoming.social || {}),
+        },
+        website: {
+          ...defaultSettings.website,
+          ...(incoming.website || {}),
+        },
+        seo: {
+          ...defaultSettings.seo,
+          ...(incoming.seo || {}),
+        },
+        notifications: {
+          ...defaultSettings.notifications,
+          ...(incoming.notifications || {}),
+        },
+      };
+
+      setSettings(saved);
+      setSavedSnapshot(clone(saved));
       setToast("Settings saved successfully");
+
+      await refreshPublicSettings();
     } catch (error) {
       console.error("Settings save error:", error);
-      window.alert("Settings save nahi ho paayi");
+
+      const apiErrors =
+        error.response?.data?.errors || {};
+
+      if (Object.keys(apiErrors).length > 0) {
+        setErrors(apiErrors);
+
+        const firstSection =
+          Object.keys(apiErrors)[0].split(".")[0];
+
+        setActiveTab(
+          firstSection === "address"
+            ? "contact"
+            : firstSection
+        );
+      }
+
+      window.alert(
+        error.response?.data?.message ||
+          error.message ||
+          "Settings save nahi ho paayi"
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const resetSettings = () => {
+  const resetSettings = async () => {
     const confirmed = window.confirm(
       "All settings ko default values par reset karna hai?"
     );
 
     if (!confirmed) return;
 
-    const next = clone(defaultSettings);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setSettings(next);
-    setSavedSnapshot(next);
-    setErrors({});
-    setActiveTab("store");
-    setToast("Default settings restored");
+    try {
+      setSaving(true);
+
+      const token = getAdminToken();
+      const response = await resetAdminSettings(token);
+
+      if (!response?.success || !response?.settings) {
+        throw new Error(
+          response?.message || "Settings reset failed"
+        );
+      }
+
+      const incoming = response.settings;
+
+      const next = {
+        store: {
+          ...defaultSettings.store,
+          ...(incoming.store || {}),
+        },
+        contact: {
+          ...defaultSettings.contact,
+          ...(incoming.contact || {}),
+        },
+        address: {
+          ...defaultSettings.address,
+          ...(incoming.address || {}),
+        },
+        shipping: {
+          ...defaultSettings.shipping,
+          ...(incoming.shipping || {}),
+        },
+        social: {
+          ...defaultSettings.social,
+          ...(incoming.social || {}),
+        },
+        website: {
+          ...defaultSettings.website,
+          ...(incoming.website || {}),
+        },
+        seo: {
+          ...defaultSettings.seo,
+          ...(incoming.seo || {}),
+        },
+        notifications: {
+          ...defaultSettings.notifications,
+          ...(incoming.notifications || {}),
+        },
+      };
+
+      setSettings(next);
+      setSavedSnapshot(clone(next));
+      setErrors({});
+      setActiveTab("store");
+      setToast("Default settings restored");
+
+      await refreshPublicSettings();
+    } catch (error) {
+      console.error("Settings reset error:", error);
+
+      window.alert(
+        error.response?.data?.message ||
+          error.message ||
+          "Settings reset nahi hui"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const discardChanges = () => {
@@ -438,7 +632,7 @@ function SettingsAdmin() {
 
       setSettings(merged);
       setErrors({});
-      setToast("Settings imported. Save to apply.");
+      setToast("Settings imported. Save to MongoDB to apply.");
     } catch (error) {
       console.error("Settings import error:", error);
       window.alert("Invalid settings JSON file");
@@ -1196,9 +1390,9 @@ function SettingsAdmin() {
 
       <div className="mt-6 rounded-2xl border border-[#eadbd4] bg-[#FDEAE6] p-4">
         <p className="text-sm leading-6 text-[#5B3B32]">
-          Email aur alert toggles ko actual emails bhejne ke liye backend email
-          service se connect karna hoga. Ye page abhi settings ko localStorage
-          me maintain karta hai.
+          Email aur alert toggles MongoDB me save honge. In toggles ke according
+          actual emails aur alerts control karne ke liye order/review backend
+          services ko settings document read karna hoga.
         </p>
       </div>
     </div>
@@ -1255,7 +1449,7 @@ function SettingsAdmin() {
             <p className="text-xs uppercase tracking-widest text-[#9b857c]">
               Storage
             </p>
-            <p className="mt-2 font-bold text-[#5B3B32]">Browser LocalStorage</p>
+            <p className="mt-2 font-bold text-[#5B3B32]">MongoDB API</p>
           </div>
 
           <div className="rounded-2xl bg-white p-5">
@@ -1269,10 +1463,10 @@ function SettingsAdmin() {
 
           <div className="rounded-2xl bg-white p-5">
             <p className="text-xs uppercase tracking-widest text-[#9b857c]">
-              Key
+              Endpoint
             </p>
             <p className="mt-2 break-all font-mono text-sm text-[#5B3B32]">
-              {STORAGE_KEY}
+              /api/admin/settings
             </p>
           </div>
         </div>
@@ -1290,6 +1484,19 @@ function SettingsAdmin() {
     notifications: renderNotificationsTab,
     backup: renderBackupTab,
   };
+
+  if (initialLoading) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-11 w-11 animate-spin rounded-full border-4 border-[#eadbd4] border-t-[#9A3F4D]" />
+          <h2 className="heading-font mt-4 text-3xl text-[#5B3B32]">
+            Loading Settings...
+          </h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-28">

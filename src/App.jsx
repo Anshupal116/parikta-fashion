@@ -50,6 +50,8 @@ import MobileBottomNav from "./components/MobileBottomNav";
 import BackToTop from "./components/BackToTop";
 import ScrollToTop from "./components/ScrollToTop";
 import CartDrawer from "./components/CartDrawer";
+import { SettingsProvider } from "./context/SettingsContext";
+
 
 /*
 |--------------------------------------------------------------------------
@@ -288,20 +290,22 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AnalyticsTracker />
+      <SettingsProvider>
+        <AnalyticsTracker />
 
-      <ScrollToTop />
+        <ScrollToTop />
 
-      {/*
-        LoadingScreen ko direct render rakho.
-        Iske bahar fixed full-screen wrapper mat lagana,
-        warna invisible layer buttons ko block karegi.
-      */}
-      <LoadingScreen />
+        {/*
+          LoadingScreen ko direct render rakho.
+          Iske bahar fixed full-screen wrapper mat lagana,
+          warna invisible layer buttons ko block karegi.
+        */}
+        <LoadingScreen />
 
-      <AppRoutes />
+        <AppRoutes />
 
-      <GlobalCustomerUI />
+        <GlobalCustomerUI />
+      </SettingsProvider>
     </BrowserRouter>
   );
 }

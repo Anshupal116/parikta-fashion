@@ -104,7 +104,7 @@ function QuickViewModal({
 };
   return (
     <div
-      className="fixed inset-0 z-[300] bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 md:p-6"
+      className="fixed inset-0 z-[99999] bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 md:p-6"
       onClick={onClose}
     >
       <div

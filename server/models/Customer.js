@@ -1,5 +1,79 @@
 const mongoose = require("mongoose");
 
+const addressSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["Home", "Office", "Other"],
+      default: "Home",
+    },
+
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+
+    house: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    area: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    landmark: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    city: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    state: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    pincode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    _id: true,
+    timestamps: true,
+  }
+);
+
 const customerSchema = new mongoose.Schema(
   {
     name: {
@@ -34,18 +108,22 @@ const customerSchema = new mongoose.Schema(
       default: true,
     },
 
-    addresses: [
-      {
-        name: String,
-        phone: String,
-        house: String,
-        city: String,
-        state: String,
-        pincode: String,
-      },
-    ],
+    addresses: {
+      type: [addressSchema],
+      default: [],
+    },
+
+    selectedCheckoutAddress: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("Customer", customerSchema);
+module.exports = mongoose.model(
+  "Customer",
+  customerSchema
+);

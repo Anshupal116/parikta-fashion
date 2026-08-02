@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FiArrowLeft, FiCheckCircle, FiCreditCard, FiLock, FiTruck } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
@@ -16,8 +16,6 @@ import {
   markRazorpayPaymentFailed,
   verifyRazorpayPayment,
 } from "../services/orderService";
-
-const SELECTED_ADDRESS_KEY = "pariktaCheckoutAddress";
 
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
@@ -46,32 +44,62 @@ function CheckoutPayment() {
     clearCart,
   } = useCart();
 
-  const { token, isLoggedIn } = useCustomer();
+  const {
+    token,
+    isLoggedIn,
+    authLoading,
+    selectedCheckoutAddress,
+    addressesLoading,
+    loadAddresses,
+  } = useCustomer();
 
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedAddress = useMemo(() => {
-    try {
-      return JSON.parse(
-        sessionStorage.getItem(SELECTED_ADDRESS_KEY) || "null"
-      );
-    } catch {
-      return null;
-    }
-  }, []);
-
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!isLoggedIn || !token) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/checkout/payment" },
+      });
+      return;
+    }
+
     if (cartItems.length === 0) {
       navigate("/cart", { replace: true });
       return;
     }
 
-    if (!selectedAddress) {
-      navigate("/checkout/address", { replace: true });
+    loadAddresses();
+  }, [
+    authLoading,
+    isLoggedIn,
+    token,
+    cartItems.length,
+    navigate,
+  ]);
+
+  useEffect(() => {
+    if (
+      !authLoading &&
+      isLoggedIn &&
+      !addressesLoading &&
+      !selectedCheckoutAddress
+    ) {
+      navigate("/checkout/address", {
+        replace: true,
+      });
     }
-  }, [cartItems.length, navigate, selectedAddress]);
+  }, [
+    authLoading,
+    isLoggedIn,
+    addressesLoading,
+    selectedCheckoutAddress,
+    navigate,
+  ]);
 
   const handleOnlinePayment = async (appOrder) => {
     const scriptLoaded = await loadRazorpayScript();
@@ -100,9 +128,9 @@ function CheckoutPayment() {
       description: `Payment for order ${appOrder.orderId}`,
       order_id: razorpayResponse.razorpayOrder.id,
       prefill: {
-        name: selectedAddress.name,
-        email: selectedAddress.email || "",
-        contact: selectedAddress.phone,
+        name: selectedCheckoutAddress.name,
+        email: selectedCheckoutAddress.email || "",
+        contact: selectedCheckoutAddress.phone,
       },
       notes: {
         appOrderId: appOrder.orderId,
@@ -149,7 +177,6 @@ function CheckoutPayment() {
           }
 
           clearCart();
-          sessionStorage.removeItem(SELECTED_ADDRESS_KEY);
           navigate(`/order-success/${appOrder.orderId}`);
         } catch (verificationError) {
           setError(
@@ -199,7 +226,7 @@ function CheckoutPayment() {
       return;
     }
 
-    if (!selectedAddress) {
+    if (!selectedCheckoutAddress) {
       navigate("/checkout/address");
       return;
     }
@@ -215,20 +242,20 @@ function CheckoutPayment() {
 
       const orderData = {
         customer: {
-          name: selectedAddress.name.trim(),
-          phone: selectedAddress.phone.trim(),
-          email: (selectedAddress.email || "").trim(),
+          name: selectedCheckoutAddress.name.trim(),
+          phone: selectedCheckoutAddress.phone.trim(),
+          email: (selectedCheckoutAddress.email || "").trim(),
         },
 
         address: {
-          house: `${selectedAddress.house}, ${selectedAddress.area}${
-            selectedAddress.landmark
-              ? `, ${selectedAddress.landmark}`
+          house: `${selectedCheckoutAddress.house}, ${selectedCheckoutAddress.area}${
+            selectedCheckoutAddress.landmark
+              ? `, ${selectedCheckoutAddress.landmark}`
               : ""
           }`,
-          city: selectedAddress.city.trim(),
-          state: selectedAddress.state.trim(),
-          pincode: selectedAddress.pincode.trim(),
+          city: selectedCheckoutAddress.city.trim(),
+          state: selectedCheckoutAddress.state.trim(),
+          pincode: selectedCheckoutAddress.pincode.trim(),
         },
 
         items: cartItems.map((item) => ({
@@ -247,6 +274,9 @@ function CheckoutPayment() {
         couponCode: appliedCoupon?.coupon?.code || "",
         couponId: appliedCoupon?.coupon?._id || null,
         paymentMethod,
+        customerAddressId:
+          selectedCheckoutAddress._id ||
+          selectedCheckoutAddress.id,
       };
 
       const response = await createOrder(orderData, token);
@@ -259,7 +289,6 @@ function CheckoutPayment() {
 
       if (paymentMethod === "COD") {
         clearCart();
-        sessionStorage.removeItem(SELECTED_ADDRESS_KEY);
         navigate(`/order-success/${appOrder.orderId}`);
         return;
       }
@@ -276,16 +305,16 @@ function CheckoutPayment() {
     }
   };
 
-  if (!selectedAddress) return null;
+  if (!selectedCheckoutAddress) return null;
 
   return (
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#f7f2ee] pb-28 pt-6 md:pb-14 md:pt-10">
+      <main className="min-h-screen bg-[#f7f2ee] pb-36 pt-4 sm:pt-6 md:pb-14 md:pt-10">
         <Container>
           <div className="mx-auto max-w-6xl">
-            <div className="mb-7 flex items-center justify-between gap-4">
+            <div className="mb-5 grid grid-cols-[44px_1fr_44px] items-center gap-2 sm:mb-7">
               <button
                 type="button"
                 onClick={() => navigate("/checkout/address")}
@@ -294,11 +323,11 @@ function CheckoutPayment() {
                 <FiArrowLeft size={21} />
               </button>
 
-              <div className="text-center">
-                <h1 className="heading-font text-3xl text-[#5B3B32] md:text-4xl">
+              <div className="min-w-0 text-center">
+                <h1 className="heading-font text-[2rem] leading-tight text-[#5B3B32] sm:text-3xl md:text-4xl">
                   Payment
                 </h1>
-                <p className="mt-1 text-xs font-semibold tracking-[0.18em] text-[#BFA996]">
+                <p className="mt-1 text-[10px] font-semibold tracking-[0.16em] text-[#BFA996] sm:text-xs">
                   STEP 3 OF 3
                 </p>
               </div>
@@ -306,20 +335,20 @@ function CheckoutPayment() {
               <div className="h-11 w-11" />
             </div>
 
-            <div className="mx-auto mb-8 max-w-xl rounded-2xl border border-[#eadbd4] bg-[#fffaf7] p-5">
+            <div className="mx-auto mb-6 max-w-xl rounded-2xl border border-[#eadbd4] bg-[#fffaf7] p-4 sm:mb-8 sm:p-5">
               <CheckoutStepper activeStep="payment" />
             </div>
 
-            <div className="grid items-start gap-7 lg:grid-cols-[1fr_380px]">
-              <section className="space-y-5">
-                <div className="rounded-3xl border border-[#eadbd4] bg-[#fffaf7] p-5 shadow-sm md:p-7">
+            <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-7">
+              <section className="min-w-0 space-y-5">
+                <div className="rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-sm sm:p-5 md:rounded-3xl md:p-7">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold tracking-[0.18em] text-[#BFA996]">
                         DELIVER TO
                       </p>
                       <h2 className="heading-font mt-1 text-3xl text-[#5B3B32]">
-                        {selectedAddress.name}
+                        {selectedCheckoutAddress.name}
                       </h2>
                     </div>
 
@@ -333,21 +362,21 @@ function CheckoutPayment() {
                   </div>
 
                   <p className="mt-4 leading-6 text-[#75635c]">
-                    {selectedAddress.house}, {selectedAddress.area}
-                    {selectedAddress.landmark
-                      ? `, ${selectedAddress.landmark}`
+                    {selectedCheckoutAddress.house}, {selectedCheckoutAddress.area}
+                    {selectedCheckoutAddress.landmark
+                      ? `, ${selectedCheckoutAddress.landmark}`
                       : ""}
                     <br />
-                    {selectedAddress.city}, {selectedAddress.state} -{" "}
-                    {selectedAddress.pincode}
+                    {selectedCheckoutAddress.city}, {selectedCheckoutAddress.state} -{" "}
+                    {selectedCheckoutAddress.pincode}
                   </p>
 
                   <p className="mt-2 font-semibold text-[#5B3B32]">
-                    Mobile: {selectedAddress.phone}
+                    Mobile: {selectedCheckoutAddress.phone}
                   </p>
                 </div>
 
-                <div className="rounded-3xl border border-[#eadbd4] bg-[#fffaf7] p-5 shadow-sm md:p-7">
+                <div className="rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-sm sm:p-5 md:rounded-3xl md:p-7">
                   <p className="text-xs font-semibold tracking-[0.18em] text-[#BFA996]">
                     PAYMENT METHOD
                   </p>
@@ -365,7 +394,7 @@ function CheckoutPayment() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("COD")}
-                      className={`flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition ${
+                      className={`flex min-h-[88px] w-full touch-manipulation items-start gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.995] sm:items-center sm:gap-4 sm:p-5 ${
                         paymentMethod === "COD"
                           ? "border-[#9A3F4D] bg-[#FDEAE6]/70"
                           : "border-[#eadbd4] bg-white"
@@ -394,7 +423,7 @@ function CheckoutPayment() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("Razorpay")}
-                      className={`flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition ${
+                      className={`flex min-h-[88px] w-full touch-manipulation items-start gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.995] sm:items-center sm:gap-4 sm:p-5 ${
                         paymentMethod === "Razorpay"
                           ? "border-[#9A3F4D] bg-[#FDEAE6]/70"
                           : "border-[#eadbd4] bg-white"
@@ -451,7 +480,7 @@ function CheckoutPayment() {
                 </div>
               </section>
 
-              <aside className="rounded-3xl border border-[#eadbd4] bg-[#fffaf7] p-6 shadow-sm lg:sticky lg:top-28">
+              <aside className="min-w-0 rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-sm sm:p-6 md:rounded-3xl lg:sticky lg:top-28">
                 <h2 className="heading-font text-3xl text-[#5B3B32]">
                   Order Summary
                 </h2>
@@ -467,7 +496,7 @@ function CheckoutPayment() {
                         item.cartItemId ||
                         `${item._id || item.id}-${item.selectedSize || "Free Size"}`
                       }
-                      className="flex gap-3 border-b border-[#eadbd4] pb-4"
+                      className="flex min-w-0 gap-3 border-b border-[#eadbd4] pb-4"
                     >
                       <img
                         src={item.image}
@@ -476,7 +505,7 @@ function CheckoutPayment() {
                       />
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="truncate font-bold text-[#5B3B32]">
+                        <h3 className="line-clamp-2 break-words font-bold text-[#5B3B32]">
                           {item.name}
                         </h3>
                         <p className="mt-1 text-xs text-[#75635c]">
@@ -545,13 +574,13 @@ function CheckoutPayment() {
         </Container>
       </main>
 
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-[#eadbd4] bg-[#fffaf7]/95 p-3 backdrop-blur-md lg:hidden">
-        <div className="mx-auto flex max-w-xl items-center gap-3">
-          <div className="min-w-[105px]">
-            <p className="text-[10px] font-semibold tracking-[0.15em] text-[#8b746b]">
+      <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-[#eadbd4] bg-[#fffaf7]/96 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(91,59,50,0.12)] backdrop-blur-md lg:hidden">
+        <div className="mx-auto grid max-w-xl grid-cols-[auto_1fr] items-center gap-2.5">
+          <div className="min-w-[88px]">
+            <p className="text-[8px] font-semibold tracking-[0.13em] text-[#8b746b]">
               TOTAL
             </p>
-            <p className="text-lg font-bold text-[#9A3F4D]">
+            <p className="text-base font-bold text-[#9A3F4D]">
               ₹{Number(finalTotal || 0).toLocaleString("en-IN")}
             </p>
           </div>
@@ -560,7 +589,7 @@ function CheckoutPayment() {
             type="button"
             onClick={placeOrder}
             disabled={loading}
-            className="flex-1 rounded-full bg-[#9A3F4D] py-3.5 font-bold text-white disabled:opacity-60"
+            className="min-h-12 min-w-0 rounded-xl bg-[#9A3F4D] px-3 py-3 text-[11px] font-bold text-white active:scale-[0.98] disabled:opacity-60 sm:text-sm"
           >
             {loading
               ? "PLEASE WAIT..."

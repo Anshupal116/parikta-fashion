@@ -73,7 +73,23 @@ function CartDrawer() {
         className="absolute inset-0 bg-black/55 backdrop-blur-sm"
       />
 
-      <aside className="absolute right-0 top-0 h-full w-full sm:w-[460px] bg-[#fffaf7] shadow-2xl flex flex-col animate-[cartSlide_0.3s_ease-out]">
+     <aside
+  className="
+    absolute
+    right-0
+    top-0
+    h-full
+    w-[88vw]
+    sm:w-[420px]
+    md:w-[440px]
+    lg:w-[460px]
+    bg-[#fffaf7]
+    shadow-[0_0_40px_rgba(0,0,0,0.18)]
+    flex
+    flex-col
+    animate-[cartSlide_0.3s_ease-out]
+  "
+>
         <header className="px-5 md:px-6 py-5 border-b border-[#eadbd4] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-[#FDEAE6] text-[#9A3F4D] flex items-center justify-center">

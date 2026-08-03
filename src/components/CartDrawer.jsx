@@ -65,7 +65,7 @@ function CartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-[500]">
+    <div className="fixed inset-0 z-[99999]">
       <button
         type="button"
         aria-label="Close cart drawer"

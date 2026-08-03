@@ -21,7 +21,7 @@ import { useCustomer } from "../context/CustomerContext";
 import Container from "./Container";
 import AnnouncementBar from "./AnnouncementBar";
 import SearchOverlay from "./SearchOverlay";
-import MiniCartDrawer from "./MiniCartDrawer";
+import CartDrawer from "./CartDrawer";
 
 const megaMenuCategories = [
   {
@@ -87,7 +87,12 @@ function Navbar() {
   const megaMenuRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  const { cartCount = 0 } = useCart();
+  const {
+  cartCount = 0,
+  openCart,
+  closeCart,
+  isCartOpen,
+} = useCart();
   const { wishlistCount = 0 } = useWishlist();
 
   const {
@@ -106,7 +111,6 @@ function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [cartOpen, setCartOpen] = useState(false);
   const [showAccountMenu, setShowAccountMenu] =
     useState(false);
   const [showWishlistMenu, setShowWishlistMenu] =
@@ -184,15 +188,18 @@ function Navbar() {
     };
   }, []);
 
-  useEffect(() => {
-    const shouldLockBody = menuOpen || searchOpen || cartOpen;
+ useEffect(() => {
+  const shouldLockBody =
+    menuOpen || searchOpen || isCartOpen;
 
-    document.body.style.overflow = shouldLockBody ? "hidden" : "";
+  document.body.style.overflow = shouldLockBody
+    ? "hidden"
+    : "";
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuOpen, searchOpen, cartOpen]);
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [menuOpen, searchOpen, isCartOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -201,7 +208,7 @@ function Navbar() {
       setMenuOpen(false);
       setMobileCollectionOpen(false);
       setSearchOpen(false);
-      setCartOpen(false);
+      closeCart();
       setShowAccountMenu(false);
       setShowWishlistMenu(false);
       setShowMegaMenu(false);
@@ -653,7 +660,7 @@ function Navbar() {
 
                 <button
                   type="button"
-                  onClick={() => setCartOpen(true)}
+                  onClick={openCart}
                   className="relative flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-[#eadbd4]/70 bg-white/65 transition-all duration-300 active:scale-95 hover:border-[#d9bdb3] hover:bg-[#f5e9e4] hover:text-[#9A3F4D]"
                   aria-label="Shopping bag"
                 >
@@ -1129,10 +1136,7 @@ function Navbar() {
         onClose={() => setSearchOpen(false)}
       />
 
-      <MiniCartDrawer
-        isOpen={cartOpen}
-        onClose={() => setCartOpen(false)}
-      />
+      <CartDrawer />
 
       <style>{`
         .luxury-nav-link {

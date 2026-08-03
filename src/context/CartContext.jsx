@@ -103,7 +103,7 @@ export function CartProvider({ children }) {
       ];
     });
 
-    setIsCartOpen(true);
+    // setIsCartOpen(true);
   };
 
   const increaseQty = (cartItemId) => {

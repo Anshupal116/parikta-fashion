@@ -1,4 +1,11 @@
 import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+} from "firebase/auth";
+
+import { auth } from "../firebase/firebase";
+
+import {
   createContext,
   useContext,
   useEffect,
@@ -21,6 +28,9 @@ export function CustomerProvider({ children }) {
   const [customer,setCustomer]=useState(null);
   const [token,setToken]=useState(null);
   const [authLoading,setAuthLoading]=useState(true);
+
+  const [confirmationResult, setConfirmationResult] =
+  useState(null);
 
   const [addresses,setAddresses]=useState([]);
   const [selectedCheckoutAddress,setSelectedCheckoutAddress]=useState(null);
@@ -52,13 +62,87 @@ export function CustomerProvider({ children }) {
     return await r.json();
   };
 
-  const sendOtp=(phone)=>request("/send-otp",{phone});
+  const sendOtp = async (phone) => {
+  try {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+        }
+      );
+    }
 
-  const verifyOtp=async(payload)=>{
-    const d=await request("/verify-otp",payload);
-    if(d.success&&d.token) saveSession(d);
-    return d;
-  };
+    const result = await signInWithPhoneNumber(
+      auth,
+      `+91${phone}`,
+      window.recaptchaVerifier
+    );
+
+    setConfirmationResult(result);
+
+    return {
+      success: true,
+      phone,
+    };
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
+
+  const verifyOtp = async ({ phone, otp }) => {
+  try {
+    if (!confirmationResult) {
+      return {
+        success: false,
+        message: "OTP session expired. Please resend OTP.",
+      };
+    }
+
+    // Firebase OTP Verify
+    const result = await confirmationResult.confirm(otp);
+
+    // Firebase User
+    const user = result.user;
+
+    // Firebase ID Token
+    const idToken = await user.getIdToken();
+
+    // Backend Login
+    const response = await request("/firebase-login", {
+      method: "POST",
+      body: {
+        idToken,
+      },
+    });
+
+    if (!response.success) {
+      return response;
+    }
+
+    // Existing Customer
+    if (!response.isNewCustomer) {
+      localStorage.setItem("customerToken", response.token);
+      setCustomer(response.customer);
+      setToken(response.token);
+    }
+
+    return response;
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+      message: "Invalid OTP",
+    };
+  }
+};
 
   const completeProfile=async(payload)=>{
     const d=await request("/complete-profile",payload);

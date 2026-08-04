@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const Customer = require("../models/Customer");
 const Order = require("../models/Order");
 
+const admin = require("../config/firebaseAdmin");
+
 const DEVELOPMENT_OTP = "123456";
 
 const generateToken = (id) => {
@@ -346,6 +348,57 @@ exports.completeProfile = async (
       message:
         "Profile completion failed",
       error: error.message,
+    });
+  }
+};
+
+exports.firebaseLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Firebase ID Token is required",
+      });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+
+    const phone = decoded.phone_number.replace("+91", "");
+
+    let customer = await Customer.findOne({ phone });
+
+    // New Customer
+    if (!customer) {
+      return res.status(200).json({
+        success: true,
+        isNewCustomer: true,
+        requiresProfile: true,
+        phone,
+      });
+    }
+
+    customer.isVerified = true;
+    await customer.save();
+
+    const token = generateToken(customer._id);
+
+    return res.status(200).json({
+      success: true,
+      isNewCustomer: false,
+      requiresProfile: !customer.isProfileComplete,
+      token,
+      customer: customerResponse(customer),
+      message: "Login successful",
+    });
+
+  } catch (error) {
+    console.error("Firebase Login Error:", error);
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid Firebase Token",
     });
   }
 };

@@ -6,6 +6,8 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect } from "react";
+import { RecaptchaVerifier } from "firebase/auth";
+import { auth } from "./firebase/firebase";
 import ReactGA from "react-ga4";
 
 import Home from "./pages/Home";
@@ -288,6 +290,19 @@ function AppRoutes() {
 */
 
 function App() {
+  useEffect(() => {
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new RecaptchaVerifier(
+      auth,
+      "recaptcha-container",
+      {
+        size: "invisible",
+      }
+    );
+
+    window.recaptchaVerifier.render();
+  }
+}, []);
   return (
     <BrowserRouter>
       <SettingsProvider>
@@ -305,6 +320,7 @@ function App() {
         <AppRoutes />
 
         <GlobalCustomerUI />
+        <div id="recaptcha-container"></div>
       </SettingsProvider>
     </BrowserRouter>
   );

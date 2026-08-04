@@ -198,6 +198,7 @@ function Login() {
   };
 
   return (
+  <>
     <main className="flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#f8f3ef] md:p-6">
       <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-[#fffdfb] md:h-[90vh] md:max-h-[780px] md:max-w-6xl md:flex-row md:rounded-[32px] md:border md:border-[#eadbd4] md:shadow-[0_30px_90px_rgba(91,59,50,0.18)]">
         {/* ============================= */}
@@ -520,7 +521,9 @@ function Login() {
           </div>
         </section>
       </div>
-    </main>
+       </main>
+
+  </>
   );
 }
 

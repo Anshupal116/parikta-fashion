@@ -12,6 +12,8 @@ import suitsImg from "../assets/categories/suits.png";
 import sareeImg from "../assets/categories/saree.png";
 import kurtiImg from "../assets/categories/kurti.png";
 import lehengaImg from "../assets/categories/lehenga.png";
+import ownerImg from "../assets/categories/owner.png";
+
 import { useRecentlyViewed } from "../context/RecentlyViewedContext"; 
 
 
@@ -55,11 +57,64 @@ const reviews = [
   },
 ];
 
+const heroSlides = [
+  {
+    image: heroDress,
+    tag: "Premium Women Designer Wear",
+    title: "Elegance",
+    subtitle: "in Every Thread",
+    description:
+      "Discover timeless ethnic, western and custom outfits crafted with premium fabrics, delicate details and a luxury finish.",
+  },
+  {
+    image: suitsImg,
+    tag: "New Season Collection",
+    title: "Style",
+    subtitle: "That Speaks",
+    description:
+      "Explore sophisticated designs created for women who love elegance, confidence and timeless fashion.",
+  },
+  {
+    image: sareeImg,
+    tag: "Custom Designer Collection",
+    title: "Designed",
+    subtitle: "For You",
+    description:
+      "Create your perfect look with custom designs, premium fabrics and a personalized designer finish.",
+  },
+];
+
+
+
 function Home() {
   const { recentlyViewed } = useRecentlyViewed();
 
+  const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+   const nextSlide = () => {
+    setCurrent((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrent(
+      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
+    );
+  };
+
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    if (isPaused) return;
+
+    const timer = setInterval(() => {
+      nextSlide();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
 
   useEffect(() => {
     let active = true;
@@ -102,8 +157,144 @@ function Home() {
 
       <Navbar />
 
+
       {/* MOBILE-FIRST CINEMATIC HERO */}
-      <section className="relative isolate overflow-hidden bg-[#14100e]">
+      <section
+      className="relative isolate overflow-hidden bg-[#14100e]"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="relative min-h-[620px] sm:min-h-[660px] lg:min-h-[720px]">
+
+        {/* SLIDES */}
+        {heroSlides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === current
+                ? "z-[1] opacity-100"
+                : "z-0 opacity-0"
+            }`}
+          >
+            <img
+              src={slide.image}
+              alt={`Parikta Fashion - ${slide.title}`}
+              className={`absolute inset-0 h-full w-full object-cover object-[62%_top] sm:object-top ${
+                index === current ? "hero-zoom" : ""
+              }`}
+            />
+
+            {/* DARK OVERLAY */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#14100e] via-[#14100e]/45 to-[#14100e]/5" />
+
+            <div className="absolute inset-0 hidden bg-gradient-to-r from-[#14100e]/85 via-[#14100e]/25 to-transparent md:block" />
+          </div>
+        ))}
+
+        {/* CONTENT */}
+        <div className="relative z-10 mx-auto flex min-h-[620px] max-w-7xl items-end px-4 pb-7 pt-14 sm:min-h-[660px] sm:px-6 sm:pb-10 lg:min-h-[720px] lg:items-center lg:px-8 lg:py-16">
+
+          <div className="w-full max-w-xl text-white">
+
+            <div
+              key={current}
+              className="hero-content"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#e8d7cc] sm:text-xs sm:tracking-[0.36em]">
+                {heroSlides[current].tag}
+              </p>
+
+              <h1 className="heading-font mt-3 text-[clamp(3rem,13vw,5.2rem)] leading-[0.88] sm:mt-4 lg:text-8xl">
+                {heroSlides[current].title}
+              </h1>
+
+              <p className="logo-font -mt-1 text-[clamp(3.2rem,14vw,5.7rem)] leading-none text-[#E2B7B1] lg:text-8xl">
+                {heroSlides[current].subtitle}
+              </p>
+
+              <p className="mt-4 max-w-md text-sm leading-6 text-[#fffaf7]/95 sm:mt-5 sm:text-base sm:leading-7">
+                {heroSlides[current].description}
+              </p>
+
+              {/* BUTTONS */}
+              <div className="mt-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
+
+                <Link
+                  to="/products"
+                  className="flex min-h-12 items-center justify-center rounded-full bg-[#9A3F4D] px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.17em] text-white shadow-[0_12px_30px_rgba(154,63,77,0.35)] transition duration-300 hover:bg-[#7d3140] active:scale-[0.98]"
+                >
+                  Shop Collection
+                </Link>
+
+                <Link
+                  to="/customize"
+                  className="flex min-h-12 items-center justify-center rounded-full border border-white/70 bg-white/90 px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.17em] text-[#9A3F4D] backdrop-blur transition duration-300 hover:bg-white active:scale-[0.98]"
+                >
+                  Custom Design
+                </Link>
+
+              </div>
+
+              {/* FEATURES */}
+              <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:max-w-md sm:gap-3">
+
+                {[
+                  "Premium Fabric",
+                  "Custom Fit",
+                  "Designer Finish",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="flex min-h-[58px] items-center justify-center rounded-2xl border border-white/20 bg-black/15 px-2 py-2 text-center backdrop-blur-md"
+                  >
+                    <p className="text-[8px] font-semibold uppercase leading-4 tracking-[0.13em] text-white sm:text-[10px]">
+                      {item}
+                    </p>
+                  </div>
+                ))}
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* LEFT / RIGHT ARROWS */}
+        <button
+          onClick={prevSlide}
+          aria-label="Previous slide"
+          className="absolute left-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 text-xl text-white backdrop-blur-md transition hover:bg-white hover:text-[#9A3F4D] sm:flex"
+        >
+          ←
+        </button>
+
+        <button
+          onClick={nextSlide}
+          aria-label="Next slide"
+          className="absolute right-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 text-xl text-white backdrop-blur-md transition hover:bg-white hover:text-[#9A3F4D] sm:flex"
+        >
+          →
+        </button>
+
+        {/* DOTS */}
+        <div className="absolute bottom-5 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrent(index)}
+              aria-label={`Go to slide ${index + 1}`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                current === index
+                  ? "w-8 bg-white"
+                  : "w-2 bg-white/50 hover:bg-white"
+              }`}
+            />
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+      {/* <section className="relative isolate overflow-hidden bg-[#14100e]">
         <div className="relative min-h-[620px] sm:min-h-[660px] lg:min-h-[720px]">
           <img
             src={heroDress}
@@ -169,7 +360,7 @@ function Home() {
             </div>
           </Container>
         </div>
-      </section>
+      </section> */}
 
 {/* FEATURED COLLECTION SLIDER */}
 <section className="border-b border-[#eadbd4] bg-[#fffaf7] py-10 sm:py-12 md:py-16">
@@ -413,45 +604,73 @@ function Home() {
         </Container>
       </section>
 
-      {/* DESIGNER STORY */}
-      <section className="bg-[#fffaf7] py-10 md:py-16">
-        <Container>
-          <div className="grid overflow-hidden rounded-[26px] border border-[#eadbd4] bg-[#f7f2ee] lg:grid-cols-2 lg:rounded-3xl">
-            <div className="h-64 sm:h-80 md:h-[440px]">
-              <img
-                src={sareeImg}
-                alt="Designer Story"
-                loading="lazy"
-                className="h-full w-full object-cover object-top"
-              />
-            </div>
+     {/* DESIGNER STORY */}
+<section className="bg-[#fffaf7] py-10 md:py-16">
+  <Container>
+    <div className="grid overflow-hidden rounded-[26px] border border-[#eadbd4] bg-[#f7f2ee] lg:grid-cols-2 lg:rounded-3xl">
 
-            <div className="flex items-center p-6 sm:p-8 md:p-12">
-              <div>
-                <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996] font-semibold">
-                  Behind The Design
-                </p>
+      {/* DESIGNER IMAGE */}
+      <div className="h-64 sm:h-80 md:h-[440px]">
+        <img
+          src={ownerImg}
+          alt="Simmi Bhagel - Designer at Parikta Fashion"
+          loading="lazy"
+          className="h-full w-full object-cover object-top"
+        />
+      </div>
 
-                <h2 className="heading-font mt-3 text-[2.15rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
-                  Crafted With Detail
-                </h2>
+      {/* DESIGNER CONTENT */}
+      <div className="flex items-center p-6 sm:p-8 md:p-12">
+        <div>
 
-                <p className="text-[#6d554d] leading-8 text-sm md:text-base mt-5">
-                  At Parikta Fashion, every outfit is designed with a balance of
-                  elegance, comfort and individuality. From fabric selection to
-                  finishing, each piece is created to feel premium and personal.
-                </p>
+          <p className="text-xs tracking-[0.28em] uppercase text-[#BFA996] font-semibold">
+            Behind The Design
+          </p>
 
-                <Link to="/customize">
-                  <button className="mt-7 min-h-12 w-full rounded-full bg-[#9A3F4D] px-7 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition active:scale-[0.98] hover:bg-[#7d3140] sm:w-auto">
-                    Start Custom Design
-                  </button>
-                </Link>
-              </div>
+          <h2 className="heading-font mt-3 text-[2.15rem] leading-tight text-[#5B3B32] sm:text-4xl md:text-5xl">
+            Crafted With Detail
+          </h2>
+
+          <p className="text-[#6d554d] leading-8 text-sm md:text-base mt-5">
+            Every Parikta design begins with a vision to make fashion feel
+            personal, elegant, and effortless. Our designer brings together
+            creativity, modern aesthetics, and a deep appreciation for
+            timeless fashion.
+          </p>
+
+          {/* DESIGNER SIGNATURE */}
+          <div className="mt-6 flex justify-end">
+            <div className="text-right">
+              <p
+                className="text-3xl text-[#9A3F4D]"
+                style={{
+                  fontFamily: "'Brush Script MT', 'Segoe Script', cursive",
+                }}
+              >
+                - Simmi Baghel
+              </p>
+
+              <p className="mt-1 text-[10px] tracking-[0.22em] uppercase text-[#BFA996]">
+                Designer & Creative Vision
+                <br></br>
+                Founder, Parikta
+              </p>
             </div>
           </div>
-        </Container>
-      </section>
+
+          {/* CTA */}
+          <Link to="/about">
+            <button className="mt-7 min-h-12 w-full rounded-full bg-[#9A3F4D] px-7 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition active:scale-[0.98] hover:bg-[#7d3140] sm:w-auto">
+              Our Story
+            </button>
+          </Link>
+
+        </div>
+      </div>
+
+    </div>
+  </Container>
+</section>
 
       {/* TRENDING PRODUCTS */}
       <section className="bg-[#f7f2ee] py-10 md:py-14">
@@ -509,7 +728,7 @@ function Home() {
   </section>
 )}
   
-      {/* CLIENT LOVE */}
+      {/* CLIENT LOVE
 <section className="bg-[#f7f2ee] py-12 md:py-16">
   <Container>
     <div className="text-center mb-10">
@@ -571,7 +790,7 @@ function Home() {
       ))}
     </div>
   </Container>
-</section>
+</section> */}
 
       {/* NEWSLETTER */}
       <section className="bg-[#9A3F4D] py-10 text-white">

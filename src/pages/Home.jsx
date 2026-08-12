@@ -610,14 +610,14 @@ function Home() {
     <div className="grid overflow-hidden rounded-[26px] border border-[#eadbd4] bg-[#f7f2ee] lg:grid-cols-2 lg:rounded-3xl">
 
       {/* DESIGNER IMAGE */}
-      <div className="h-64 sm:h-80 md:h-[440px]">
-        <img
-          src={ownerImg}
-          alt="Simmi Bhagel - Designer at Parikta Fashion"
-          loading="lazy"
-          className="h-full w-full object-cover object-top"
-        />
-      </div>
+<div className="h-auto min-h-[360px] bg-[#f7f2ee] sm:h-80 md:h-[440px]">
+  <img
+    src={ownerImg}
+    alt="Simmi Bhagel - Designer at Parikta Fashion"
+    loading="lazy"
+    className="h-full w-full object-contain object-center sm:object-cover sm:object-top"
+  />
+</div>
 
       {/* DESIGNER CONTENT */}
       <div className="flex items-center p-6 sm:p-8 md:p-12">
@@ -697,7 +697,7 @@ function Home() {
 </div>
         </Container>
       </section>
-{recentlyViewed.length > 0 && (
+{/* {recentlyViewed.length > 0 && (
   <section className="bg-[#fffaf7] py-10 md:py-14 border-t border-[#eadbd4]">
     <Container>
       <div className="mb-6 flex items-end justify-between gap-3 sm:mb-7">
@@ -726,7 +726,7 @@ function Home() {
       </div>
     </Container>
   </section>
-)}
+)} */}
   
       {/* CLIENT LOVE
 <section className="bg-[#f7f2ee] py-12 md:py-16">

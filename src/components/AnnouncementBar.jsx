@@ -1,10 +1,12 @@
 function AnnouncementBar() {
   const messages = [
-    "Free Shipping On Orders Above ₹999",
-    "Custom Stitching Available",
+    // "Free Shipping On Orders Above ₹999",
+    // "Custom Stitching Available",
     "Premium Designer Collection",
     "New Arrivals Live Now",
     "COD Available On Selected Orders",
+    "Get 10% off on prepaid Orders",
+    "Get 25% off on your first order",
   ];
 
   return (

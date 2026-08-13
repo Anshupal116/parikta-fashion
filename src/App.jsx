@@ -53,7 +53,7 @@ import BackToTop from "./components/BackToTop";
 import ScrollToTop from "./components/ScrollToTop";
 import CartDrawer from "./components/CartDrawer";
 import { SettingsProvider } from "./context/SettingsContext";
-
+import InstallApp from "./components/InstallApp";
 
 /*
 |--------------------------------------------------------------------------
@@ -318,6 +318,7 @@ function App() {
         <LoadingScreen />
 
         <AppRoutes />
+        <InstallApp />
 
         <GlobalCustomerUI />
         <div id="recaptcha-container"></div>

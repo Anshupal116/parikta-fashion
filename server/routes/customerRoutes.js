@@ -105,6 +105,6 @@ router.patch(
 router.get("/", getAllCustomers);
 router.get("/admin/all", getAllCustomers);
 
-router.post("/firebase-login", firebaseLogin);
+// router.post("/firebase-login", firebaseLogin);
 
 module.exports = router;

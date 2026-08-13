@@ -1,11 +1,4 @@
 import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-} from "firebase/auth";
-
-import { auth } from "../firebase/firebase";
-
-import {
   createContext,
   useContext,
   useEffect,
@@ -22,187 +15,265 @@ import {
 } from "../services/customerService";
 
 const CustomerContext = createContext();
+
 const API_URL = `${import.meta.env.VITE_API_URL}/customers`;
 
 export function CustomerProvider({ children }) {
-  const [customer,setCustomer]=useState(null);
-  const [token,setToken]=useState(null);
-  const [authLoading,setAuthLoading]=useState(true);
+  const [customer, setCustomer] = useState(null);
+  const [token, setToken] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const [confirmationResult, setConfirmationResult] =
-  useState(null);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedCheckoutAddress, setSelectedCheckoutAddress] =
+    useState(null);
+  const [addressesLoading, setAddressesLoading] = useState(false);
 
-  const [addresses,setAddresses]=useState([]);
-  const [selectedCheckoutAddress,setSelectedCheckoutAddress]=useState(null);
-  const [addressesLoading,setAddressesLoading]=useState(false);
+  // ==============================
+  // RESTORE SESSION
+  // ==============================
+  useEffect(() => {
+    const c = localStorage.getItem("parikta_customer");
+    const t = localStorage.getItem("parikta_customer_token");
 
-  useEffect(()=>{
-    const c=localStorage.getItem("parikta_customer");
-    const t=localStorage.getItem("parikta_customer_token");
-    if(c&&t){
-      setCustomer(JSON.parse(c));
-      setToken(t);
+    if (c && t) {
+      try {
+        setCustomer(JSON.parse(c));
+        setToken(t);
+      } catch (error) {
+        console.error("Session restore error:", error);
+
+        localStorage.removeItem("parikta_customer");
+        localStorage.removeItem("parikta_customer_token");
+      }
     }
-    setAuthLoading(false);
-  },[]);
 
-  const saveSession=(data)=>{
-    localStorage.setItem("parikta_customer",JSON.stringify(data.customer));
-    localStorage.setItem("parikta_customer_token",data.token);
+    setAuthLoading(false);
+  }, []);
+
+  // ==============================
+  // SAVE SESSION
+  // ==============================
+  const saveSession = (data) => {
+    localStorage.setItem(
+      "parikta_customer",
+      JSON.stringify(data.customer)
+    );
+
+    localStorage.setItem(
+      "parikta_customer_token",
+      data.token
+    );
+
     setCustomer(data.customer);
     setToken(data.token);
   };
 
-  const request=async(endpoint,body)=>{
-    const r=await fetch(`${API_URL}${endpoint}`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(body)
+  // ==============================
+  // API REQUEST
+  // ==============================
+  const request = async (endpoint, body) => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     });
-    return await r.json();
+
+    return await response.json();
   };
 
+  // ==============================
+  // SEND OTP
+  // DEVELOPMENT OTP = 123456
+  // ==============================
   const sendOtp = async (phone) => {
-  try {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
-        }
-      );
-    }
+    try {
+      const response = await request("/send-otp", {
+        phone,
+      });
 
-    const result = await signInWithPhoneNumber(
-      auth,
-      `+91${phone}`,
-      window.recaptchaVerifier
-    );
+      return response;
+    } catch (error) {
+      console.error("Send OTP error:", error);
 
-    setConfirmationResult(result);
-
-    return {
-      success: true,
-      phone,
-    };
-  } catch (error) {
-    console.error(error);
-
-    return {
-      success: false,
-      message: error.message,
-    };
-  }
-};
-
-  const verifyOtp = async ({ phone, otp }) => {
-  try {
-    if (!confirmationResult) {
       return {
         success: false,
-        message: "OTP session expired. Please resend OTP.",
+        message: "OTP send failed",
       };
     }
+  };
 
-    // Firebase OTP Verify
-    const result = await confirmationResult.confirm(otp);
+  // ==============================
+  // VERIFY OTP
+  // ==============================
+  const verifyOtp = async ({ phone, otp }) => {
+    try {
+      const response = await request("/verify-otp", {
+        phone,
+        otp,
+      });
 
-    // Firebase User
-    const user = result.user;
+      if (!response.success) {
+        return response;
+      }
 
-    // Firebase ID Token
-    const idToken = await user.getIdToken();
+      // Existing customer
+      if (!response.isNewCustomer && response.token) {
+        saveSession(response);
+      }
 
-    // Backend Login
-    const response = await request("/firebase-login", {
-      method: "POST",
-      body: {
-        idToken,
-      },
-    });
-
-    if (!response.success) {
       return response;
-    }
+    } catch (error) {
+      console.error("Verify OTP error:", error);
 
-    // Existing Customer
-    if (!response.isNewCustomer) {
-      localStorage.setItem("customerToken", response.token);
-      setCustomer(response.customer);
-      setToken(response.token);
+      return {
+        success: false,
+        message: "OTP verification failed",
+      };
+    }
+  };
+
+  // ==============================
+  // COMPLETE PROFILE
+  // ==============================
+  const completeProfile = async (payload) => {
+    const response = await request(
+      "/complete-profile",
+      payload
+    );
+
+    if (response.success && response.token) {
+      saveSession(response);
     }
 
     return response;
-  } catch (error) {
-    console.error(error);
-
-    return {
-      success: false,
-      message: "Invalid OTP",
-    };
-  }
-};
-
-  const completeProfile=async(payload)=>{
-    const d=await request("/complete-profile",payload);
-    if(d.success&&d.token) saveSession(d);
-    return d;
   };
 
-  const loadAddresses=async()=>{
-    if(!token) return;
+  // ==============================
+  // LOAD ADDRESSES
+  // ==============================
+  const loadAddresses = async () => {
+    if (!token) return;
+
     setAddressesLoading(true);
-    try{
-      const d=await getCustomerAddresses(token);
-      setAddresses(d.addresses||[]);
-      setSelectedCheckoutAddress(d.selectedCheckoutAddress||null);
-      return d;
-    }finally{
+
+    try {
+      const response = await getCustomerAddresses(token);
+
+      setAddresses(response.addresses || []);
+
+      setSelectedCheckoutAddress(
+        response.selectedCheckoutAddress || null
+      );
+
+      return response;
+    } finally {
       setAddressesLoading(false);
     }
   };
 
-  useEffect(()=>{
-    if(token) loadAddresses();
-  },[token]);
+  useEffect(() => {
+    if (token) {
+      loadAddresses();
+    }
+  }, [token]);
 
-  const addAddress=async(a)=>{
-    const d=await addCustomerAddress(a,token);
-    setAddresses(d.addresses||[]);
-    setSelectedCheckoutAddress(d.selectedCheckoutAddress||d.address||null);
-    return d;
+  // ==============================
+  // ADD ADDRESS
+  // ==============================
+  const addAddress = async (address) => {
+    const response = await addCustomerAddress(
+      address,
+      token
+    );
+
+    setAddresses(response.addresses || []);
+
+    setSelectedCheckoutAddress(
+      response.selectedCheckoutAddress ||
+        response.address ||
+        null
+    );
+
+    return response;
   };
 
-  const updateAddress=async(id,a)=>{
-    const d=await updateCustomerAddress(id,a,token);
-    setAddresses(d.addresses||[]);
-    setSelectedCheckoutAddress(d.selectedCheckoutAddress||null);
-    return d;
+  // ==============================
+  // UPDATE ADDRESS
+  // ==============================
+  const updateAddress = async (id, address) => {
+    const response = await updateCustomerAddress(
+      id,
+      address,
+      token
+    );
+
+    setAddresses(response.addresses || []);
+
+    setSelectedCheckoutAddress(
+      response.selectedCheckoutAddress || null
+    );
+
+    return response;
   };
 
-  const removeAddress=async(id)=>{
-    const d=await deleteCustomerAddress(id,token);
-    setAddresses(d.addresses||[]);
-    setSelectedCheckoutAddress(d.selectedCheckoutAddress||null);
-    return d;
+  // ==============================
+  // DELETE ADDRESS
+  // ==============================
+  const removeAddress = async (id) => {
+    const response = await deleteCustomerAddress(
+      id,
+      token
+    );
+
+    setAddresses(response.addresses || []);
+
+    setSelectedCheckoutAddress(
+      response.selectedCheckoutAddress || null
+    );
+
+    return response;
   };
 
-  const setDefaultAddress=async(id)=>{
-    const d=await setCustomerDefaultAddress(id,token);
-    setAddresses(d.addresses||[]);
-    return d;
+  // ==============================
+  // DEFAULT ADDRESS
+  // ==============================
+  const setDefaultAddress = async (id) => {
+    const response = await setCustomerDefaultAddress(
+      id,
+      token
+    );
+
+    setAddresses(response.addresses || []);
+
+    return response;
   };
 
-  const selectCheckoutAddress=async(id)=>{
-    const d=await selectCustomerCheckoutAddress(id,token);
-    setSelectedCheckoutAddress(d.selectedCheckoutAddress||null);
-    return d;
+  // ==============================
+  // SELECT CHECKOUT ADDRESS
+  // ==============================
+  const selectCheckoutAddress = async (id) => {
+    const response =
+      await selectCustomerCheckoutAddress(
+        id,
+        token
+      );
+
+    setSelectedCheckoutAddress(
+      response.selectedCheckoutAddress || null
+    );
+
+    return response;
   };
 
-  const logoutCustomer=()=>{
+  // ==============================
+  // LOGOUT
+  // ==============================
+  const logoutCustomer = () => {
     localStorage.removeItem("parikta_customer");
     localStorage.removeItem("parikta_customer_token");
+
     setCustomer(null);
     setToken(null);
     setAddresses([]);
@@ -210,24 +281,38 @@ export function CustomerProvider({ children }) {
   };
 
   return (
-    <CustomerContext.Provider value={{
-      customer,token,authLoading,
-      isLoggedIn:Boolean(customer&&token),
-      sendOtp,verifyOtp,completeProfile,
-      logoutCustomer,
-      addresses,
-      addressesLoading,
-      selectedCheckoutAddress,
-      loadAddresses,
-      addAddress,
-      updateAddress,
-      deleteAddress:removeAddress,
-      setDefaultAddress,
-      selectCheckoutAddress,
-    }}>
+    <CustomerContext.Provider
+      value={{
+        customer,
+        token,
+        authLoading,
+
+        isLoggedIn: Boolean(
+          customer && token
+        ),
+
+        sendOtp,
+        verifyOtp,
+        completeProfile,
+
+        logoutCustomer,
+
+        addresses,
+        addressesLoading,
+        selectedCheckoutAddress,
+
+        loadAddresses,
+        addAddress,
+        updateAddress,
+        deleteAddress: removeAddress,
+        setDefaultAddress,
+        selectCheckoutAddress,
+      }}
+    >
       {children}
     </CustomerContext.Provider>
   );
 }
 
-export const useCustomer=()=>useContext(CustomerContext);
+export const useCustomer = () =>
+  useContext(CustomerContext);

@@ -9,56 +9,46 @@ export default defineConfig({
     tailwindcss(),
 
     VitePWA({
-      registerType: "autoUpdate",
+  registerType: "autoUpdate",
 
-      includeAssets: [
-        "favicon.ico",
-        "robots.txt",
-      ],
+  manifest: {
+    name: "Parikta Fashion",
+    short_name: "Parikta",
+    description:
+      "Parikta Fashion - Premium designer wear and custom outfits.",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    orientation: "portrait-primary",
 
-      manifest: {
-        name: "Parikta Fashion",
-        short_name: "Parikta",
-        description:
-          "Parikta Fashion – Premium designer wear, custom outfits and timeless fashion.",
-        theme_color: "#9A3F4D",
-        background_color: "#fffaf7",
-        display: "standalone",
-        orientation: "portrait-primary",
-        start_url: "/",
-        scope: "/",
+    theme_color: "#9A3F4D",
+    background_color: "#fffaf7",
 
-        icons: [
-          {
-            src: "/pwa-192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/pwa-512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-          {
-            src: "/pwa-512-maskable.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
-        ],
+    icons: [
+      {
+        src: "/pwa-192.png",
+        sizes: "192x192",
+        type: "image/png",
       },
-
-      workbox: {
-        navigateFallback: "/index.html",
-
-        globPatterns: [
-          "**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}",
-        ],
+      {
+        src: "/pwa-512.png",
+        sizes: "512x512",
+        type: "image/png",
       },
-
-      devOptions: {
-        enabled: true,
+      {
+        src: "/pwa-512-maskable.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
-    }),
+    ],
+  },
+
+  workbox: {
+    navigateFallback: "/index.html",
+
+    maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+  },
+}),
   ],
 });

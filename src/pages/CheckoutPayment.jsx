@@ -44,7 +44,7 @@ function CheckoutPayment() {
   // UPI PAYMENT
   // =====================================
 
-  const UPI_ID = "YOUR_UPI_ID@upi";
+  const UPI_ID = "manju00802@ybl";
   const UPI_NAME = "Parikta Fashion";
 
   const [paymentMethod] = useState("UPI");

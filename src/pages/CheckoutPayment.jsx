@@ -53,7 +53,7 @@ function CheckoutPayment() {
     loadAddresses,
   } = useCustomer();
 
-  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [paymentMethod, setPaymentMethod] = useState("Razorpay");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -417,7 +417,7 @@ function CheckoutPayment() {
                   )}
 
                   <div className="mt-6 space-y-4">
-                    <button
+                    {/* <button
                       type="button"
                       onClick={() => setPaymentMethod("COD")}
                       className={`flex min-h-[88px] w-full touch-manipulation items-start gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.995] sm:items-center sm:gap-4 sm:p-5 ${
@@ -444,7 +444,7 @@ function CheckoutPayment() {
                           Delivery ke time cash payment karein.
                         </p>
                       </div>
-                    </button>
+                    </button> */}
 
                     <button
                       type="button"

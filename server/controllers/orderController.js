@@ -197,6 +197,18 @@ exports.createOrder = async (req, res) => {
       couponCode,
     } = req.body;
 
+    // =====================================
+// TEMPORARILY DISABLE COD
+// =====================================
+
+if (paymentMethod === "COD") {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Cash on Delivery is temporarily unavailable. Please use online payment.",
+  });
+}
+
     if (
       !customer?.name?.trim() ||
       !customer?.phone?.trim()
@@ -396,10 +408,12 @@ exports.createOrder = async (req, res) => {
       couponId:
         coupon?._id || null,
 
-      paymentMethod:
-        ["COD", "Razorpay"].includes(paymentMethod)
-          ? paymentMethod
-          : "COD",
+        paymentMethod: "Razorpay",
+        
+      // paymentMethod:
+      //   ["COD", "Razorpay"].includes(paymentMethod)
+      //     ? paymentMethod
+      //     : "COD",
 
       paymentStatus: "Pending",
 

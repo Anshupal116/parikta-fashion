@@ -24,6 +24,7 @@ import MyOrders from "./pages/MyOrders";
 import CheckoutAddress from "./pages/CheckoutAddress";
 import CheckoutPayment from "./pages/CheckoutPayment";
 import HomepageCMS from "./pages/admin/HomepageCMS";
+import MyProfile from "./pages/MyProfile";
 
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -144,6 +145,7 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/lookbook" element={<Lookbook />} />
+      <Route path="/my-profile" element={<MyProfile />} />
       {/* Customer authentication */}
 
       <Route path="/login" element={<Login />} />

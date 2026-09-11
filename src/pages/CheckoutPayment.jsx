@@ -948,7 +948,7 @@ function CheckoutPayment() {
 
       {showPaymentPopup &&
         createdOrder && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
 
             <div className="w-full max-w-md overflow-hidden rounded-3xl bg-[#fffaf7] shadow-2xl">
 

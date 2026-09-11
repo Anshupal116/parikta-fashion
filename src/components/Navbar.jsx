@@ -773,7 +773,7 @@ function Navbar() {
 
                         <div className="p-2.5">
                           <AccountMenuLink
-                            to="/profile"
+                            to="/my-profile"
                             icon={<FiUser size={18} />}
                             title="My Profile"
                             description="Manage your account details"
@@ -1096,7 +1096,7 @@ function Navbar() {
                   </div>
 
                   <div className="mt-3 grid gap-1">
-                    <MobileNavLink to="/profile">
+                    <MobileNavLink to="/my-profile">
                       My Profile
                     </MobileNavLink>
 

@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  FiArrowLeft,
-  FiCheckCircle,
-  FiCreditCard,
-  FiLock,
-  FiTruck,
-} from "react-icons/fi";
+import { FiArrowLeft, FiCheckCircle, FiCreditCard, FiLock, FiTruck } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { QRCodeSVG } from "qrcode.react";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -17,7 +10,27 @@ import CheckoutStepper from "../components/CheckoutStepper";
 
 import { useCart } from "../context/CartContext";
 import { useCustomer } from "../context/CustomerContext";
-import { createOrder } from "../services/orderService";
+import {
+  createOrder,
+  createRazorpayOrder,
+  markRazorpayPaymentFailed,
+  verifyRazorpayPayment,
+} from "../services/orderService";
+
+const loadRazorpayScript = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 
 function CheckoutPayment() {
   const navigate = useNavigate();
@@ -40,19 +53,9 @@ function CheckoutPayment() {
     loadAddresses,
   } = useCustomer();
 
-  // =====================================
-  // TEMPORARY UPI PAYMENT
-  // =====================================
-  const UPI_ID = "xyz@kotak811";
-  const UPI_NAME = "Parikta Fashion";
-
-  const [paymentMethod] = useState("UPI");
+  const [paymentMethod, setPaymentMethod] = useState("Razorpay");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Payment pending popup
-  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
-  const [createdOrder, setCreatedOrder] = useState(null);
 
   // Cart clear hote hi checkout effect /cart par redirect karta tha.
   // Success navigation ke dauran us redirect ko block karne ke liye.
@@ -76,18 +79,6 @@ function CheckoutPayment() {
     });
   };
 
-  // =====================================
-  // UPI PAYMENT URL
-  // =====================================
-  const upiPaymentUrl = `upi://pay?pa=${encodeURIComponent(
-    UPI_ID
-  )}&pn=${encodeURIComponent(
-    UPI_NAME
-  )}&am=${Number(finalTotal || 0).toFixed(2)}&cu=INR`;
-
-  // =====================================
-  // AUTH / ADDRESS CHECK
-  // =====================================
   useEffect(() => {
     if (authLoading) return;
 
@@ -135,9 +126,125 @@ function CheckoutPayment() {
     navigate,
   ]);
 
-  // =====================================
-  // PLACE ORDER
-  // =====================================
+  const handleOnlinePayment = async (appOrder) => {
+    const scriptLoaded = await loadRazorpayScript();
+
+    if (!scriptLoaded) {
+      throw new Error(
+        "Razorpay payment window load nahi hui. Internet connection check karo."
+      );
+    }
+
+    const razorpayResponse = await createRazorpayOrder(appOrder._id, token);
+
+    if (!razorpayResponse.success) {
+      throw new Error(
+        razorpayResponse.message || "Razorpay order create failed"
+      );
+    }
+
+    const options = {
+      key:
+        razorpayResponse.keyId ||
+        import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: razorpayResponse.razorpayOrder.amount,
+      currency: razorpayResponse.razorpayOrder.currency,
+      name: "Parikta Fashion",
+      description: `Payment for order ${appOrder.orderId}`,
+      order_id: razorpayResponse.razorpayOrder.id,
+      prefill: {
+        name: selectedCheckoutAddress.name,
+        email: selectedCheckoutAddress.email || "",
+        contact: selectedCheckoutAddress.phone,
+      },
+      notes: {
+        appOrderId: appOrder.orderId,
+      },
+      theme: {
+        color: "#9A3F4D",
+      },
+      modal: {
+        confirm_close: true,
+        ondismiss: async () => {
+          setLoading(false);
+
+          try {
+            await markRazorpayPaymentFailed(
+              {
+                orderId: appOrder._id,
+                reason: "Payment popup closed by customer",
+              },
+              token
+            );
+          } catch (paymentError) {
+            console.error("Payment dismissal update failed:", paymentError);
+          }
+        },
+      },
+      handler: async (paymentResponse) => {
+        try {
+          setLoading(true);
+
+          const verificationResponse = await verifyRazorpayPayment(
+            {
+              orderId: appOrder._id,
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+              razorpay_signature: paymentResponse.razorpay_signature,
+            },
+            token
+          );
+
+          if (!verificationResponse.success) {
+            throw new Error(
+              verificationResponse.message || "Payment verification failed"
+            );
+          }
+
+          openOrderSuccess(
+            verificationResponse.order || appOrder,
+            "ONLINE"
+          );
+        } catch (verificationError) {
+          setError(
+            verificationError.response?.data?.message ||
+              verificationError.message ||
+              "Payment verify nahi hui."
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+    };
+
+    const razorpayCheckout = new window.Razorpay(options);
+
+    razorpayCheckout.on("payment.failed", async (response) => {
+      const failureReason =
+        response.error?.description ||
+        response.error?.reason ||
+        "Payment failed";
+
+      try {
+        await markRazorpayPaymentFailed(
+          {
+            orderId: appOrder._id,
+            reason: failureReason,
+          },
+          token
+        );
+      } catch (paymentError) {
+        console.error("Payment failure update error:", paymentError);
+      }
+
+      setLoading(false);
+      setError(`Payment failed: ${failureReason}`);
+    });
+
+    setLoading(false);
+    razorpayCheckout.open();
+  };
+
   const placeOrder = async () => {
     if (!isLoggedIn || !token) {
       navigate("/login", {
@@ -168,9 +275,7 @@ function CheckoutPayment() {
         },
 
         address: {
-          house: `${selectedCheckoutAddress.house}, ${
-            selectedCheckoutAddress.area
-          }${
+          house: `${selectedCheckoutAddress.house}, ${selectedCheckoutAddress.area}${
             selectedCheckoutAddress.landmark
               ? `, ${selectedCheckoutAddress.landmark}`
               : ""
@@ -195,12 +300,7 @@ function CheckoutPayment() {
 
         couponCode: appliedCoupon?.coupon?.code || "",
         couponId: appliedCoupon?.coupon?._id || null,
-
-        // =====================================
-        // UPI PAYMENT
-        // =====================================
-        paymentMethod: "UPI",
-
+        paymentMethod,
         customerAddressId:
           selectedCheckoutAddress._id ||
           selectedCheckoutAddress.id,
@@ -209,52 +309,26 @@ function CheckoutPayment() {
       const response = await createOrder(orderData, token);
 
       if (!response.success) {
-        throw new Error(
-          response.message || "Order failed"
-        );
+        throw new Error(response.message || "Order failed");
       }
 
       const appOrder = response.order;
 
-      if (!appOrder?.orderId) {
-        throw new Error("Order ID missing");
+      if (paymentMethod === "COD") {
+        openOrderSuccess(appOrder, "COD");
+        return;
       }
 
-      // Payment complete hone se pehle order success page par
-      // nahi bhejna. Pehle UPI payment screen dikhegi.
-      setCreatedOrder(appOrder);
-      setShowPaymentPopup(true);
+      await handleOnlinePayment(appOrder);
     } catch (orderError) {
-      console.error(
-        "Order place error:",
-        orderError
-      );
-
+      console.error("Order place error:", orderError);
       setError(
         orderError.response?.data?.message ||
           orderError.message ||
           "Server error. Order place nahi hua."
       );
-    } finally {
       setLoading(false);
     }
-  };
-
-  // =====================================
-  // CUSTOMER SAYS PAYMENT COMPLETED
-  // =====================================
-  const handlePaymentCompleted = () => {
-    if (!createdOrder) return;
-
-    setShowPaymentPopup(false);
-
-    // IMPORTANT:
-    // Is temporary UPI system mein payment automatically
-    // verify nahi hoti.
-    //
-    // Order ko payment pending state ke saath admin mein
-    // verify karna hoga.
-    openOrderSuccess(createdOrder, "UPI");
   };
 
   if (!selectedCheckoutAddress) return null;
@@ -266,14 +340,10 @@ function CheckoutPayment() {
       <main className="min-h-screen bg-[#f7f2ee] pb-36 pt-4 sm:pt-6 md:pb-14 md:pt-10">
         <Container>
           <div className="mx-auto max-w-6xl">
-
-            {/* HEADER */}
             <div className="mb-5 grid grid-cols-[44px_1fr_44px] items-center gap-2 sm:mb-7">
               <button
                 type="button"
-                onClick={() =>
-                  navigate("/checkout/address")
-                }
+                onClick={() => navigate("/checkout/address")}
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eadbd4] bg-white text-[#5B3B32]"
               >
                 <FiArrowLeft size={21} />
@@ -283,7 +353,6 @@ function CheckoutPayment() {
                 <h1 className="heading-font text-[2rem] leading-tight text-[#5B3B32] sm:text-3xl md:text-4xl">
                   Payment
                 </h1>
-
                 <p className="mt-1 text-[10px] font-semibold tracking-[0.16em] text-[#BFA996] sm:text-xs">
                   STEP 3 OF 3
                 </p>
@@ -292,24 +361,18 @@ function CheckoutPayment() {
               <div className="h-11 w-11" />
             </div>
 
-            {/* STEPPER */}
             <div className="mx-auto mb-6 max-w-xl rounded-2xl border border-[#eadbd4] bg-[#fffaf7] p-4 sm:mb-8 sm:p-5">
               <CheckoutStepper activeStep="payment" />
             </div>
 
             <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-7">
-
-              {/* LEFT */}
               <section className="min-w-0 space-y-5">
-
-                {/* ADDRESS */}
                 <div className="rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-sm sm:p-5 md:rounded-3xl md:p-7">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold tracking-[0.18em] text-[#BFA996]">
                         DELIVER TO
                       </p>
-
                       <h2 className="heading-font mt-1 text-3xl text-[#5B3B32]">
                         {selectedCheckoutAddress.name}
                       </h2>
@@ -317,9 +380,7 @@ function CheckoutPayment() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        navigate("/checkout/address")
-                      }
+                      onClick={() => navigate("/checkout/address")}
                       className="font-bold text-[#9A3F4D]"
                     >
                       Change
@@ -327,35 +388,26 @@ function CheckoutPayment() {
                   </div>
 
                   <p className="mt-4 leading-6 text-[#75635c]">
-                    {selectedCheckoutAddress.house},{" "}
-                    {selectedCheckoutAddress.area}
-
+                    {selectedCheckoutAddress.house}, {selectedCheckoutAddress.area}
                     {selectedCheckoutAddress.landmark
                       ? `, ${selectedCheckoutAddress.landmark}`
                       : ""}
-
                     <br />
-
-                    {selectedCheckoutAddress.city},{" "}
-                    {selectedCheckoutAddress.state} -{" "}
+                    {selectedCheckoutAddress.city}, {selectedCheckoutAddress.state} -{" "}
                     {selectedCheckoutAddress.pincode}
                   </p>
 
                   <p className="mt-2 font-semibold text-[#5B3B32]">
-                    Mobile:{" "}
-                    {selectedCheckoutAddress.phone}
+                    Mobile: {selectedCheckoutAddress.phone}
                   </p>
                 </div>
 
-                {/* PAYMENT */}
                 <div className="rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-sm sm:p-5 md:rounded-3xl md:p-7">
-
                   <p className="text-xs font-semibold tracking-[0.18em] text-[#BFA996]">
                     PAYMENT METHOD
                   </p>
-
                   <h2 className="heading-font mt-1 text-3xl text-[#5B3B32]">
-                    Pay via UPI
+                    Choose payment option
                   </h2>
 
                   {error && (
@@ -364,90 +416,74 @@ function CheckoutPayment() {
                     </div>
                   )}
 
-                  {/* UPI OPTION */}
-                  <div className="mt-6 rounded-2xl border border-[#9A3F4D] bg-[#FDEAE6]/70 p-5">
-
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#9A3F4D] shadow-sm">
-                        <FiCreditCard size={20} />
+                  <div className="mt-6 space-y-4">
+                    {/* <button
+                      type="button"
+                      onClick={() => setPaymentMethod("COD")}
+                      className={`flex min-h-[88px] w-full touch-manipulation items-start gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.995] sm:items-center sm:gap-4 sm:p-5 ${
+                        paymentMethod === "COD"
+                          ? "border-[#9A3F4D] bg-[#FDEAE6]/70"
+                          : "border-[#eadbd4] bg-white"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                          paymentMethod === "COD"
+                            ? "border-[#9A3F4D] bg-[#9A3F4D] text-white"
+                            : "border-[#cdbbb2]"
+                        }`}
+                      >
+                        {paymentMethod === "COD" && <FiCheckCircle size={15} />}
                       </div>
 
                       <div>
                         <h3 className="font-bold text-[#5B3B32]">
-                          UPI Payment
+                          Cash on Delivery
                         </h3>
-
                         <p className="mt-1 text-sm text-[#75635c]">
-                          Google Pay, PhonePe, Paytm,
-                          BHIM aur other UPI apps
+                          Delivery ke time cash payment karein.
                         </p>
                       </div>
-                    </div>
+                    </button> */}
 
-                    {/* AMOUNT */}
-                    <div className="mt-6 text-center">
-                      <p className="text-xs font-semibold tracking-[0.16em] text-[#BFA996]">
-                        AMOUNT TO PAY
-                      </p>
-
-                      <p className="mt-1 text-3xl font-bold text-[#9A3F4D]">
-                        ₹
-                        {Number(
-                          finalTotal || 0
-                        ).toLocaleString("en-IN")}
-                      </p>
-                    </div>
-
-                    {/* QR */}
-                    <div className="mt-5 flex justify-center">
-                      <div className="rounded-2xl border border-[#eadbd4] bg-white p-4 shadow-sm">
-                        <QRCodeSVG
-                          value={upiPaymentUrl}
-                          size={220}
-                          level="H"
-                          includeMargin
-                        />
-                      </div>
-                    </div>
-
-                    <p className="mt-4 text-center text-sm text-[#75635c]">
-                      QR scan karke payment karein
-                    </p>
-
-                    {/* UPI ID */}
-                    <div className="mt-3 rounded-xl bg-white px-4 py-3 text-center">
-                      <p className="text-[10px] font-semibold tracking-[0.15em] text-[#BFA996]">
-                        UPI ID
-                      </p>
-
-                      <p className="mt-1 font-bold text-[#5B3B32]">
-                        {UPI_ID}
-                      </p>
-                    </div>
-
-                    {/* MOBILE UPI BUTTON */}
                     <button
                       type="button"
-                      onClick={() => {
-                        window.location.href =
-                          upiPaymentUrl;
-                      }}
-                      className="mt-4 w-full rounded-xl bg-[#9A3F4D] py-3.5 font-bold text-white transition hover:bg-[#7f1d2d] active:scale-[0.99] md:hidden"
+                      onClick={() => setPaymentMethod("Razorpay")}
+                      className={`flex min-h-[88px] w-full touch-manipulation items-start gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.995] sm:items-center sm:gap-4 sm:p-5 ${
+                        paymentMethod === "Razorpay"
+                          ? "border-[#9A3F4D] bg-[#FDEAE6]/70"
+                          : "border-[#eadbd4] bg-white"
+                      }`}
                     >
-                      PAY VIA UPI APP
-                    </button>
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                          paymentMethod === "Razorpay"
+                            ? "border-[#9A3F4D] bg-[#9A3F4D] text-white"
+                            : "border-[#cdbbb2]"
+                        }`}
+                      >
+                        {paymentMethod === "Razorpay" && (
+                          <FiCheckCircle size={15} />
+                        )}
+                      </div>
 
-                    <p className="mt-4 text-center text-xs leading-5 text-[#8b746b]">
-                      Payment karne ke baad neeche
-                      "I HAVE PAID" button dabayein.
-                    </p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <FiCreditCard className="text-[#9A3F4D]" />
+                          <h3 className="font-bold text-[#5B3B32]">
+                            Pay Online
+                          </h3>
+                        </div>
+                        <p className="mt-1 text-sm text-[#75635c]">
+                          UPI, Cards, Net Banking aur Wallet via Razorpay.
+                        </p>
+                      </div>
+                    </button>
                   </div>
 
-                  {/* SECURITY FEATURES */}
                   <div className="mt-6 grid grid-cols-3 gap-2">
                     <div className="rounded-xl bg-[#FDEAE6] p-3 text-center">
                       <FiLock className="mx-auto text-[#9A3F4D]" />
-
                       <p className="mt-2 text-[10px] font-semibold text-[#5B3B32]">
                         Secure Payment
                       </p>
@@ -455,7 +491,6 @@ function CheckoutPayment() {
 
                     <div className="rounded-xl bg-[#FDEAE6] p-3 text-center">
                       <FiTruck className="mx-auto text-[#9A3F4D]" />
-
                       <p className="mt-2 text-[10px] font-semibold text-[#5B3B32]">
                         Free Delivery
                       </p>
@@ -463,7 +498,6 @@ function CheckoutPayment() {
 
                     <div className="rounded-xl bg-[#FDEAE6] p-3 text-center">
                       <FiCheckCircle className="mx-auto text-[#9A3F4D]" />
-
                       <p className="mt-2 text-[10px] font-semibold text-[#5B3B32]">
                         Easy Returns
                       </p>
@@ -472,9 +506,7 @@ function CheckoutPayment() {
                 </div>
               </section>
 
-              {/* ORDER SUMMARY */}
               <aside className="min-w-0 rounded-[26px] border border-[#eadbd4] bg-[#fffaf7] p-4 shadow-sm sm:p-6 md:rounded-3xl lg:sticky lg:top-28">
-
                 <h2 className="heading-font text-3xl text-[#5B3B32]">
                   Order Summary
                 </h2>
@@ -488,10 +520,7 @@ function CheckoutPayment() {
                     <div
                       key={
                         item.cartItemId ||
-                        `${item._id || item.id}-${
-                          item.selectedSize ||
-                          "Free Size"
-                        }`
+                        `${item._id || item.id}-${item.selectedSize || "Free Size"}`
                       }
                       className="flex min-w-0 gap-3 border-b border-[#eadbd4] pb-4"
                     >
@@ -505,21 +534,14 @@ function CheckoutPayment() {
                         <h3 className="line-clamp-2 break-words font-bold text-[#5B3B32]">
                           {item.name}
                         </h3>
-
                         <p className="mt-1 text-xs text-[#75635c]">
-                          Size:{" "}
-                          {item.selectedSize ||
-                            "Free Size"}{" "}
-                          • Qty:{" "}
+                          Size: {item.selectedSize || "Free Size"} • Qty:{" "}
                           {item.qty || 1}
                         </p>
-
                         <p className="mt-1 font-bold text-[#9A3F4D]">
                           ₹
                           {(
-                            Number(
-                              item.price || 0
-                            ) *
+                            Number(item.price || 0) *
                             Number(item.qty || 1)
                           ).toLocaleString("en-IN")}
                         </p>
@@ -528,54 +550,36 @@ function CheckoutPayment() {
                   ))}
                 </div>
 
-                {/* TOTALS */}
                 <div className="mt-6 space-y-3 text-[#5B3B32]">
-
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-
                     <span>
-                      ₹
-                      {Number(
-                        cartTotal || 0
-                      ).toLocaleString("en-IN")}
+                      ₹{Number(cartTotal || 0).toLocaleString("en-IN")}
                     </span>
                   </div>
 
                   {discountAmount > 0 && (
                     <div className="flex justify-between font-semibold text-green-700">
                       <span>Coupon Discount</span>
-
                       <span>
-                        -₹
-                        {Number(
-                          discountAmount
-                        ).toLocaleString("en-IN")}
+                        -₹{Number(discountAmount).toLocaleString("en-IN")}
                       </span>
                     </div>
                   )}
 
                   <div className="flex justify-between">
                     <span>Delivery</span>
-
-                    <span className="font-bold text-green-600">
-                      Free
-                    </span>
+                    <span className="font-bold text-green-600">Free</span>
                   </div>
 
                   <div className="flex justify-between border-t border-[#eadbd4] pt-4 text-xl font-bold">
                     <span>Total</span>
-
                     <span>
-                      ₹
-                      {Number(
-                        finalTotal || 0
-                      ).toLocaleString("en-IN")}
+                      ₹{Number(finalTotal || 0).toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
 
-                {/* DESKTOP PAY BUTTON */}
                 <button
                   type="button"
                   onClick={placeOrder}
@@ -583,10 +587,12 @@ function CheckoutPayment() {
                   className="mt-6 hidden w-full rounded-xl bg-[#9A3F4D] py-4 font-bold text-white disabled:opacity-60 lg:block"
                 >
                   {loading
-                    ? "CREATING ORDER..."
-                    : `PAY ₹${Number(
-                        finalTotal || 0
-                      ).toLocaleString("en-IN")}`}
+                    ? paymentMethod === "Razorpay"
+                      ? "OPENING PAYMENT..."
+                      : "PLACING ORDER..."
+                    : paymentMethod === "Razorpay"
+                    ? `PAY ₹${Number(finalTotal || 0).toLocaleString("en-IN")}`
+                    : `PLACE ORDER • ₹${Number(finalTotal || 0).toLocaleString("en-IN")}`}
                 </button>
               </aside>
             </div>
@@ -594,20 +600,14 @@ function CheckoutPayment() {
         </Container>
       </main>
 
-      {/* MOBILE BOTTOM BUTTON */}
       <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-[#eadbd4] bg-[#fffaf7]/96 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(91,59,50,0.12)] backdrop-blur-md lg:hidden">
         <div className="mx-auto grid max-w-xl grid-cols-[auto_1fr] items-center gap-2.5">
-
           <div className="min-w-[88px]">
             <p className="text-[8px] font-semibold tracking-[0.13em] text-[#8b746b]">
               TOTAL
             </p>
-
             <p className="text-base font-bold text-[#9A3F4D]">
-              ₹
-              {Number(
-                finalTotal || 0
-              ).toLocaleString("en-IN")}
+              ₹{Number(finalTotal || 0).toLocaleString("en-IN")}
             </p>
           </div>
 
@@ -619,123 +619,12 @@ function CheckoutPayment() {
           >
             {loading
               ? "PLEASE WAIT..."
-              : "PAY VIA UPI"}
+              : paymentMethod === "Razorpay"
+              ? "PAY NOW"
+              : "PLACE ORDER"}
           </button>
         </div>
       </div>
-
-      {/* =====================================
-          UPI PAYMENT POPUP
-      ===================================== */}
-      {showPaymentPopup && createdOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-
-          <div className="w-full max-w-md overflow-hidden rounded-3xl bg-[#fffaf7] shadow-2xl">
-
-            {/* HEADER */}
-            <div className="bg-[#9A3F4D] px-6 py-5 text-center text-white">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
-                <FiCreditCard size={26} />
-              </div>
-
-              <h2 className="heading-font mt-3 text-2xl">
-                Complete UPI Payment
-              </h2>
-
-              <p className="mt-1 text-sm text-white/80">
-                Order #{createdOrder.orderId}
-              </p>
-            </div>
-
-            <div className="p-6">
-
-              {/* AMOUNT */}
-              <div className="text-center">
-                <p className="text-xs font-semibold tracking-[0.16em] text-[#BFA996]">
-                  PAY EXACT AMOUNT
-                </p>
-
-                <p className="mt-1 text-4xl font-bold text-[#9A3F4D]">
-                  ₹
-                  {Number(
-                    finalTotal || 0
-                  ).toLocaleString("en-IN")}
-                </p>
-              </div>
-
-              {/* QR */}
-              <div className="mt-5 flex justify-center">
-                <div className="rounded-2xl border border-[#eadbd4] bg-white p-4 shadow-sm">
-                  <QRCodeSVG
-                    value={upiPaymentUrl}
-                    size={210}
-                    level="H"
-                    includeMargin
-                  />
-                </div>
-              </div>
-
-              <p className="mt-4 text-center text-sm text-[#75635c]">
-                Scan with Google Pay, PhonePe,
-                Paytm or any UPI app
-              </p>
-
-              {/* UPI ID */}
-              <div className="mt-4 rounded-xl bg-[#f7f2ee] p-3 text-center">
-                <p className="text-[10px] font-semibold tracking-[0.15em] text-[#BFA996]">
-                  UPI ID
-                </p>
-
-                <p className="mt-1 font-bold text-[#5B3B32]">
-                  {UPI_ID}
-                </p>
-              </div>
-
-              {/* MOBILE APP */}
-              <button
-                type="button"
-                onClick={() => {
-                  window.location.href =
-                    upiPaymentUrl;
-                }}
-                className="mt-4 w-full rounded-xl bg-[#9A3F4D] py-3.5 font-bold text-white md:hidden"
-              >
-                OPEN UPI APP
-              </button>
-
-              {/* PAYMENT WARNING */}
-              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                <p className="text-xs leading-5 text-amber-800">
-                  Payment karne ke baad hi
-                  "I HAVE PAID" button dabayein.
-                  Payment bank account mein verify
-                  hone ke baad order confirm kiya jayega.
-                </p>
-              </div>
-
-              {/* CONFIRM */}
-              <button
-                type="button"
-                onClick={handlePaymentCompleted}
-                className="mt-4 w-full rounded-xl border border-[#9A3F4D] bg-white py-3.5 font-bold text-[#9A3F4D] transition hover:bg-[#FDEAE6]"
-              >
-                I HAVE PAID
-              </button>
-
-              {/* CANCEL */}
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPaymentPopup(false)
-                }
-                className="mt-3 w-full py-2 text-sm font-semibold text-[#8b746b]"
-              >
-                Pay Later / Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </>

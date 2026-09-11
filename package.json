@@ -24,6 +24,7 @@
     "jspdf-autotable": "^5.0.8",
     "mongoose": "^9.7.2",
     "qrcode": "^1.5.4",
+    "qrcode.react": "^4.2.0",
     "razorpay": "^2.9.6",
     "react": "^19.2.6",
     "react-apexcharts": "^2.1.1",

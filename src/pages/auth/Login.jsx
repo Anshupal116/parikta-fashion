@@ -104,6 +104,8 @@ function Login() {
   const handleSendOtp = async (event) => {
     event?.preventDefault();
 
+    
+
     setError("");
     setCopied(false);
 
@@ -126,6 +128,13 @@ function Login() {
         );
         return;
       }
+
+      console.log("OTP:", response.developmentOtp);
+
+setGeneratedOtp(String(response.developmentOtp));
+setShowOtpPopup(true);
+
+console.log("POPUP STATE SET");
 
       // Reset OTP input
       setOtp("");

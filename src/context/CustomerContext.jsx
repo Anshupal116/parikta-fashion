@@ -83,26 +83,28 @@ export function CustomerProvider({ children }) {
     return await response.json();
   };
 
-  // ==============================
-  // SEND OTP
-  // DEVELOPMENT OTP = 123456
-  // ==============================
-  const sendOtp = async (phone) => {
-    try {
-      const response = await request("/send-otp", {
-        phone,
-      });
+ // ==============================
+// SEND OTP
+// Backend generates random OTP
+// ==============================
+const sendOtp = async (phone) => {
+  try {
+    const response = await request("/send-otp", {
+      phone,
+    });
 
-      return response;
-    } catch (error) {
-      console.error("Send OTP error:", error);
+    console.log("SEND OTP RESPONSE:", response);
 
-      return {
-        success: false,
-        message: "OTP send failed",
-      };
-    }
-  };
+    return response;
+  } catch (error) {
+    console.error("Send OTP error:", error);
+
+    return {
+      success: false,
+      message: "OTP send failed",
+    };
+  }
+};
 
   // ==============================
   // VERIFY OTP

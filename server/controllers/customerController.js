@@ -138,27 +138,25 @@ exports.sendOtp = async (req, res) => {
       });
     }
 
-    const customer = await Customer.findOne({
-      phone,
-    });
+    const customer = await Customer.findOne({ phone });
 
     // Generate random 6-digit OTP
     const otp = Math.floor(
       100000 + Math.random() * 900000
     ).toString();
 
-    // OTP expires after 5 minutes
+    // OTP valid for 5 minutes
     const expiresAt = Date.now() + 5 * 60 * 1000;
 
-    // Save OTP against phone number
     developmentOtps.set(phone, {
       otp,
       expiresAt,
     });
 
-    console.log(
-      `Development OTP for ${phone}: ${otp}`
-    );
+    console.log("=================================");
+    console.log("PHONE:", phone);
+    console.log("DEVELOPMENT OTP:", otp);
+    console.log("=================================");
 
     return res.status(200).json({
       success: true,
@@ -166,11 +164,8 @@ exports.sendOtp = async (req, res) => {
       phone,
       isExistingCustomer: Boolean(customer),
 
-      // Development only
-      developmentOtp:
-        process.env.NODE_ENV === "production"
-          ? undefined
-          : otp,
+      // DEVELOPMENT ONLY
+      developmentOtp: otp,
     });
   } catch (error) {
     console.error("Send OTP error:", error);

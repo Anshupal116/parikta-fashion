@@ -3,7 +3,6 @@ const Customer = require("../models/Customer");
 const Order = require("../models/Order");
 
 // const DEVELOPMENT_OTP = "123456";
-const developmentOtps = new Map();
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {

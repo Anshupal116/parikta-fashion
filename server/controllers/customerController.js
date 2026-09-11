@@ -194,6 +194,8 @@ if (!savedOtp || otp !== savedOtp) {
   });
 }
 
+developmentOtps.delete(phone);
+
     const customer = await Customer.findOne({
       phone,
     });
@@ -271,13 +273,14 @@ exports.completeProfile = async (
       });
     }
 
-    if (otp !== DEVELOPMENT_OTP) {
-      return res.status(401).json({
-        success: false,
-        message:
-          "OTP verification expired or invalid",
-      });
-    }
+    const savedOtp = developmentOtps.get(phone);
+
+if (!savedOtp || otp !== savedOtp) {
+  return res.status(401).json({
+    success: false,
+    message: "OTP verification expired or invalid",
+  });
+}
 
     if (name.length < 2) {
       return res.status(400).json({

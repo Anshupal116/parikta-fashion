@@ -43,7 +43,7 @@ function CheckoutPayment() {
   // =====================================
   // TEMPORARY UPI PAYMENT
   // =====================================
-  const UPI_ID = "xyz@kotak811";
+  const UPI_ID = "8800102815@kotakbank";
   const UPI_NAME = "Parikta Fashion";
 
   const [paymentMethod] = useState("UPI");

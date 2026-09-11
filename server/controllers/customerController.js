@@ -118,9 +118,16 @@ const customerResponse = (customer) => ({
 });
 
 // ========================================
-// SEND OTP - DEVELOPMENT MODE
-// OTP is always 123456
+// DEVELOPMENT OTP STORAGE
 // ========================================
+
+const developmentOtps = new Map();
+
+
+// ========================================
+// SEND OTP
+// ========================================
+
 exports.sendOtp = async (req, res) => {
   try {
     const phone = normalizePhone(req.body.phone);
@@ -132,15 +139,27 @@ exports.sendOtp = async (req, res) => {
       });
     }
 
-    const customer = await Customer.findOne({ phone });
+    const customer = await Customer.findOne({
+      phone,
+    });
 
     // Generate random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
 
-    // Save OTP against this phone
-    developmentOtps.set(phone, otp);
+    // OTP expires after 5 minutes
+    const expiresAt = Date.now() + 5 * 60 * 1000;
 
-    console.log(`Development OTP for ${phone}: ${otp}`);
+    // Save OTP against phone number
+    developmentOtps.set(phone, {
+      otp,
+      expiresAt,
+    });
+
+    console.log(
+      `Development OTP for ${phone}: ${otp}`
+    );
 
     return res.status(200).json({
       success: true,
@@ -165,11 +184,14 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
+
 // ========================================
 // VERIFY OTP
-// Existing customer => login
-// New customer => ask for profile
+//
+// Existing customer => Login
+// New customer => Ask for profile
 // ========================================
+
 exports.verifyOtp = async (req, res) => {
   try {
     const phone = normalizePhone(req.body.phone);
@@ -185,20 +207,48 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-   const savedOtp = developmentOtps.get(phone);
+    if (!/^\d{6}$/.test(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 6-digit OTP",
+      });
+    }
 
-if (!savedOtp || otp !== savedOtp) {
-  return res.status(401).json({
-    success: false,
-    message: "Invalid OTP",
-  });
-}
+    // Get saved OTP
+    const otpData = developmentOtps.get(phone);
 
-developmentOtps.delete(phone);
+    if (!otpData) {
+      return res.status(401).json({
+        success: false,
+        message: "OTP expired or not found",
+      });
+    }
+
+    // Check expiry
+    if (Date.now() > otpData.expiresAt) {
+      developmentOtps.delete(phone);
+
+      return res.status(401).json({
+        success: false,
+        message: "OTP expired. Please request a new OTP.",
+      });
+    }
+
+    // Check OTP
+    if (otp !== otpData.otp) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
     const customer = await Customer.findOne({
       phone,
     });
+
+    // ========================================
+    // NEW CUSTOMER
+    // ========================================
 
     if (!customer) {
       return res.status(200).json({
@@ -211,9 +261,16 @@ developmentOtps.delete(phone);
       });
     }
 
+    // ========================================
+    // EXISTING CUSTOMER
+    // ========================================
+
     customer.isVerified = true;
 
     await customer.save();
+
+    // OTP no longer needed
+    developmentOtps.delete(phone);
 
     return res.status(200).json({
       success: true,
@@ -239,9 +296,11 @@ developmentOtps.delete(phone);
   }
 };
 
+
 // ========================================
 // COMPLETE PROFILE / SIGNUP
 // ========================================
+
 exports.completeProfile = async (
   req,
   res
@@ -268,19 +327,43 @@ exports.completeProfile = async (
     if (!/^[6-9]\d{9}$/.test(phone)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid mobile number",
+        message: "Invalid mobile number",
       });
     }
 
-    const savedOtp = developmentOtps.get(phone);
+    // Check OTP
+    const otpData = developmentOtps.get(phone);
 
-if (!savedOtp || otp !== savedOtp) {
-  return res.status(401).json({
-    success: false,
-    message: "OTP verification expired or invalid",
-  });
-}
+    if (!otpData) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "OTP verification expired or invalid",
+      });
+    }
+
+    // Check OTP expiry
+    if (Date.now() > otpData.expiresAt) {
+      developmentOtps.delete(phone);
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "OTP verification expired. Please request a new OTP.",
+      });
+    }
+
+    if (otp !== otpData.otp) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "OTP verification expired or invalid",
+      });
+    }
+
+    // ========================================
+    // NAME VALIDATION
+    // ========================================
 
     if (name.length < 2) {
       return res.status(400).json({
@@ -289,6 +372,10 @@ if (!savedOtp || otp !== savedOtp) {
           "Please enter your full name",
       });
     }
+
+    // ========================================
+    // EMAIL VALIDATION
+    // ========================================
 
     if (
       email &&
@@ -302,6 +389,10 @@ if (!savedOtp || otp !== savedOtp) {
           "Please enter a valid email address",
       });
     }
+
+    // ========================================
+    // EMAIL DUPLICATE CHECK
+    // ========================================
 
     if (email) {
       const emailExists =
@@ -318,6 +409,10 @@ if (!savedOtp || otp !== savedOtp) {
         });
       }
     }
+
+    // ========================================
+    // CREATE / UPDATE CUSTOMER
+    // ========================================
 
     let customer =
       await Customer.findOne({ phone });
@@ -339,6 +434,9 @@ if (!savedOtp || otp !== savedOtp) {
 
       await customer.save();
     }
+
+    // OTP completed successfully
+    developmentOtps.delete(phone);
 
     return res.status(200).json({
       success: true,

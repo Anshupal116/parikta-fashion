@@ -2,7 +2,8 @@ const jwt = require("jsonwebtoken");
 const Customer = require("../models/Customer");
 const Order = require("../models/Order");
 
-const DEVELOPMENT_OTP = "123456";
+// const DEVELOPMENT_OTP = "123456";
+const developmentOtps = new Map();
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -127,24 +128,31 @@ exports.sendOtp = async (req, res) => {
     if (!/^[6-9]\d{9}$/.test(phone)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Please enter a valid 10-digit mobile number",
+        message: "Please enter a valid 10-digit mobile number",
       });
     }
 
-    const customer = await Customer.findOne({
-      phone,
-    });
+    const customer = await Customer.findOne({ phone });
+
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save OTP against this phone
+    developmentOtps.set(phone, otp);
+
+    console.log(`Development OTP for ${phone}: ${otp}`);
 
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
       phone,
       isExistingCustomer: Boolean(customer),
+
+      // Development only
       developmentOtp:
         process.env.NODE_ENV === "production"
           ? undefined
-          : DEVELOPMENT_OTP,
+          : otp,
     });
   } catch (error) {
     console.error("Send OTP error:", error);
@@ -177,12 +185,14 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    if (otp !== DEVELOPMENT_OTP) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
+   const savedOtp = developmentOtps.get(phone);
+
+if (!savedOtp || otp !== savedOtp) {
+  return res.status(401).json({
+    success: false,
+    message: "Invalid OTP",
+  });
+}
 
     const customer = await Customer.findOne({
       phone,
@@ -1174,3 +1184,5 @@ exports.getAllCustomers = async (
     });
   }
 };
+
+
